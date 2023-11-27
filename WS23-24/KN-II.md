@@ -11,3 +11,9 @@ c) The interface to a service is defined independently from the specific operati
 d) Connectionless protocols are much easier to conceive and implement as connection-oriented protocols.
 
 Answer: a, b, c, d.
+
+
+
+
+
+OSI Model
