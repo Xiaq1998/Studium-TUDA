@@ -1,6 +1,10 @@
-Pingo
+# Introduction
 
-Q2: Which of the following statements is true?(at least one answer is correct)
+
+
+#Pingo
+
+**Q2**: Which of the following statements is true? (at least one answer is correct)
 
 a) A body area network is based on broadcasting; a storage area network is based on point-to-point communications.
 
@@ -14,6 +18,15 @@ Answer: a, b, c, d.
 
 
 
+**Q3**: An Address identifies communication entities/components. Which of the following statement/s is/are in general true?
 
+a) an Address is the NAME of a resource indicating WHAT we seek.
 
-OSI Model
+b) an Address indicates WHERE it is.
+
+c) an Address is needed in order to find out a ROUTE which tells HOW TO GET THERE.
+
+d) an Address in an abbreviation in order to remember "something" it better.
+
+f) ideally one Address is sufficient for a communication device/end system.
+
