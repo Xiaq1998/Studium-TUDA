@@ -64,3 +64,51 @@ Answer: a, e
 
 
 
+**Q3**：Which of the following statements is true? (just one correct answer is possible)
+
+a) If reliable message delivery is most important, you should use UDP instead of TCP
+
+b) Regarding protocol overhead, TCP is more complex compared tu UDP due to e.g. connection setup
+
+c) When using TCP, more or less 100% of the network bandwidth is used for message delivery
+
+d) None of the other statements are true
+
+Answer: b
+
+
+
+**Q4**：What is the difference between fragments and segments?
+
+a) Fragments are used to split TCP data if required by max. fragment size.
+
+​    Segments are used when IP packets must be split according to maximum transfer unit of the underlying network.
+
+b) Segments are used to split TCP data if required by max. segment size.
+
+​     Fragments are used when IP packets must be split according to maximum transfer unit of the underlying network.
+
+c) There is no difference between them. Just two names for the same.
+
+Answer: b
+
+
+
+**Q6**: What is correct for the Retransmission Timeout (i. e. timeout) compared the round trip time RTT ?
+
+a) Very many duplicate packets are sent if timeout > 1*Round Trip Time
+
+b) Very many duplicate packets are sent if timeout < 1*Round Trip Time
+
+c) Timeout > 1*Round Trip Time
+
+d) In case of packtes being dropped a very high timeout adds latency to the communication
+
+Answer: b, c, d
+
+
+
+
+
+
+
