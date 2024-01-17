@@ -96,3 +96,112 @@ The server does not know any secret information.
 
 **Signature Scheme - Security: EUF-CMA 存在不可伪造性**
 
+
+
+## 3. PKI Challenges
+
+####PKI Key Infrastructures
+
+​    a Public Key Infrastructure (PKI) is designed to facilitate the use of public key cryptography.
+
+* Consists of hardware, software, people, policies, and procedures
+* Deals with the management of digital certificates in distributed environment (creation, distribution, usage, storage, and revocation)
+
+#### Why PKI?
+
+**Assure that the public key is available (Availability)**
+
+* Directories: (L)DAP, Active Directory
+* Web PAges: HTTP(s)
+* File transfer: (s)FTP
+* Services: OCSP, SCVP
+
+**Assure that the public key is authentic (Authenticate  真实性)**
+
+* Bind publick key uniquely to electronic identity
+* Seal the binding
+* Answer for the binding
+
+**Assure that the public key is valid (Validity 有效性)**
+
+* Monitor binding public key &harr; electronic identity &harr; key owner
+* Establish time constraints 设定时间限制
+* Provide means to revoke binding 提供撤销绑定的方法
+
+*Example: Certificate revocation list (CRL)*
+
+**PKI support security (Security of key pairs)**
+
+* Select suitable algorithms and key sizes
+* Monitor possible security threats and react adequately
+* Provide suitable
+  * means to generate key pairs
+  * formats and media to store private keys
+  * means of delivering private keys
+
+*Example: PSE (Smart card)*
+
+**PKI support interoperability 互操作性**
+
+​    Comply to accepted (international) standards. 遵守公认的（国际）标准
+
+​    **Enforce policies 执行政策**  
+
+* Certificate policy (CP) 证书政策: States what to comply to
+* Certificate practice statement (CPS) 证书实践证明: States how to comply
+
+
+
+## 4. Certificates
+
+### Pbulic key certificates
+
+**Definition**
+
+​    Public key certificates: data structures that bind publick key vaules to subjects.
+
+*Example: Secure browsing, Click on icon*
+
+**Publick Key Certificate (PKC)**
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-01-17 11.10.54_BvKcGU.jpg" alt="Screenshot_2024-01-17 11.10.54_BvKcGU" style="zoom:50%;" />
+
+**Certificate properties**
+
+* Protected binding of a key to the key holder
+* Its authenticity is independent of the means of transportation
+* It can be used online and offline
+* It is a proof of the binding
+* It can be used for key servers
+
+**Certificate standards**
+
+* X.509
+* Pretty Good Privacy (PGP)
+* WAP certificates
+* Card Verifiable Certificates (CVC)
+* Simple PKI / Simple Distributed Security Infrastructure
+
+
+
+### X.509 certificates
+
+**Relevant standards**
+
+* X.509 (ITU-T)
+* PKIX (RFC 5280)
+
+**Encoding**
+
+* Abstract Syntax Notation Nr. 1: ASN.1  X.509证书通过ASN.1来描述
+* Distinguished Encoding Rules: DER  X.509证书通过DER编码来生成二进制
+
+#### Contents
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-01-17 11.22.34_afvGiv.jpg" alt="Screenshot_2024-01-17 11.22.34_afvGiv" style="zoom:50%;" />
+
+**Certificate (ASN.1)**
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-01-17 11.26.05_UDNIqF.jpg" style="zoom:50%;" />
+
+* 

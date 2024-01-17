@@ -108,6 +108,18 @@ Answer: b, c, d
 
 
 
+**Q1**: The establishment of an association in SCTP allows...(multiple correct answers are possible)
+
+a) to address one end system over different networks and network addresses
+
+b) to set-up multiple TCP connections at the same time
+
+c) to use stream to combine data of different media to be transmitted
+
+d) to interconnect more than two end systems
+
+Answer: a, c
+
 
 
 
