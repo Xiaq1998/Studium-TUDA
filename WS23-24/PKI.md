@@ -247,6 +247,18 @@ The server does not know any secret information.
 * Extensions
   + Details see next 
 
+**Distinguished Names**
+
+* CN        Common Name
+* L            Locality
+* ST          State or Province
+* O           Organization
+* OU        Organization Unit
+* C            Country
+* Street    Street Address
+* DC         Domain Component
+* UID       User Id
+
 #### X.509 extensions
 
 **(non-) critical extensions**
@@ -256,7 +268,7 @@ The server does not know any secret information.
 
 <img src="/Users/summer/Pictures/截屏/Screenshot_2024-01-17 11.59.38_svnXgL.jpg" alt="Screenshot_2024-01-17 11.59.38_svnXgL" style="zoom:50%;" />
 
-**Subject Key Identifier (SKI) 主体密钥标识符**
+**Subject Key Identifier (SKI) 主题密钥标识符**
 
 * Identifies certificates that contain a particular public key
 * Must be included in all CA certificates (non-critical)
