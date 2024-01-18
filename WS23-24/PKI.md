@@ -158,7 +158,7 @@ The server does not know any secret information.
 
 **Definition**
 
-​    Public key certificates: data structures that bind publick key vaules to subjects.
+​    Public key certificates: data structures that bind public key vaules to subjects.
 
 *Example: Secure browsing, Click on icon*
 
@@ -331,4 +331,153 @@ The server does not know any secret information.
 * Freshest CRL
 * Autohority Information Access
 * Subject Information Access
+
+
+
+### Hybrid certificates
+
+**Hybrid certificates**
+
+* Binding between identity and two independent public keys (primary and secondary)
+* Binding certified with two signatures (primary and secondary)
+* Usage of two independent signature schemes in parallel
+  + Secure as long as at least one of the used schemes is secure
+* Standard conformity to X.509
+
+#### Building hybrid certificates
+
+* Different approaches exist. In this lecture:
+  + Concatenation 级联
+  + Certificate Encapsulation 证书封装
+  + Key-signature encapsulation 密钥签名封装
+* Approaches come with different advantages and disadvantages
+* Backwards compatibility  should be provied
+
+**Backwards compatibility 向后兼容性**
+
+​    Assume two entities, e.g. a client and a server,
+
+​    During transition phase, hybrid certificates should still work if:
+
+* The (legacy) server does not understand "Hybrid"
+* The (legacy) client does not understand "Hybrid"
+* Both entities do not understand "Hybrid"
+
+Then: hybrid certificates should appear as common X.509 certificates
+
+#### Concatenation
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-01-18 17.16.04_c01QVK.jpg" alt="Screenshot_2024-01-18 17.16.04_c01QVK" style="zoom:50%;" />
+
+* Public key = concatenation of primary and secondary key
+  + public key = pk1|pk2
+* Signature is concatenation of a primary and a secondary signature
+  + signature = sig1|sig2
+* Algorithm OID identifies both signature schemes
+
+**Advantages**
+
+* Minimal (data) overhead
+* Easy to implement
+* No downgrade attackes
+
+**Disadvantages**
+
+* New OIDs for combined signature schemes required (treated as one signature algorithm)
+* No backwards compatibility, "new" signature algorithms must be known to clients
+
+#### Certificate Encapsulation
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-01-18 17.26.21_OzcOm2.jpg" alt="Screenshot_2024-01-18 17.26.21_OzcOm2" style="zoom:50%;" />
+
+* Standard X.509 certificate
+* One additional, non-critical extension &rarr; hybridCert extension
+* hybridCert extension contains a complete X.509 cert
+* Identical contents as hybrid certificate except:
+  + Public key replaced by secondary subject public key
+  + Signed with a secondary signature scheme and key by the issuer
+  + Inner certificate has no hybridCert extension
+
+**Advantages**
+
+* Easy implementation
+* Backwards compatibility
+
+**Disadvantages**
+
+* Redundant information (issuer, subject, validity period, ...)
+  + &rarr; data overhead
+  + &rarr; consistency check required
+* Potential downgrade attacks to be considered during validation
+
+#### Key-signature encapulation
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-01-18 17.37.15_AINyw1.jpg" alt="Screenshot_2024-01-18 17.37.15_AINyw1" style="zoom:50%;" />
+
+* Standard X.509 certificate
+* Two additional, non-critical extensions
+  + ==hybridKey extension== contains secondary public key
+  + ==hybridSig extension== contains secondary signature
+
+**Advantages**
+
+* No redundant information &rarr; minimal (data) overhead
+* Backwards compatibility
+
+**Disadvantages**
+
+* More complex implementation
+* Potential downgrade attacks to be considered during validation
+
+**hybridKey extension**
+
+* extension OID: id-ce 211
+  + OID used in reference implementation
+* Criticality: non-critical
+* hybridKey: SubjectPublicKeyInfo
+  + The algorithm OID of the secondary public key and its parameters
+  + The secondary public key of the certificate holder
+
+**hybridSig extension**
+
+* extension OID: id-ce 212
+  + OID used in reference implementation
+* Criticality: non-critical
+* Signature algorithm: AlgorithmIdentifier
+  + The algorithm OID and its parameters used for the secondary signature
+* Signature value: Bitstring
+  + The actual signature value (over the TBS-part of the certificate)
+
+**Certificate creation**
+
+1. Create standard tbsCertificate with all required extensions
+2. Add hybridKey and hybridSig extensions
+   + hybridSig extension contains placeholder bitstring (zero bytes) of identical length as final signature value
+3. Sign resulting tbsCertificate with secondary signature algorithm and key of certificate issuer to obtain secondary signature
+4. Replace zero bytes with resulting secondary signature value
+5. Sign final tbsCertificate with primary signature algorithm andk key of the certificate issuer
+
+**Hybrid certificate verification**
+
+1. Verify primary signature of certificate with primary public key of issuer
+2. Extract tbsCertificate from the certificate
+3. Read signature algorithm OID from hybridSig extension &rarr; defines byte length of signature
+4. Replace signature bytes in hybridSig extension with zero bytes &rarr; recreates tbsCertificate which was originally signed with secondary key
+5. Use resulting tbsCertificate to verify the secondary signature with the secondary public key of the issuer
+6. The certificate is valid, if primary and secondary signature are both valid, els invalid
+
+
+
+### PGP certificate
+
+**Pretty Good Privacy (PGP)**
+
+* Software suite that facilitates e-mail and file protection: Encryption & Signing
+* Developed by Philip Zimmermann in 1991
+* Follows the OpenPGP standard (RFC 4880)
+
+GNU Privacy Guard (GnuPG, GPG)
+
+* A free open source alternative to PGP
+* Implements to OpenPGP standard (RFC4880)
 
