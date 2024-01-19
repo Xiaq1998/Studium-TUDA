@@ -284,6 +284,10 @@ The server does not know any secret information.
   + authorityCertIssuer
   + authorityCertSerialNumber
 
+**Correlation 相关性 of SKIE - AKIE**
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-01-19 15.07.54_LICLre.jpg" alt="Screenshot_2024-01-19 15.07.54_LICLre" style="zoom:50%;" />
+
 **Key Usage 密钥用法**
 
 * Defines the purpose of the key contained in the certificate
@@ -476,8 +480,126 @@ Then: hybrid certificates should appear as common X.509 certificates
 * Developed by Philip Zimmermann in 1991
 * Follows the OpenPGP standard (RFC 4880)
 
-GNU Privacy Guard (GnuPG, GPG)
+**GNU Privacy Guard (GnuPG, GPG)**
 
 * A free open source alternative to PGP
 * Implements to OpenPGP standard (RFC4880)
+
+**Contents**
+
+* Pubilc Key Packet
+  + Version + Creation Time + Public Key Algorithm + Public Key (RSA case)
+* User ID Packet
+  + A User ID packet consists of UTF-8 text that is intended to represent the name and email address of the key holder.
+* Signature Packet
+
+
+
+### Other certificate types
+
+**WAP certificates (Wireless Application Protocol) 无线应用协议证书**
+
+* Like X.509 certificates but **smaller**
+* For usage in **mobile Internet**
+* Serial Number: ususally not longer than 8 bytes
+* Algorithms: e.g. SHA256withECDSA
+* Extensions: not all are included
+
+**Card verifiable certificate (CVC)**
+
+* Even more compact than WAP certificates
+* For usage on smart cards (authentication)
+* Signature with message recovery (ISO 9796)
+* Contains barely more than Issuer, Subject, Public Key, Validity
+
+**Attribute certificates (AC) 属性证书**
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-01-19 13.39.03_tBRYa5.jpg" alt="Screenshot_2024-01-19 13.39.03_tBRYa5" style="zoom:50%;" />
+
+* Similar to a PKC but contains no public key
+* May contain attributes associated with the AC holder
+* Example attributes: group membership, role, security clearance, ......
+
+**Why attribute certificates?**
+
+The placement of authorization information in PKCs is usually undesirable because:
+
+* Authorization information often does not have the same lifetime as the binding of the identity and the public key
+* PKC issuer is not usually authoritative for the authorization information
+
+
+
+## 5. Trust Models
+
+We trust certificates because we trust the system(s):
+
+* Direct Trust
+* Web of Trust
+* Hierarchical Trust
+
+**Meaning of trust in PKI**
+
+In PKI, trust means::
+
+* That certifiers reliably check authenticity of entities
+* Follow certain standards and policies regarding their processes
+
+We can trust, that an entity is who it pretends to be & that the used keys/crypto are secure,
+
+**But not,** that an entity is indeed trustworthy in its behavior, e.g., that the online shop owner actually sends out the goods you pated for — not in the scope of PKI.
+
+### Direct trust
+
+User receives public key directly from owner or User verifies public key directly with owner
+
+**Most common**
+
+* Fingerprint comparison
+  + Fingerprint = hash of certificate (incl. signature) in DER format
+* Face to face verification
+* Phone verification
+* Web page verification
+* Printed media verification
+
+**Certificate installation**
+
+* Step 1: Get certificate
+* Step 2: View certificate &rarr; Fingerprints
+* Step 3: Compare finger print
+* Step 4: Decide certificate purposes
+
+**Software signing**
+
+* Step 1: Get software
+* Step 2: Download checksum and signatures
+* Step 3: Retrieve correct signature key
+* Step 4: Verify Signature
+* Step 5: Check the ISO
+
+**SSH step**
+
+* SSH: Secure Shell
+  + Cryptographically secure operation of network services over insecure networks, e.g. remote login or command line execution
+  + User authentication based on password or public key
+  + Computer authentication based always on public key
+* Public-key-based user authentication
+  + The user creates a key pair on the client side
+  + The user deposits the public key on the server
+  + The user must reomove compromised keys from the host
+* Public-key-based computer authentication
+  + Protection against DNS- or IP-Spoofing
+  + The public key of the server is transmitted during the first login
+  + The user must verify the fingerprint by asking the server's administrator
+  + Warning in case of public key alteration
+
+**Key validation problem**
+
+* ==n*(n-1) validations = O(n^2^)==
+* Worse complexity than secret key exchange
+
+
+
+### Web of trust
+
+
 
