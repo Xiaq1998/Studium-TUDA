@@ -601,5 +601,206 @@ User receives public key directly from owner or User verifies public key directl
 
 ### Web of trust
 
+* Decentralized trust model
+* To establish the authenticity of the binding public key &hArr; user
+* Udes in PGP, GnuPG, and other OpenPGP-compatible systems
+* Each party = end-user & certification authority at the same time &rarr; All users distribute their own public keys, and certify those of ohter users
 
+#### Key validity
+
+Is the key owner who they claim to be?
+
+**Key validity levels**
+
+Levels: unknown &rarr; marginal &rarr; complete &rarr; ultimate
+
+* Unknown: Nothing is known about this key
+* Marginal: The key probably belongs to the name
+* Complete: The key definitely belongs to the name
+* Ultimate: Own keys
+
+**Assigning Key validity**
+
+* Manually set (key signing)
+
+  + direct trust, trust anchor
+  + Bob's key validity is compelte for Alice becasue she decided it when signing the key after verifying the fingerprint
+
+  <img src="/Users/summer/Pictures/截屏/Screenshot_2024-01-20 17.07.32_YOKwsu.jpg" alt="Screenshot_2024-01-20 17.07.32_YOKwsu" style="zoom:50%;" />
+
+  *Alice sets key validity of Bob by signing his key (after verification)*
+
+* Computed from the trust in the corresponding singers, only considering singers with key validity **"complete"**
+
+  + complete (1): If the key is ==signed by at least one user with owner trust **complete**==
+
+    <img src="/Users/summer/Pictures/截屏/Screenshot_2024-01-20 17.10.13_GuKbtj.jpg" alt="Screenshot_2024-01-20 17.10.13_GuKbtj" style="zoom:50%;" />
+
+    *Alice computes key validity using Bob's signatures*
+
+    *Alice computes key validity using Bob's and Charlie's signatures*
+
+  + complete (2): If the key is signed by ==at least *x* names with owner trust **marginal**==
+
+    <img src="/Users/summer/Pictures/截屏/Screenshot_2024-01-20 17.28.56_Vhjr4l.jpg" alt="Screenshot_2024-01-20 17.28.56_Vhjr4l" style="zoom:50%;" />
+
+  + marginal: If the key is signed by ==less than *x* names with owner trust **marginal**==
+
+    <img src="/Users/summer/Pictures/截屏/Screenshot_2024-01-20 17.29.28_I0pA2W.jpg" alt="Screenshot_2024-01-20 17.29.28_I0pA2W" style="zoom:50%;" />
+
+  + unknown: If the key is signed by on name with at least owner trust marginal
+
+    <img src="/Users/summer/Pictures/截屏/Screenshot_2024-01-20 17.34.19_OqUley.jpg" alt="Screenshot_2024-01-20 17.34.19_OqUley" style="zoom:50%;" />
+
+
+
+#### Owner trust
+
+Is the key owner reliable? (in respect to signing keys of others)
+
+**Owner trust levels**
+
+Levels: unknown &rarr; none &rarr; marginal &rarr; complete &rarr; ultimate
+
+* Unknown: Nothing can be said about the owner's judgment in key signing
+* None: The owner is known to improperly 不恰当的 sign keys
+* Marginal: The owner is known to properly 恰当的 sign keys
+* Complete: The owner is known to put great care in key signing
+* Ultimate: The owner is known to put great care in key signing, and is allowed to make trust decisions for you
+
+**Assigning owner trust**
+
+* manually set (trust setting)
+  + direct trust, trust anchor
+
+
+
+#### Trust signatures & trusted introducers
+
+* Trust signature = special type of signature
+  + The signer asserts that the key is not only valid but also trustworthly at the specified level
+* Allows trust delegation along a chain of signatures
+* Not widely used, often not implemented by PGP clients
+
+**Example**
+
+* Thunderbrid
+* Sign and encrypt message
+* Decrypt and verify message
+
+**PGP Disadvantages**
+
+* PGP lacks forward secrecy  缺乏前向保密性
+* No supervision regarding upgrading algorithms and parameters (e.g., use of old ciphers)
+* Bad scalability
+
+
+
+### Hierarchical trust
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-01-20 17.50.40_4TmuaU.jpg" alt="Screenshot_2024-01-20 17.50.40_4TmuaU" style="zoom:50%;" />
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-01-20 17.51.25_c4qJHI.jpg" alt="Screenshot_2024-01-20 17.51.25_c4qJHI" style="zoom:50%;" />
+
+####Trust models in multiple hierarchies
+
+* Trusted Lists
+
+  + Every participant has a list of trusted CAs
+  + ==Alice trusts TC~2~ and TC~3~==
+  + Every user maintains their own list (like in the Web of Trust)
+  + Used in web browsers (preinstalled + user defined)
+  + Alice to Freya (Certification path)
+
+  <img src="/Users/summer/Pictures/截屏/Screenshot_2024-01-20 17.55.41_xkg4Nb.jpg" alt="Screenshot_2024-01-20 17.55.41_xkg4Nb" style="zoom:50%;" />
+
+* Common Root
+
+  + Every user who trusts TC~1~, accepts every other end-user certificate
+
+  + Alice to Freya (Certification path):
+
+    <img src="/Users/summer/Pictures/截屏/Screenshot_2024-01-20 17.57.53_KhifIF.jpg" alt="Screenshot_2024-01-20 17.57.53_KhifIF" style="zoom:50%;" />
+
+* Cross Certification
+
+  + TC~2~ issues a CA-certificate for TC~3~ & TC~3~ issues a CA-certificate for TC~2~ **(not always bilateral)**
+  + Every user who trusts TC~3~, accepts every certificate, that was issued by TC~2~ (or a subordinate CA)
+  + Every user who trusts TC~2~, accepts every certificate, that was issued by TC~3~ (or a subordinate CA)
+  + Alice to Freya (Certification path):
+
+  <img src="/Users/summer/Pictures/截屏/Screenshot_2024-01-20 18.01.00_GPLmhq.jpg" alt="Screenshot_2024-01-20 18.01.00_GPLmhq" style="zoom:50%;" />
+
+  + Other possibility (1)
+
+    + TC~2~ issues one CA-certificate to TC~7~ and vice versa
+
+    + Harper accepts the certificate of Ellen and vice versa
+
+    + Ellen does not accept the certificate of Freya
+
+      <img src="/Users/summer/Pictures/截屏/Screenshot_2024-01-20 18.05.05_3Wo277.jpg" alt="Screenshot_2024-01-20 18.05.05_3Wo277" style="zoom:50%;" />
+
+  + Other possibility (2)
+
+    + TC~4~ issues one CA-certificate to TC~6~ and vice versa
+
+    + Alice accepts the certificate of Freya and vice versa
+
+    + Freya does not accept the certificate of Ellen
+
+      <img src="/Users/summer/Pictures/截屏/Screenshot_2024-01-20 18.09.09_CtT4zZ.jpg" alt="Screenshot_2024-01-20 18.09.09_CtT4zZ" style="zoom:50%;" />
+
+  + Cross-certification problem
+
+    + ==n*(n-1) cross-certificates = O(n^2^)==
+
+* Bridges
+
+  + Bridge TC has cross-certification with TC~2~ and TC~3~
+
+  + Alice accepts all certificates beneath TC~3~
+
+  + Freya accepts all certificates beneath TC~2~
+
+  + Alice to Freya (Certification path):
+
+    <img src="/Users/summer/Pictures/截屏/Screenshot_2024-01-20 18.13.50_Ct4I3S.jpg" alt="Screenshot_2024-01-20 18.13.50_Ct4I3S" style="zoom:50%;" />
+
+  + Bridge enforces minimal policy
+
+  + Bridge trust center
+
+    + The bridge TC acts as a connector
+    + This TC is not subordinate to a third CA
+
+
+
+#### Basic Constraints
+
+**Basic Constraints 基本约束 (X.509 certificate extension)**
+
+* Must be included in CA certificates
+* It is marked critical
+* If pathlength is not present &rarr; no limit
+
+**Identifies**
+
+* whether the subject of the certificate is a CA
+* the maximum number of non-self-issued intermediate certificates that may follow this certificate in a valid certification path
+
+**Example**
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-01-20 18.20.17_CJNgAK.jpg" alt="Screenshot_2024-01-20 18.20.17_CJNgAK" style="zoom:50%;" />
+
+* ca
+  + = true: 表示该证书是CA证书，且允许颁发其他证书
+  + = false: 表示该证书被视为最终实体证书
+* pathLength
+  + = 1: 表示可以颁发最大路径为1（包括其自身）的证书
+  + = 0: 表示该证书只能签署最终实体证书，不能用于创建具有任何中间CA证书的证书途径
+
+
+
+## 6. The Wek PKI
 
