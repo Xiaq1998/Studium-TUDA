@@ -804,3 +804,38 @@ Levels: unknown &rarr; none &rarr; marginal &rarr; complete &rarr; ultimate
 
 ## 6. The Wek PKI
 
+**CAs do not always adhere to the rules, e.g.,**
+
++ prohibited algorithms (key size too small, ...)
++ Unauthorized issuance
++ Audit issues
+
+**Web PKI - CA/Browser Forum**
+
+* Baseline Requirements
+  + a subset of the requirements that a CA must meet in order to issue digital certificates for SSL/TLS servers to be publicly trusted by browsers
+* Extended Validation Certificate Guidelines
+  + Stricter set of guidelines providing stronger guarantees for the identity of the certificate holder
+
+**Problems**
+
+* Huge number
+* Governmental access
+* No globally standardized mechanism to ensure a CA's trustworthiness
+* Any CA ultimately fallible
+
+**Certificate Transparency 证书透明度**
+
+1. Website owner requests a certificate from the **Certificate Authority (CA) **证书颁发机构
+2. CA issues a precertificate
+3. CA sends precertificates to logs
+4. Precertificates are added to the logs
+5. Logs return SCTs to the CA
+6. CAs send the certificate to the domain owner
+7. Browsers and user agents help keep the web secure
+8. Logs are cryptographically monitored
+
+
+
+## 7. Revocation
+
