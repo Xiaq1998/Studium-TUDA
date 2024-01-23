@@ -839,3 +839,224 @@ Levels: unknown &rarr; none &rarr; marginal &rarr; complete &rarr; ultimate
 
 ## 7. Revocation
 
+**Certificate revocation**
+
+Abortive ending of the binding between:
+
+* subject and key (public key certificate)
+* subject and attributes (attribute certificate)
+
+The revocation is initiated by **the subject** or **the issuer**.
+
+**Revocation requirements**
+
+* Revocation infrmation is publicly available
+* Authenticity can be checked by everyone
+* Revoked certificate is unambiguously identified 明确标识已吊销证书
+* Information about the time of the revocation
+* Optional:
+  + revocation reason
+  + Temporary revocation 临时撤销 (on hold / suspended)
+* X.509: CAs are responsible for publishing revocation information
+
+
+
+### CRLs I (Basic CRLS)
+
+#### CRL
+
+**CRL (Certificate Revocation List) 证书吊销列表**
+
+* Signed (&rarr; authenticated) list of revoked certificates
+* "Blocklist", i.e., no positive information about the validity of a certificate
+* Standard mechanism (e.g., X.509) 标准机制
+* Wide-spread mechanism
+
+**Structure of a CRL**
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-01-23 14.25.55_O9jun6.jpg" alt="Screenshot_2024-01-23 14.25.55_O9jun6" style="zoom:50%;" />
+
+* Version: currently version 2
+* Signature ID: signature algorithm
+* Issuer: issuer name
+* This Update: issuance time of the CRL 签发时间
+* Netx Update: date of the netxt update
+* List of revoked certificates: **sequence of CRL entries CRL条目的序列**
+* CRL extensions (version 2): extensions for the whole CRL
+
+**Structure of a CRL entry**
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-01-23 14.29.41_edSRje.jpg" alt="Screenshot_2024-01-23 14.29.41_edSRje" style="zoom:50%;" />
+
+* userCertificate: serial number of the certificate
+* revocationDate: revocation time for this certificate
+* CRLEntry-extensions (version 2): extensions regarding this CRL entry only 仅与此CRL条目相关的扩展
+
+**CRL properties**
+
+* Can be used offline (CRL caching)
+* Easy implementation & management
+* High information content (extendable)
+* The CRL (Full CRL) contains information about all revoked certificates
+
+**Publishing CRLs**
+
+* Most common:
+  + Web pages (HTTP)
+  + LDAP
+* Other possibilities:
+  + File transfer protocol (FTP)
+  + CRL push service (Broadcasts)
+    + CRLs are delivered to registered clients
+    + Searching for a CRL is unnecessary
+    + Can only be used online
+    + Suitable for e.g., Computer in intranet, Servers
+    + Covers only certificates of few PKIs
+
+**Locating a CRL**
+
+* Using the policy:
+  + The policy of the issuer names places where its CRLs are published
+* Using the certificate:
+  + CRLDistributionPoints extension
+    + X.509 certificate extension
+    + Non-critical
+    + Identifies how CRL information is obtained
+    + Usage recommended
+    + Realized by the most typical applications
+
+
+
+#### CRL extensions (X.509)
+
+CRL extensions affect the CRL as a whole or each single CRL entry (all of them)
+
+**AKI / IAN** (As in X.509 certificates)
+
+* Authority Key Identifier
+* Issuer Alternative Name
+
+**CRL Number**
+
+* Monotonically increasing sequence number
+* **Non-critical** extensions, ==must be included in all CRLs==
+* To determine when a particular CRL supersedes another CRL
+* Two CRLs for same scope generated at different times must not have same CRL number
+* Supports the use of Delta CRLs
+
+**Issuing Distribution Point**
+
+* **Critical** extension
+* Identifies the CRL distribution point and scope
+* Indicates whether the CRL covers revocation for
+  + end-entity certificates only
+  + CA certificates only
+  + attribute certificates only
+  + a limited set of reason codes
+
+
+
+#### CRL entry extensions (X.509)
+
+CRL entry extensions affect the current CRL entry and maybe some following ones (but not necessarily all of them)
+
+**Reason Code**
+
+* **Non-critical** extension
+* Identifies the reason for certificate revocation
+
+**Hold Instruction Code**
+
+* Non-critical extension
+* Indicates the action to be taken after encountering a certificate that has been placed on hold
+* Standard actions:
+  + None
+  + Contact issuer or reject certificate
+  + Reject certificate
+
+**Invalidity Date**
+
+* Non-critical extension
+* Provides the (suspected) date on which the certificate became invalid
+* CRL issuers are strongly encouraged to share this date with CRL users
+
+
+
+### CRLS II (CRL Variants)
+
+**Over-Issued CRLs**
+
+* CRLs issued more frequently than "nextUpdate" requires
+* e.g., on a regular basis or with every certificate revocation
+* Frequency of the updates is chosen by the client
+
+**Delta CRL**
+
+* Format like a "normal" CRL + Delta CRL Indicator extension
+* Contains ALL changes since Base CRL was issued
+* Associated to Base CRL by the BaseCRLNumber
+
+  &rarr; Better network load, netter scalability
+
+  &rarr; Slightly increases administration costs
+
+**CRL segmentation**
+
+* Revocation information for disjoint sets of certificates is spilt up into multiple Partitioned CRLs
+* Relevant CRL identified:
+  + Directly: Multiple CRLDistributionPoints, or
+  + Indirectly: CRLDistributionPoint extension points to a special Redirect CRL
+* Redirect CRL
+  + Set of pairs
+  + The scope describes a set of certificates
+  + Advantage: Can be changed later
+
+
+
+####X.509 CRL extensions
+
+**CRL Number (cont.)** 
+
+* CRL numbers are used to identify complementary complete CRLs and Delta CRLs
+* CRL numbering conventions for Delta CRLs
+  + Complete and Delta CRLs for a given scope must share one numbering sequence
+* A complete and a Delta CRL issued at the same time must have same CRL number and provide same revocation information
+
+**Delta CRL Indicator** 
+
+* Critical extension
+* Identifies a CRL as being a Delta CRL
+* Contains a single value called **BaseCRLNumber**
+* The BaseCRLNumber identifies the CRL used as the starting point in the generation of the Delta CRL
+* The reference base CRL must be published as a complete CRL
+
+**Freshest CRL** 
+
+* a.k.a. Delta CRL Distribution Point
+* Non-critical extension
+* Identifies how to obtain Delta CRLs
+* Must not appear in Delta CRLs
+* Thie extension also exists as a standard X.509 certificate extension
+
+**Indirect CRLs**
+
+* Issuer of the CRL is not the issuer of the certificates
+* Revocation can be delegated
+* Revocation instance can operate online even if certificate issuer is offline
+
+**Certificate Issuer** (X.509 CRL entry extension)
+
+* Critical extension
+* Identifies the certificate issuer associated with an entry in an indirect CRL
+* If this extension is not present:
+  + on the first entry in an indirect CRL
+  + on subsequent entries
+
+
+
+### OCSP
+
+### CRS/CRT
+
+### Revocation in PGP
+
