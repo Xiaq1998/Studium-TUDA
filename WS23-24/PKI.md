@@ -1056,7 +1056,211 @@ CRL entry extensions affect the current CRL entry and maybe some following ones 
 
 ### OCSP
 
-### CRS/CRT
+**OCSP (Online Certificate Status Protocol) 在线证书状态协议**
+
+* RFC 6960
+* Client-Server architecture, where clients:
+  + request status of certificates from an OCSP responder (server)
+  + communicate online, in (near) real time
+  + can request status of multiple certificates inside a single query
+
+**OCSP-Responder**
+
+Responder:
+
+* Provides signed answers
+* Has a certificate with the extension **extendedKeyUsage = OCSPSigning**
+
+Possible responses (basic version):
+
+* Unknown, nothing known about the certificate, e.g., issuer unknown
+* Revoked, certificate revoked or may not exist
+* Good, no such certificates is within its validity period and is revoked
+
+**Structure of an OCSP request**
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-01-24 13.06.37_lTGnBo.jpg" alt="Screenshot_2024-01-24 13.06.37_lTGnBo" style="zoom:50%;" />
+
+**Structure of an OCSP response**
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-01-24 13.07.48_3iKVQm.jpg" alt="Screenshot_2024-01-24 13.07.48_3iKVQm" style="zoom:50%;" />
+
+**Structure of an OCSP response - SingleResponse**
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-01-24 13.08.53_vmiEA3.jpg" alt="Screenshot_2024-01-24 13.08.53_vmiEA3" style="zoom:50%;" />
+
+**Signed response acceptance requirements**
+
+* The certificate identified in a received response corresponds to the certificate identified in the corresponding request
+* The signature on the response is valid
+* The identity of the signer matches the intended recipient of the request
+* Thetime at which the status being indicated is known to be correct (thisUpdate is sufficiently recent)
+* When available, the time at or before which newer information will be available about the status of the certificate (nextUpdate) is greater than the current time
+
+**OCSP server revocation**
+
+Problem: Is the certificate of the OCSP server valid?
+
+Approaches:
+
+* No revocation for the certificates of OCSP resonders
+  + Speical extension ocsp nocheck
+  + Short validity period
+* Use CRLs
+* Leave it to the verifier
+
+**OCSP Stapling**
+
+Transport Layer Security (TLS) Extensions: Extensions Definitions - RFC 6066:
+
+* During the TLS handshake, servers may return a suitable certificate status response along with their certificate
+* Servers can cahce OCSP responses and reuse them (until nextUpdate time)
+
+Transport Layer Security (TLS): Multiple Certificate Status Request Extension - RFC6961:
+
+* Mainly solves two problems of RFC 6066:
+  + RFC 6961 allows to staple multiple OCSP responses
+  + RFC 6961 allows the client to offer the server multiple status methods
+
+**OCSP Must-Staple (X.509 certificate extension)**
+
+* X.509V3 Tranpsort Layer Security (TLS) Feature Extension - RFC7633
+* Should not be marked critical
+* Indicates, that server must staple OCSP status information
+  + hard fail possible on absence of stapled OCSP info
+
+
+
+### Hash-Based Revocation CRS/CRT
+
+**Hash-based revocation**
+
+* No explicit revocation necessary
+* But explicit validation
+* By publishing "not revoked" information
+
+#### CRS (Certificate revocation system) 证书吊销系统
+
+* Proposed by Micali in 1996
+* Instead of producing CRLs, the CA updates the directory daily by indicating the status of each issued certificate
+* In order to do this, it uses an authentication system based on a one-way function
+
+**One-way functions**
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-01-24 15.30.01_p0dbMI.jpg" alt="Screenshot_2024-01-24 15.30.01_p0dbMI" style="zoom:50%;" />
+
+* Here:
+  + a function **f** which is one-way, and can be used repeatedly (i.e. f(x),f(f(x)), ..., f(f(f(...f(x)))))
+  + typical representatives: cryptographic hash functions
+
+**A 3 day authentication system**
+
+* Choose a random number **r~0~** and a one-way function **f**
+* Calculate:
+  + **r~1~** = f(r~0~)
+  + **r~2~** = f(f(r~0~)) = f(r~2~)
+  + **r~3~** = f(f(f(r~0~))))) = f(r~2~)
+* Sign **r~3~** and publish **r~3~** and the signature
+* On day one, to prove it is you, publish **r~2~**
+* Verifiers then can calculate **f(r~2~)**, find that it is **r~3~** and know that it must be you
+* On day two, give them **r~1~** and on day three, give them **r~0~**
+
+ **Micali's CRS**
+
+* Functionality
+  + For each certificate, choose two random numbers, **N~0~ and Y~0~**
+  + Compute **Y~365~** = f^365^(Y~0~) and **N** = f(N~0~) and put them into the certificate
+  + On day i:
+    + if the certificate is still valid, publish the value **C** = Y~365-i~ = f^365-i^(Y~0~)
+    + if it is invalid, publish **C = N~0~**
+* Properties
+  + C servers as proof of authenticity or revocation
+  + Update bandwidth is high, depending on the total number of certificates
+  + Verification of known certificates is low-bandwidth
+  + If a user has never verified a particular certificate before, on day 364 he must calculate **f^364^(C)** to verify it
+  + If we increase the rate of updates, we increase the computation time needed
+
+
+
+#### CRT (Tree-based system)
+
+* Choose a cryptographically strong (one-way) hash function h
+* Randomly generate 2^Y^ numbers as leaves of a binary tree
+* Build a hash-tree
+* Put the value of the root node into the certificate (replacing Y~365~ from Micali's system)
+* On a day i, release the values of the path from leaf node i and all nodes on the path needed to compute the root
+
+**Effect**
+
+* O(log(#leaves)) hash values have to be released each day, so updates are a little worse than original Micali, but not much
+* Computation time is now als O(log(#leaves)), which is much better
+
+ 
 
 ### Revocation in PGP
+
+**Revocation Certificate**
+
+* Keep this certificate secret
+* Others could revoke the key if they have it
+
+**Revocation in PGP**
+
+* By publishing the revocation certificate (on PGP key servers)
+* The key owner (the subject) is responsible for revocation
+* The private key is required to generate the revocation certificate
+  + If the private key is lost, and no revocation certificate has been generated before: revocation is impossible
+
+**PGP key servers —— key removal?**
+
+* Can one remove a key from key servers in order to "revoke" it?
+* No
+  + Most PGP servers are not designed to support this
+  + There is no mechanism to remove keys once published
+  + PGP servers are regularly synced
+  + Everybody could upload the removed key again
+
+
+
+## 8. The Web PKI ——Revocation
+
+**Problems**
+
+* Detection
+  + Wrong / malicious certificate must be detected
+  + How to do this in a system, where hundreds of CAs can potentially issue certificates?
+* Distribution / availability
+  + Delays in general not accepted (by users)
+  + Hard vs. soft fails
+* Too-big-to-fail
+  + Revocation may endanger functioning of whole infrastrucutres (large CAs)
+
+**Approachs**
+
+* Detection
+  + Public key pinning
+    + a pin is a relationship between a hostname and a cryptographic identity
+    + key pinning is a trust-on-first-use (TOFU) mechanism
+  + Public logs
+    + e.g. Certificate Transparency
+  + DNSSEC + DANE (DNS-Based Authentication of Named Entities)
+    + DNSSEC: signed DNS responses
+    + NANE: DNS records also contain public keys of servers
+  + Notaries
+    + Ask third party
+* Distribution / availability
+  + OCSP must-staple
+  + Proprietary push and aggregation mechanisms
+    + OneCRL —— intermediate CA certificate
+    + CRLite ——end entity certificates
+    + CRLSets (Chrome)
+    + Other browsers come with own mechanisms
+  + No revocation checking for certificates with a validity period < 10 days
+* Too-big-to-fail
+  + Implementation of chain model for certificate validation
+  + Fine grained revocation &path validation with forward secure signatures
+
+
+
+## 9. Validity Models
 
