@@ -1,8 +1,40 @@
-# Introduction
+#Communication Networks II
+## 1. Introduction
+
+##9. RTP & RTSP
+
+### Real-Time
+
+**Real-Time Process**
+
+A process which delivers the results of the processing in a given time-span
+
+**Deadlines in Real-Time (networked) Systems**
+
+* Hard deadlines
+  + should never be violated
+  + result presented too late after deadline has no value for the user
+* Soft deadlines
+  + deadlines are not missed by much
+  + In some cases, the deadlines may be missed, but not too many deadlines are missed
 
 
 
-#Pingo
+### Real-Time Transport Protocol (RTP)
+
+#### RTP + RTCP Basics
+
+
+
+#### Packet Format
+
+
+
+### Real-Time Streaming Protocol (RTSP)
+
+
+
+##Pingo
 
 **Q2**: Which of the following statements is true? (at least one answer is correct)
 
@@ -119,6 +151,22 @@ c) to use stream to combine data of different media to be transmitted
 d) to interconnect more than two end systems
 
 Answer: a, c
+
+
+
+**Q1:** What is/are the reason(s) for the usage of RTP (over UDP) for streaming applications instead of using traditional TCP?
+
+a) RTP is more reliable than TCP
+
+b) TCPs slow-start phase is detrimental to (i.e., is harmful for) real-time streaming applications
+
+c) RTP provides better error detection than TCP
+
+d) TCP does not support multicast
+
+e) RTP can handle jitter better than traditional TCP
+
+Answer: b, d, e
 
 
 

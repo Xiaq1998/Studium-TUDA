@@ -1076,6 +1076,7 @@ Possible responses (basic version):
 * Unknown, nothing known about the certificate, e.g., issuer unknown
 * Revoked, certificate revoked or may not exist
 * Good, no such certificates is within its validity period and is revoked
+  + Good means that the certificate is not revoked, but it may be expired or even not exist at all
 
 **Structure of an OCSP request**
 
