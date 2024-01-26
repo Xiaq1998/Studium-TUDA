@@ -1258,10 +1258,162 @@ Transport Layer Security (TLS): Multiple Certificate Status Request Extension - 
     + Other browsers come with own mechanisms
   + No revocation checking for certificates with a validity period < 10 days
 * Too-big-to-fail
-  + Implementation of chain model for certificate validation
-  + Fine grained revocation &path validation with forward secure signatures
+  + Implementation of **chain model** for certificate validation
+    + Chain model problems: Signature key compromise &rarr; Signature and time information in certificates are unreliable
+  + Fine grained revocation & path validation with forward secure signatures
 
 
 
 ## 9. Validity Models
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-01-25 13.16.00_8PGtsl.jpg" alt="Screenshot_2024-01-25 13.16.00_8PGtsl" style="zoom:50%;" />
+
+### Shell Model
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-01-25 12.24.47_6IIMRQ.jpg" alt="Screenshot_2024-01-25 12.24.47_6IIMRQ" style="zoom:50%;" />
+
+* Signature time: 所有证书中有一个有效时就能创建签名 （证书不都有效时可以签名，但是直到所有证书都有效才能验证）
+* Vertification time: 所有证书在验证时都有效，则签名自动有效
+* 用于RFC5280的路径验证，如：上网时浏览器检查Web服务器的证书或证书链
+
+
+
+### Modified or hybrid model
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-01-25 12.25.20_6uCL5x.jpg" alt="Screenshot_2024-01-25 12.25.20_6uCL5x" style="zoom:50%;" />
+
+* Signature time: 只有所有证书均有效时才能创建签名
+* Verification time: 只检查在签名时，所有证书是否有效 （即，所有证书在签名时都是有效的）
+
+### Chain Model
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-01-25 12.25.45_q4pZyE.jpg" alt="Screenshot_2024-01-25 12.25.45_q4pZyE" style="zoom:50%;" />
+
+* Signature time: 只要最底层的证书有效，且链上的证书2签署能够追溯到证书1有效时创建签名
+* Veritification time: 只要算法不过期，检查每一个上级证书是否在对当前证书签名时有效
+
+
+
+## 10. Certification Service Provider (Trust Center)
+
+### CSP
+
+**Certification service provider (CSP) 认证服务商**
+
+* Serves as trust anchor in hierarchical PKIs
+* Responsible for correct operation of the PKI
+* Trusted third party
+* "Home" of the issuer
+* Provides entities with PKI services
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-01-25 13.25.46_XC0oXz.jpg" alt="Screenshot_2024-01-25 13.25.46_XC0oXz" style="zoom:50%;" />
+
+**CSP components (authorities)**
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-01-25 13.28.30_QeCqbG.jpg" alt="Screenshot_2024-01-25 13.28.30_QeCqbG" style="zoom:50%;" />
+
+#### Registration authority (CA) 登记机关
+
+* Contact point for (prospective) PKI entities
+* Register prospective entities
+* Establish "customer relationship"
+* Accept requests from entities
+* Usually online
+
+**Key/certificate life cycle and RA**
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-01-25 13.32.28_Pbx1iv.jpg" alt="Screenshot_2024-01-25 13.32.28_Pbx1iv" style="zoom:50%;" />
+
+**Procedure in CSP**
+
+1. determines identity and public key
+2. generates digital name
+3. issues certificate
+
+#### Registration
+
+**Establish**
+
+* identitiy
+  + whatever makes an entity definable and recognizable
+  + whatever maks something the same or different
+  + Example: 
+    + Name &rarr; biometrical data
+    + Residence &rarr; employer
+    + Citizenship &rarr; name of the parents
+
+* contact information
+  + Information about the accessibility of a participant, e.g.:
+    + pstal address
+    + Telephone number
+    + email address
+* client preferences
+  + Choice of the cryptosystem and parameters
+  + Delivery (smart card, PIN-letter, etc.)
+  + Certificate's validity period
+  + Pseudonym 签名
+* billing data
+* public keys and proof-of-possession (optional)
+
+
+
+### Client keys
+
+* The clients may generate their own keys
+* How to transfer the public key to the Certification Service Provider?
+  + PKCS#10
+    + Public-key + additional attributes
+    + Signature with the corresponding private key
+  + Directly in the browser
+    + special HTML-Form field
+    + modified PKCS#10-format
+    + Signature with a private key that is generated in the browser
+
+#### PKCS#10
+
+* Defines syntax for certification requests (a.k.a CSR, certificate signing request 证书签名请求)
+* Response format (how to send back the certificate): out of scope of PKCS#10
+
+**Certification request construction**
+
+1. Requesting entity generates **CertificationRequestInfo**
+
+   <img src="/Users/summer/Pictures/截屏/Screenshot_2024-01-25 14.02.18_sXVjKC.jpg" alt="Screenshot_2024-01-25 14.02.18_sXVjKC" style="zoom:50%;" />
+
+2. **CertificationRequestInfo** value signed with the subject entity's private key
+
+   <img src="/Users/summer/Pictures/截屏/Screenshot_2024-01-25 14.02.52_wpGq2E.jpg" alt="Screenshot_2024-01-25 14.02.52_wpGq2E" style="zoom:50%;" />
+
+3. **CertificationRequestInfo** + a signature algorithm identifier + signature value = **CertificationRequest**
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-01-25 14.03.27_HijQ7M.jpg" alt="Screenshot_2024-01-25 14.03.27_HijQ7M" style="zoom:50%;" />
+
+**Building a hybrid CSR**
+
+* The **extensionRequest** attribute type may be used to carry information about certificate extensions the requester wishes to be included in a certificate
+* Same procedure as for hybrid certificates (hybridKey- and hybridSig extension)
+  + hybridSig extension contains secondary signature over CertificationRequestInfo (PoP)
+
+### Proof-of-Prossession (PoP) 所有权证名
+
+**PoP: CRMF** (certificate request message format) 证书请求报文格式
+
+* Defines a ProofOfPossession field to include PoP information into certificate request messages
+* Contents of PoP field depend on key type
+  + **Signature keys:** signature on a piece of data containing the requestor's identity
+  + **Encryption keys:** providing private key to CA/RA, direct method, indirect method
+    + Direct: Encrypt a value and have the entity decrypt it
+    + Indirect: Encrypt the certificate and have the entity decrypt it
+  + **Key agreement keys:** establishing ephemeral key + employing one of the methods defined for encryption keys or providing a MAC over certificate request computed with the ephemeral key
+    + Establishment of a shared secret key between CSP and entity
+
+**PoP: PKCS#10**
+
+In PKCS#10 this is performed by signing the request
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-01-25 14.13.20_j1yNtc.jpg" alt="Screenshot_2024-01-25 14.13.20_j1yNtc" style="zoom:50%;" />
+
+
+
+
 

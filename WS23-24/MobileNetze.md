@@ -147,5 +147,181 @@ A superframe contains:
 
 
 
+## Chapter 05, Module 01
+
+### Bluetooth Introduction
+
+**What is Bluetooth**
+
+Bluetooth is a low-power, short-range wireless technology for WPAN (wireless personal area network)
+
+**Application Scenarios**
+
+* WPAN has a range less than 100m, typically ~10m
+* Two types of communications, two protocols
+  + Bluetooth Classic: Basic Rate / Enhanced Data Rate (BR / EDR) for continuous communication
+  + Bluetooth Low Energy: Low Energy (LE) for bursty communication
+* Three general application areas:
+  + Real-Time voice and data transmissions
+  + Cable replacement
+  + Ad hoc and mesh networking
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-01-25 17.22.29_iWpAgm.jpg" alt="Screenshot_2024-01-25 17.22.29_iWpAgm" style="zoom:50%;" />
+
+
+
+### Bluetooth Classic
+
+**Physical layer specifications**
+
+* RF band: 2.4 GHz ISM band, 2.402 - 2.480 GHz (Total bandwidth: 79 MHz)
+* 79 RF channels, each taking 1 MHz
+* Frequency hopping spread spectrum (FHSS) hops up to 1.6 kHz, each slot (=625us) may use a different RF channel
+* Devices divided into 3 classes according to TX output power
+  + Class 1: Max 20 dBm (100 mW) - typical 100m LOS range
+  + Class 2: Max 4 dBm (2.5 mW) - typical 10m LOS range
+  + Class 3: Max 0 dBm (1 mW) - typical 1m LOS range
+* Modulation
+  + Both BR and EDR has symbol rate of 1 Msym/s
+  + Basic Rate: GFSK (data rate = 1 Mbps)
+  + Enhanced Data Rate: /4-DQPSK (data rate = 2 Mbps), 8DPSK (data rate = 3 Mbps)
+
+
+
+####Piconet 微微网
+
+**Piconet:** The basic unit of networking in Bluetooth classic is a piconet.
+
+* A piconet has one master and up to seven slaves
+  + slaves can only transmit when requested by master
+* Up to 255 parked slaves
+  + Each station gets an 8-bit parked address
+* Bi-directional communication between master and slave
+* Master determines the frequency hopping sequence (FHS) and clock that are used by all devices in a piconet
+* Both FHS and master's clock are used for communication scheduling
+* Slaves are polled by the master for transmission
+* Communication uses a TDMA scheme
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-01-25 17.46.25_D5zRvu.jpg" alt="Screenshot_2024-01-25 17.46.25_D5zRvu" style="zoom:50%;" />
+
+* A slave has a 3-bit logical transport address (LT_ADDR)
+* A stand-by device does not need an LT_ADDR, as it does not communicate with anyone
+* A piconet is active on **1 RF channel at a time**
+* Multiple co-existing piconets share the 79 RF channels, which increases the total throughput
+* Collison can occur if two or more piconets use the same RF channel at the same time. Retransmission and FEC (forward error correction) can fix the rare collisions
+* A scatternet consists of two or more interconnected piconets
+* Communication among more than & devices is possible
+* A bridge node joins more than one piconets
+* A bridge node can be active in one piconet at a time
+* Timeshare and must synchronize to the master of the current piconet
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-01-25 20.20.28_cH12pl.jpg" alt="Screenshot_2024-01-25 20.20.28_cH12pl" style="zoom:50%;" />
+
+
+
+#### Frequency Hopping (FH) 跳频
+
+* Each piconet has a unique pseudo-random hopping sequence through all 79 RF channels
+* The channel index is computed by a deterministic algorithm with the inputs of master's clock and master's address
+* Piconet communication is a FH-TDMA scheme
+  + Different piconets use different hopping sequence for communication (FHMA)
+  + In a single piconet, the master and slaves transmit in different time slots (TDMA)
+* TDMA polling scheme: master starts transmission only in **even slots 偶数时隙**, Slaves starts transmission only in **odd slots 奇数时隙**
+* Packets can be 1, 3 or 5 slots long
+* The frequency hopping stops during a packet transmission; esay implementation for the transitivers
+* Advantages of frequency hopping:
+  + Resistant to narrow-band interference
+  + Co-existence with other wireless communication in the same band
+
+
+
+#### Adaptive Frequency Hopping (AFH) 自适应跳频
+
+* 2.4 GHz ISM band is license-free, therefore very noisy 
+  + WiFi, Zigbee, cordless phones and even microwave oven works in this band
+* Adaptive Frequency Hopping (AFH) appeared in Bluetooth v1.2 to avoid static interference in WLAN and similar environment
+* Further improve communication reliability
+* Each channel is labelled as "good" or "bad"
+* A master determines the AFH channel map, which contains the binary channel classification
+* The number of good channels is at least 20 and at most 79
+* A pair of transmissions slots use the same channel
+* Frequency hops with half the rate of non-adaptive frequency hopping
+* Master determines "AFH channel map" based on (1) local measurement, (2) channel classification specified by the host or (3) reported by slaves
+
+
+
+#### Logical links
+
+ Three types of logical links can be established between a master and a slave for transmitting user data
+
+* SCO (Synchronous Connection-Oriented) 同步面向连接: reservation-based access
+* eSCO (Extended Synchronous Connection-Oriented) 扩展同步面向连接: reservation-based access
+* ACL (Asynchronous Connection-Less) 异步无连接: polling-based access
+
+**SCO**
+
+* Periodic single slot packet assignment.
+* Slot reservation (two consecutive slots M &rarr; S, S &rarr; M) at fixed interval, point-to-point link between a master and a slave.
+* No retransmission
+* **eSCO:**
+  + Extends SCO, allow asymmetric transport and retransmissions
+* SCO and eSCO are used for data that requires guaranteed delay, but can tolerate packet loss. Typically the dat is also periodic
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-01-25 22.18.43_60vRbt.jpg" alt="Screenshot_2024-01-25 22.18.43_60vRbt" style="zoom:50%;" />
+
+**ACL**
+
+* Asymmetric bandwidth for variable packet size (1, 3, 5 slots) connectionless packet transmission
+* Point-to-multipoint link between a master and all slaves in a piconet
+* Unicast ACL packets (M &rarr; S, S &rarr; M) should be ACKed
+* Broadcast packets (M &rarr; S) should not be ACKed
+* No slot reservation is possible
+  + Can not transmit in slots taken by SCO and eSCO
+* Retransmission allowed
+* ACL is used for data that requires guaranteed reliability, but can tolerate delay; typically the data is also intermittent
+* E.g. file transfer, control packets and broadcast packets
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-01-25 22.23.51_XZ67uT.jpg" alt="Screenshot_2024-01-25 22.23.51_XZ67uT" style="zoom:50%;" />
+
+
+
+####Bluetooth Classic Link Layer State Machine
+
+**Operational States:**
+
+* **Standby:** default mode, a device has not joined a piconet
+* **Inquiry:** master scans for slave devices, slave responds with its address and clock after a random delay
+* **Page:** master invites slaves to join the piconet, slave responds with its device access code
+* **Connected:** successful connection between master and slave, slave is assigned the 3-bit address (LT_ADDR)
+* **Transmit:** data transmission between master and slave
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-01-25 22.53.26_thTdc7.jpg" alt="Screenshot_2024-01-25 22.53.26_thTdc7" style="zoom:50%;" />
+
+**Bluetooth Low Power Modes**
+
+* HOLD: low-power mode
+  + Slave has no ACL transport, continue with reserved SCO and eSCO transports
+  + Slave can do other things like: scanning, paging, inquiring, or attending to the other piconets, or simply sleeping
+  + The slave unit keeps its active member address (i.e., LT_ADDR)
+  + Before entering Hold mode,the master and slave agree on the time duration for the hold period
+
+* SNIFF: low-power mode
+  + Sniff mode frees a slave for predetermined, recurring, fixed time periods
+  + Slave listens during D-sniff before fixed sniff intervals (T-sniff)
+  + Node can do other things like: scanning, paging, inquiring, or attending to the other piconets, or simply sleeping
+  + The slave unit keeps its active member address (i.e., LT_ADDR)
+
+* PARK: very low-power mode
+  + Slave give up its 3-bit active member address (i.e., LT_ADDR) and gets an 8-bit parked member address (PMA)
+  + Wake up periodically (with some reconnection overhead) and listen to beacons
+  + Master broadcasts a train of beacons peroidically
+  + The beacon period is communicated to the slave when it is being parked; it can be changed at a beacon interval
+
+
+
+### Bluetooth Low-energy
+
+### Bluetooth Mesh
+
 
 
