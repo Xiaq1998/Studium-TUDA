@@ -1415,5 +1415,500 @@ In PKCS#10 this is performed by signing the request
 
 
 
+### Secure "Out-of-Band" channel 
+
+Independent of the PKI:
+
+* Face-to-face communication (i.e. local presence)
+* Previoulsy established shared secrets (e.g. passwords)
+* Third-party services (e.g. Postident)
+
+**Registration with Postident**
+
+1. The CPS issues a coupon
+2. The customer delivers the coupon to the post office
+3. The post office employee checks a valid offical document (ID-card, passport, etc.) and fills out an application with the customer's data
+4. The application is signed by the customer and the post office employee
+5. The post office employee sends the application and coupon to the CSP
+
+**Data sources**
+
+* Independent ascertainment by the RA
+  + personal contact
+  + online registration
+* Usage of data from third parties
+  + E.g. staff database, registry office
+  + security depends on the data source
+  + input assistance or trusted source
+
+**RA models**
+
+* Centralized
+  + One RA for all participants
+* Decentralized (Local Registration Authority, LRA)
+  + Different RAs for different participant groups
+  + Reasons for decentralization:
+    + Topology
+    + Separation of the responsibilitite
+    + On-site registration
+    + Fail-safeness
+* Hybrid models
+  + E.g. distributed collection of data, but centralized data management
+
+
+
+### Classification for TLS certificates
+
+* Also not part of X.509 standard but commonly agreed
+
+* Describles the strength of performed identity validation
+
+* Indicated via OID in the X.509 Certificate Policies extension
+
+* 3 types:
+
+  + domain validation (DV): 
+
+    + existence & control over domain verified
+
+    + OID value: 2.23.140.1.2.1
+
+  + organization validation (OV):
+
+    + some additional checks regarding the requesting organization
+    + OID value: 2.23.140.1.2.2
+
+  + extended validation (EV):
+
+    + thorough validation of the requesting organization
+    + OID value: 2.23.140.1.1
+
+#### Extended validation certificates
+
+In order to issue an extended validation (EV) certificate, thorough validation is performed.
+
+* Scope: EV Certificates are intended for use in establishing web-based data communication conduits via TLS/SSL protocols
+* Primary purposes
+  + Identify the legal entity that controls a website
+  + Provide reasonable assurance that the website is controlled by a specific legal entity identified by: name, address of place of business, jurisdiction of incorporation, and registration number
+  + Enable the encrypted communication of information
+* Secondary purposes
+  + Establish the legitimacy of a business by confirminf its legal and physical existence
+  + Assist in addressing problems related to phishing and other forms of online identity fraud
+
+
+
+### Directory services (DS) 目录服务
+
+* Publish PKI information
+* Deliver PSEs
+* Manage certificate lifecycle
+* Usually online
+* Example:
+  + Certificate notification
+  + Certificate retrieval
+  + (Automatic) certificate installation
+
+
+
+## 11. Policies 政策
+
+**PKI policies & practice statements**
+
+* Certificate policy (CP)
+  + States what to comply with
+* Certificate practice statement (CPS)
+  + States how to comply
+
+**RFC 3647**
+
+* Framework for CPs and CPSs
+* List of topics that potentially need to be convered in a CP or CPS
+
+**Certificate policy (CP) 证书政策**
+
+* Definition:
+  + A named set of rules that indicates the applicability of a certificate to a particular community and/or class of application with common security requirements
+* Example:
+  + A CP might indicate applicability of a certain type of certificate for authentication in business-to-business transactions
+
+**Certification practice statement (CPS) 认证实践证明**
+
+* Definition:
+  + A statement of the practices that a certification authority employs in issuing, managing, revoking, and renewing or re-keying certificates
+
+**Differences between CP & CPS**
+
+* CP and CPS address the same set of topics
+* Primary difference: the focus of their provisions
+  + CP - states requirements and standards imposed by PKI
+    + &rarr; what participants must do
+  + CPS - states how to meet the requirements stated in the CP
+    + &rarr; how to perform functions and implement controls
+* Additional difference: their scope of coverage
+  + CP: best serves as the vehicle for communicating minimum operating guidelines that must be met by interoperating PKIs
+    + &rarr; generally applies to multiple CAs / organizations /domains
+  + CPS: applies only to a single CA / organization, not generally a vehicle to facilitate interoperation
+
+**X.509 certificate extensions supporting the use of Cps**
+
+* Certificate Policies extension 证书政策扩展
+  + Policy information term:
+    + a policy identifier (as OID) + optional policy qualifiers
+    + In end-entity certificates:
+      + Indicates the policy under which the certificate has been issued and the purposes for which the certificate may be used
+    + In CA certificates:
+      + Limits the set of policies for certification paths which include this certificate
+      + Circumvention of limitation: by use of special policy "anyPolicy"
+* Policy Mappings extension (see next chapter "Path validation")
+* Policy Constraints extension (see next chapter "Path validation")
+
+
+
+## 12. Certification Path Building
+
+**Public information**
+
+* Where it this information published?
+* How can I find a certificate?
+* How can I find a CRL?
+* What are the CRL distribution points in a certificate?
+
+**Possible solutions**
+
+* DNS
+* OCSP Responders
+* Web Servers and HTTP
+* FTP
+* Certificate store access via HTTP
+* LDAP
+
+### LDAP 轻量级目录访问协议
+
+LDAP: Lightweigt Directory Access Protocol
+
+* Offers various and flexible solutions
+* Most used soltion:
+  + RFCs 4510 - 4513
+* Information is organized hierarchically in a tree structure
+* Directory accessed through a client
+
+**Data Model**
+
+* Data is stored as entries
+* Every entry has a unique identifier: a Distinguished Name (DN) 专有名称
+  + Entry's DN = its Relative Distinguished Name (RDN) + parent entry's DN
+  + Usually the subjectDN of an X.509 certificate matches the DN of the LDAP
+* Every entry has one or more attributes
+* Every attributes has a name (type) and one or more values
+
+**Distinguished Names**
+
+* CN: Common Name
+* L: Locality
+* ST: State or Province
+* O: Organization
+* OU: Organizational Unit
+* C: Country
+* STREET: Street Address
+* DC: Domain Component
+* UID: User Id
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-01-27 00.22.50_tOXKq6.jpg" alt="Screenshot_2024-01-27 00.22.50_tOXKq6" style="zoom:50%;" />
+
+### RFC 4158 Certification Path Building
+
+**Certification Path Building**
+
+* Criterion 1: The implementation is able to find all possible paths, excepting paths containing repeated subject name/public key pairs
+* Criterion 2: The implementation is as efficient as possible.
+
+**Forward search**
+
+Start with the end entity certificate
+
+Only use certificates found in:
+
+* cACertificate attributes
+* Forward (issuedToThisCA) element of the crossCertificatePair attributes
+* Example: (Cert = W, TA = K, **CP = K &rarr; Bridge &rarr; Q &rarr; S &rarr; U &rarr; W**)
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-01-27 00.28.22_BRicTX.jpg" alt="Screenshot_2024-01-27 00.28.22_BRicTX" style="zoom:50%;" />
+
+
+
+## 13. Path Validation
+
+### Certification path validation
+
+**Path validation** verify the binding: subject distinguishe name (SDN) or subject alternative name (SAN) &harr; subject public key
+
+**Steps:**
+
+1. **Initialization:** Performed exactly once
+2. **Basic certificate processing:** Once for each certificate
+3. **Preparation for next certificate:** Once for each certificate (except the last one)
+4. **Wrap-up:** Performed exactly once
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-01-27 17.53.10_YMQtB9.jpg" alt="Screenshot_2024-01-27 17.53.10_YMQtB9" style="zoom:50%;" />
+
+
+
+### Initialization 初始化
+
+#### Input variables
+
+**Input variables - 1: Prospective certification path of length n**
+
+* The certification path to be validated
+* Note: A certificaste must not appear more than once in a prospective certification path
+* Exapmle: (Path length = 3)
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-01-27 17.58.19_IOblxv.jpg" alt="Screenshot_2024-01-27 17.58.19_IOblxv" style="zoom:50%;" />
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-01-27 17.58.43_Qx4IS3.jpg" alt="Screenshot_2024-01-27 17.58.43_Qx4IS3" style="zoom:50%;" />
+
+**Input variables - 2: Current date/time**
+
+* This is the time at which the path validation runs
+  + Shell model
+  + Hybrid model by "cheating"
+
+**Input variables - 3: User-initial-policy-set**
+
+* A set of certificate policy identifiers
+  + The polices acceptable to the certificate user
+  + Contains "anyPolicy" if the user is not concerned about certificate policies
+* Example:
+  + {1.2.3.4, 9.8.7.6}
+  + or more "readable" {gold, silver}
+
+**Input variables - 4: Trust anchor information**
+
+* May be provided in form of a self-signed certificate
+* is trusted because it was delivered by some trustworthy out-of-band procedure
+
+(1) the trusted issuer name
+
+(2) the trusted public key algorithm
+
+(3) the trusted public key
+
+(4) optionally, the trusted public key parameters associated with the public key
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-01-27 18.36.45_kdZlDB.jpg" alt="Screenshot_2024-01-27 18.36.45_kdZlDB" style="zoom:50%;" />
+
+**Input variables - 5: Initial-policy-mapping-point**
+
+* Indicates if policy mapping is allowed in the certification path
+* Either true or false
+* &rarr; X.509 extension Policy Mappings
+
+**Input variables - 6: Initial-explicit-policy**
+
+* Indicates if the path must be valid for at least one of the certificate policies in the user-initial-policy-set
+* Either true or false
+* &rarr; X.509 extension Policy Constraints
+
+**Input variables - 7: Initial-anyPolicy-inhibit**
+
+* Indicates whether the anyPolicy OID should be processed if it is included in a certificate
+* Either true or false
+* &rarr; E.509 extension Inhibit anyPolicy
+
+**Input variables - 8: Initial-permitted-subtrees**
+
+* Indicates which names are allowed for subject names in the path
+* For each name type (e.g., X.509 distinguished names, email addresses, or IP addresses): a set of subtrees defining the acceptable names
+
+**Input variables - 9: Initial-excluded-subtrees**
+
+* Indicates which names are not allowed for subject names in the path
+* For each name type: a set of subtrees defining the prohibited names
+* &rarr; X.509 extension Name Constraints
+
+
+
+#### X.509 extension
+
+**Policy Mappings**
+
+* Only for CA certificates
+* Should be marked critical
+* Contains pairs of (Policy) OIDs the issuing CA considers equivalent
+* Each pair: Indicates equivalence of an issuing CA's policy with a subject CA's policy
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-01-27 18.54.34_KMfAru.jpg" alt="Screenshot_2024-01-27 18.54.34_KMfAru" style="zoom:50%;" />
+
+* Example: Policy evaluation (User requires "Gold")
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-01-27 18.55.53_Ds32cP.jpg" alt="Screenshot_2024-01-27 18.55.53_Ds32cP" style="zoom:50%;" />
+
+**Policy Constraints**
+
+* Only for CA certificates
+* Must be marked critical
+* Contains two integers:
+  + Allowed number of subsequent certificates before an explicit policy is required
+  + Allowed number of subsequent certificates before policy mapping is no longer permitted
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-01-27 18.58.48_HkaO6m.jpg" alt="Screenshot_2024-01-27 18.58.48_HkaO6m" style="zoom:50%;" />
+
+**Inhibit anyPolicy**
+
+* Only for CA certificates
+* Must be marked critical
+* Contains on integer:
+  + Allowed number of subsequent certificates before anyPolicy is no longer permitted
+  + Self-issued certificates not counted, may still use anyPolicy
+* Example: Policy evaluation (User requires "Gold")
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-01-27 19.00.56_Mklaly.jpg" alt="Screenshot_2024-01-27 19.00.56_Mklaly" style="zoom:50%;" />
+
+**Name Constraints**
+
+* Only for CA certificates
+* Must be marked critical
+* Indicates the name space for allowed subject names in subsequent certificates
+* Applys to SubjectDN and SubjectAlternativeName
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-01-27 19.02.32_PMpEA0.jpg" alt="Screenshot_2024-01-27 19.02.32_PMpEA0" style="zoom:50%;" />
+
+
+
+### Process cert
+
+#### Valid_policy_tree
+
+**Algorithm variable**
+
+* A tree of certificate policies + their optional qualifiers
+* Leaves represent valid policies at respective stage in the certification path validation
+* If valid policies exist:
+  + tree depth = the number of processed certificates
+* If valid policies do not exist:
+  + the tree is set to NULL, policy processing ceases
+
+**Nodes**
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-01-27 19.17.49_n0AcZb.jpg" alt="Screenshot_2024-01-27 19.17.49_n0AcZb" style="zoom:50%;" />
+
+**Initial state**
+
+depth 0:
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-01-27 19.19.35_uV375j.jpg" alt="Screenshot_2024-01-27 19.19.35_uV375j" style="zoom:50%;" />
+
+
+
+#### Basic certificate processing
+
+**Once for each certificate:**
+
+1. Basic verification
+   + Certificate signature can be verified with the working_public_key_algorithm, working_public_key, and working_public_key_parameters?
+   + Certificate is valid in time?
+   + Not revoked or on hold?
+   + Issuer Name = working_issuer_name?
+2. SDN and SANs belong to permitted_subtrees?
+3. SDN and SANs do not belong to excluded_subtrees
+4. Policy processing
+5. If policies not present, then set valid_policy_tree to NULL
+6. Verify explicit_policy or valid_policy_tree
+
+**policy processing - exact match**
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-01-27 22.32.18_FYRs0Q.jpg" alt="Screenshot_2024-01-27 22.32.18_FYRs0Q" style="zoom:50%;" />
+
+**policy processing - leaf node-anyPolicy**
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-01-27 22.33.11_nB3myw.jpg" alt="Screenshot_2024-01-27 22.33.11_nB3myw" style="zoom:50%;" />
+
+**policy processing - certificate-anyPolicy**
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-01-27 22.33.58_57dpYW.jpg" alt="Screenshot_2024-01-27 22.33.58_57dpYW" style="zoom:50%;" />
+
+**policy processing - deletion of nodes w/o children**
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-01-27 22.34.51_y75N9d.jpg" alt="Screenshot_2024-01-27 22.34.51_y75N9d" style="zoom:50%;" />
+
+
+
+### Prepare for next cert
+
+* Once for each certificate (except the last one)
+* Process policy mappings
+* Update algorithm variables
+
+**Policy mapping**
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-01-27 22.46.10_FaV71n.jpg" alt="Screenshot_2024-01-27 22.46.10_FaV71n" style="zoom:50%;" />
+
+**Policy mapping to ANY**
+
+==This is not allowed!==
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-01-27 22.46.58_nlTVJx.jpg" alt="Screenshot_2024-01-27 22.46.58_nlTVJx" style="zoom:50%;" />
+
+**Policy mapping from ANY**
+
+==This is not allowed!==
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-01-27 22.49.02_Y0jt9y.jpg" alt="Screenshot_2024-01-27 22.49.02_Y0jt9y" style="zoom:50%;" />
+
+
+
+### Wrap-up
+
+* Only for certificate n
+* Update (some) algorithm variables
+* Recognize and process extensions fo certificate n
+* Finalize valid_policy_tree: Calculate the intersection of the **valid_policy_tree 有效策略树** and the **user_initial_policy_set (uips) 用户初始策略集**
+
+**Finalize_valid_policy_tree**
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-01-27 22.54.30_GbwdFG.jpg" alt="Screenshot_2024-01-27 22.54.30_GbwdFG" style="zoom:50%;" />
+
+1. Determine the set of policy nodes whose parent nodes have a valid_policy of anyPolicy
+
+   <img src="/Users/summer/Pictures/截屏/Screenshot_2024-01-27 22.57.29_5yww1c.jpg" alt="Screenshot_2024-01-27 22.57.29_5yww1c" style="zoom:50%;" />
+
+2. If the valid_policy of any node in the valid_policy_node_set is not in the user_initial_policy_set and is not anyPolicy, delete this node and all its children
+
+   <img src="/Users/summer/Pictures/截屏/Screenshot_2024-01-27 22.59.28_aFh6GG.jpg" alt="Screenshot_2024-01-27 22.59.28_aFh6GG" style="zoom:50%;" />
+
+3. If the valid_policy_tree includes a node of depth n with the valid_policy anyPolicy and the user_initial_policy_set is not anyPolicy, perform the following steps:
+
+   + for each P-OID in the user_initial_policy_set that is not the valid_policy of a node in the valid_policy_node_set, create a child node whose parent is the node of depth n-1 with the valid_policy anyPolicy
+   + delete the node of depth n with the valid_policy anyPolicy
+
+   <img src="/Users/summer/Pictures/截屏/Screenshot_2024-01-27 23.06.16_xEBn9C.jpg" alt="Screenshot_2024-01-27 23.06.16_xEBn9C" style="zoom:50%;" />
+
+4. result
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-01-27 23.06.49_j0szEV.jpg" alt="Screenshot_2024-01-27 23.06.49_j0szEV" style="zoom:50%;" />
+
+**Output**
+
+* If either (1) the value of explicit_policy variable is greater than zero or (2) the valid_policy_tree is not NULL, then path processing has succeeded
+* If successful
+  + success indicator
+  + Valid_policy_tree
+  + Working_public_key
+  + Working_public_key_algorithm
+  + Working_public_key_parameters
+* Else
+  + failure indicator
+
+
+
+## 14. Time-Stamping
+
+
+
+
+
+
+
 
 

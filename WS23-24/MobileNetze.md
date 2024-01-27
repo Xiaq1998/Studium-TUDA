@@ -321,6 +321,12 @@ Bluetooth is a low-power, short-range wireless technology for WPAN (wireless per
 
 ### Bluetooth Low-energy
 
+**BLE: Overview**
+
+* Very low energy: a button cell battery lasts for a few years or energy harvesting is enough
+* Low throughput: huge number of sensors in smart home and smart factory. Periodically or event-based very small packets (e.g., window open/close, temperature, heart rate)
+* Very simple devices: 
+
 ### Bluetooth Mesh
 
 
