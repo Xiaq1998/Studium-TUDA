@@ -1623,7 +1623,7 @@ LDAP: Lightweigt Directory Access Protocol
 * Criterion 1: The implementation is able to find all possible paths, excepting paths containing repeated subject name/public key pairs
 * Criterion 2: The implementation is as efficient as possible.
 
-**Forward search**
+**Forward search (issuedToThisCA)**
 
 Start with the end entity certificate
 

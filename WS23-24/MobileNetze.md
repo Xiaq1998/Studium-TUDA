@@ -325,9 +325,211 @@ Bluetooth is a low-power, short-range wireless technology for WPAN (wireless per
 
 * Very low energy: a button cell battery lasts for a few years or energy harvesting is enough
 * Low throughput: huge number of sensors in smart home and smart factory. Periodically or event-based very small packets (e.g., window open/close, temperature, heart rate)
-* Very simple devices: 
+* Very simple devices: must be low cost due to large quantity. Talk simple prtocols with gateways. Star topology, no scatternets or mesh
+* Lower cost than Bluetooth classic
+* Bluetooth low-energy (BLE) is designed for ultra-low power WPAN communication. Based on Nokia's WiBree
+* Currently lot's of devices (e.g., all new smartphones) are equipped with dual-mode chips (Bluetooth classic and BLE)
 
-### Bluetooth Mesh
+**Physical Layer**
+
+* RF band: 2.4 GHz ISM band (same as Bluetooth classic)
+* Range: 150m in open field
+* 40 RF channels, two neighboring channels separated by 2 MHz
+* Adaptive frequency hopping
+  + 3 channels reserved for advertising
+  + 37 channels reserved for data communication
+* TX output power
+  + Class 1: Max 20 dBm (100 mW)
+  + Class 1.5: Max 10 dBm (10 mW)
+  + Class 2: Max 4 dBm (2.5 mW)
+  + Class 3: Max 0 dBm (1 mW)
+* Modulation: GFSK
+  + symbol rate = 1 Msps, data rate = 1 Mbps
+  + symbol rate = 2 Msps, data rate = 2 Mbps
+
+**Network Topology**
+
+* BLE uses the same idea of piconet as Bluetooth classic
+* But
+  + There is no limit on the number of slaves
+  + A slave can only belong to one Piconet
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-01-29 16.26.41_NsESyd.jpg" alt="Screenshot_2024-01-29 16.26.41_NsESyd" style="zoom:50%;" />
+
+**Frequency Hopping**
+
+* Channels are divided into two types: advertising channels and data channels
+  + 3 advertising channels for advertising packets
+    + Channle #37, #38 and #39
+    + Strategically chosen to avoid interference with WiFi
+  + 37 data channels for data packets
+    + Channel #0 to #36
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-01-29 16.28.43_XnRoxA.jpg" alt="Screenshot_2024-01-29 16.28.43_XnRoxA" style="zoom:50%;" />
+
+* Simple frequency hopping algorithm in a data connection
+  + ==f(n + 1) = [f(n) + hop] mod 37==
+    + f(n) = the current channel id
+    + f(n + 1)= the next channel id
+    + hop = a value between 5 and 16 randomly chosen by the master
+* Different from Bluetooth classic where a master share the same hopping sequence with all its slaves in BLE, each master-slave pair has a unique frequency hopping sequence
+* For a master-slave pair, channel hopping happens at each connection event
+  + A connection event is the start of a group of packets that are sent from master to slave and back again
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-01-29 16.33.05_30B1uo.jpg" alt="Screenshot_2024-01-29 16.33.05_30B1uo" style="zoom:50%;" />
+
+**Adaptive Frequency Hopping (AFH)**
+
+* Same idea as the AFH for Bluetooth classic
+* Channel map determined by the master
+* AFH may use at least 2 and at most 37 channels
+* Channel map can be changed during connection
+* Example:
+  + Channel. Map: 00000000 01100000 00000111 00000000 01111 (left to right, channel #0 to channel #36)
+  + Array of good channels: Good = [9, 10, 21, 22, 23, 33, 34, 35, 36]
+  + Number of good channels: N = 9
+  + Channel hopping formula: ==f(n + 1) = [f(n) + hop] mod 37, f(0) = 0, hop = 7==
+  + The first connection event on f(1) = (0 + 7) mod 37 = 7
+  + &rarr; #7 is a bad channel. Remap to Good[7 mod N] = Good[7 mod 9] = Good[7] = 35
+  + The second connection event on f(2) = (7 + 7) mod 37 = 14
+  + &rarr; #14 is again a bad channel. Remap to Good[14 mod N] = Good[14 mod 9] = Good[5] = 33
+  + The third connection event on f(3) = (14 + 7) mod 37 = 21
+  + &rarr; #21 is a good channel
+
+**Link Layer State Machine**
+
+* Standby:
+  + default state after power on
+* Advertising:
+  + transmit advertising packets
+  + advertising if a device wants to be discovered, to be connected to, or to broadcast data
+* Scanning:
+  + master scans who are advertising
+  + Passive scanning: just scan, does not transmit
+  + Active scanning: to obtain more information; after discover a new advertising device, send a scan request to it, and expect a scan response
+  + Scan request and scan response packets are transmitted on the advertising channels
+* Initiating:
+  + master listens for the device that it is attempting to connect to
+  + after receiving the advertising packet from the device, master sends a connect request (CONNECT_REQ)
+* Connected:
+  + in this state, data packets are exchanged between two devices
+  + data packets are transmitted on the data channels
+    + Master enters connected from initiating
+    + Slave enters connected from advertising
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-01-29 16.48.41_DC6w3M.jpg" alt="Screenshot_2024-01-29 16.48.41_DC6w3M" style="zoom:50%;" />
+
+**Typical Connection Lifecycle**
+
+A link can be terminated by either master or slave
+
+* ADV_IND
+  + advertise that it can be connected to
+* CONNECT_REQ
+  + request to connect to a slave
+* LL_TERMINATE_IND
+  + send a terminate indication packet
+* LL_ACK
+  + an empty ack packet
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-01-29 16.50.54_MNW8ym.jpg" alt="Screenshot_2024-01-29 16.50.54_MNW8ym" style="zoom:50%;" />
+
+**BLE Packet Format**
+
+* Preamble: Used by receiver for time and frequency synchronization and to perform automatic gain control (AGC) 自动增益控制
+  + Advertising packet: 10101010
+  + Data packet: either 10101010 (if LSB of access address is 0), or 01010101 (if LSB of access address is 1)
+* Access Address (4 Bytes = 32bits)
+* CRC (24-bit): Used for error detection of the packet
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-01-29 16.54.05_WIPRlj.jpg" alt="Screenshot_2024-01-29 16.54.05_WIPRlj" style="zoom:50%;" />
+
+**Low Power Potimizations in BLE**
+
+* Short packets:
+  + a packet transmission takes at most 376 us. Will not heat up the silicon
+  + therefore no need to compensate the carrier frequency drift
+* Low overhead in packets:
+  + 10 bytes of overhead for unencrypted packets and 14 for encrypted packets
+* Delayed and poggybacked acknowledgements:
+  + wait to ack until it has data to send
+* Single-channle connection event:
+  + stay on the same channel for the whole connection event instead of hopping in every slot as in Bluetooth classic;
+  + stay longer on a good channel improves packet reliability
+* Substrate wakeup
+  + if a slave wants to have low latency to master, it needs to be polled often
+  + if the slave wants to have high energy efficiency at the same time, it needs to ignore pollings
+    + saving slave's energy at the cost of master
 
 
+
+### Bluetooth Mesh 蓝牙网状网络
+
+**Introduction to Bluetooth Mesh**
+
+* Bluetooth Mesh Networking is standardized in July, 2017
+* It enables many-to-many communication, ideal for IoT applications
+* Mesh is a networking technology, and it is based on BLE
+* Advantages
+  + Multi-hop communication covers much larger area
+  + Provide resilience in communication (no single point of failure)
+  + Potential of being supported by smartphones, tablets and PCs, which is lacking by other mesh technology (e.g., Zigbee)
+* Application scenario: monitoring and control systems, e.g., lighting control in smart buildings
+
+**Publish and Subscribe**
+
+* Bluetooth mesh uses the publish/subscribe messaging system
+* Publishing:
+  + the act of sending messages to specific addresses
+* Subscribing:
+  + configure nodes to process messages sent to specific addresses
+* A node may subscribe to multiple addresses
+* Multiple nodes may publish/subscribe to a single address
+* Advantage of using group and virtual addresses with the publish/subscribe communication model:
+  + removing and adding new nodes to the network do not require reconfiguration of other nodes
+* Example:
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-01-29 17.11.11_0auPaf.jpg" alt="Screenshot_2024-01-29 17.11.11_0auPaf" style="zoom:50%;" />
+
+**Features**
+
+* 4 optional features for a node
+  + Relay: capable of retransmitting received packets
+  + Proxy: acts as interface to mesh network for BLE devices not talking mesh protocol
+  + Friend: buffers messages to the low power node (LPN), delivers them when polled by the LPN, typically power-unconstrained nodes
+  + Low Power: polls Friend infrequently to receive messages typically power-constrained nodes running on cell battery
+* Friend and low-power features work together for power saving
+* However, receiving aperipdic messages immediately requires turning on the radio all the time
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-01-29 17.15.07_wWwzgJ.jpg" alt="Screenshot_2024-01-29 17.15.07_wWwzgJ" style="zoom:50%;" />
+
+**Mesh Communication**
+
+* Bluetooth mesh only uses the advertising/scanning states of BLE
+* Bluetooth mesh uses **flooding** to deliver messages
+  + Published messages are broadcast rather than routed directedly to one or more nodes
+  + Nodes may rebroadcast (rely) received messages
+* Advantages of flooding:
+  + Messages arrive at destination via multiple paths, resilient to topology change and node failure
+  + No need for routing protocols, which incurs large overhead especially for large networks
+  + Better use of the broadcast nature of wireless communication
+* Disadvanteages of flooding:
+  + Potential of redundant transmissions, so-called broadcast storm
+* How to overcome this problem?
+  + &rarr; Managed Flooding
+  + Heartbeat messages
+    + Flooded by nodes periodically
+    + Indicate that the source is still alive
+    + Used to measure the distance to the source; the distance can be used to set TTL for other messages
+  + TTL (time to live) field
+    + Mesh PDU includes the TTL field
+    + Set as the max number of hops that a message is to be relayed
+    + Limit the range of relaying
+  + Message cache
+    + Cache contains recently heard messages to avoid rebroadcasting
+    + If find a message is cache, discard immediately (limit number of transmissions)
+
+
+
+## Chapter 05, Module 02
 
