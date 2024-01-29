@@ -1902,7 +1902,143 @@ depth 0:
 
 
 
-## 14. Time-Stamping
+### Path validation for hybrid certificates
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-01-29 13.40.42_YWkCW6.jpg" alt="Screenshot_2024-01-29 13.40.42_YWkCW6" style="zoom:50%;" />
+
+* Hybrid certificates (HC):
+  + 2 keys
+  + 2 signatures
+  + 2 different crypto systems used
+* Challenge:
+  + Standard path validation only considers a single key/signature
+* Goal:
+  + Adapt path validation such that
+    + Binding of both keys to subject are verified
+  + While
+    + Downgrading attacks are prevente
+    + Full backward compatibility is ensured
+
+
+
+#### Hybrid verification
+
+Adaptations of standard path validation algorithm:
+
+* 3 variables concerning second key/signature to be added for HC enabled clients
+  + the second trusted public key: w_pk_2
+  + the second trusted public key algorithm: w_pk_a_2
+  + optionally, the trusted public key parameters associated with the second public key: w_pk_p_2
+* 1. Initialization
+     + Additionally set w_pk_2, w_pk_a_2, w_pk_p_2 with given trust anchor information
+  2. Basic certificate processing
+     + no adaptations
+  3. Preparation for next certificate
+     + Process hybrid certificate extensions, update w_pk_2, w_pk_a_2, w_pk_p_2
+  4. Wrap-up
+     + Process hybrid certificate extensions, update and additionally output w_pk_2, w_pk_a_2, w_pk_p_2
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-01-29 13.50.00_orR9du.jpg" alt="Screenshot_2024-01-29 13.50.00_orR9du" style="zoom:50%;" />
+
+#### Downgrading attack 降级攻击
+
+* Assume: Adversary can break one of the crypto systems
+* Downgrading attack:
+  + Adversary exchanges (undetected) the hybrid certificate(s) by standarad certificate(s)
+
+&rarr; Security downgraded to security of single (broken) crypto system
+
+**Backward compatibility & security downgrading**
+
+* Backward compatibility - 4 scenarios to be covered:
+  + 1. Both entities are not HC enabled
+    2. Certificate holder is HC enabled, relying entity is not
+    3. Relying entity is HC enabled, certificate holder is not
+    4. Certificate holder and relying entity both are HC enabled
+  + Scenario 1-3:
+    + No downgrading senseful (single crypto system used anyway)
+  + Scenario 4:
+    + Adversary may pretend one of the other scenarios to apply a downgrading attack
+    + Entities must be able to unambiguously distinguish between scenarios 1-3 and a potential downgrading attack
+
+#### Downgrading attack prevention
+
+1. Trusted list with hybrid and non-hybrid (only single key) trust anchors?
+
+   <img src="/Users/summer/Pictures/截屏/Screenshot_2024-01-29 13.59.13_NQhPrC.jpg" alt="Screenshot_2024-01-29 13.59.13_NQhPrC" style="zoom:50%;" />
+
+   Adversary may issue non-hybrid certificate chain starting from non-hybrid trust anchor
+
+   &rarr; All trust anchors must be hybrid
+
+2. Trust anchors hybrid - sufficient?
+
+   <img src="/Users/summer/Pictures/截屏/Screenshot_2024-01-29 14.00.26_yaqaKi.jpg" alt="Screenshot_2024-01-29 14.00.26_yaqaKi" style="zoom:50%;" />
+
+   Adversary may issue non-hybrid certificate chain starting from any non-hybrid CA
+
+   &rarr; All subordinate CAs must be hybrid
+
+3. Classical certificates for ent entities acceptable (to support scenario 1 + 3)?
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-01-29 14.01.33_fuAMNA.jpg" alt="Screenshot_2024-01-29 14.01.33_fuAMNA" style="zoom:50%;" />
+
+​      Adversary may switch from hybrid to non-hybrid
+
+​     &rarr; All end entity certificates must be signed with both keys of the parent certificate
+
+
+
+#### Partially hybrid certificates for end entities
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-01-29 14.04.25_JbcUXD.jpg" alt="Screenshot_2024-01-29 14.04.25_JbcUXD" style="zoom:50%;" />
+
+* Partially hybrid certificates (PHC) contain:
+  + 1 key (as classical certificate)
+  + 2 signatures
+  + 2 different crypto systems used for signing
+* Why needed?
+  + Hybrid verification &rarr; can not be forged by adversary
+  + Explicit statement by the CA, that subject does not support a second crypto system
+  + Relying entity can distinguish valid scenarios from attacks
+
+
+
+
+
+## 14. Time-Stamping 时间戳
+
+**Time-Stamping Authority (TSA) 时间戳权威**
+
+* supports assertions of proof that a datum existed before a particular time
+* may be operated as a Trusted Third Party (TTP) service
+
+**TSA requirements (RFC 3161)**
+
+1. Use trustworthy source of time
+2. Produce a time stamp toke upon receiving a valid request
+3. In each time stamp token include:
+   + trustworthy time valude
+   + unique integer (serial number)
+   + identifier for the security policy under which the token was created
+4. Only time stamp a hash representation of the datum, i.e., a data imprint associated with a one-way collision resistant hash-function uniquely identified by an OID
+5. Examine the OID of the hash-function and verify that the hash value length is consistent with the hash algorithm
+6. Not to examine the imprint being time-stamped in any way
+7. Not to include any identification of the requesting entity in the time stamp tokens
+8. Sing time stamp tokens using a key reserved for this purpose
+9. Include additional information in the time stamp token, if asked by the requester using the extensions field, only for the extensions that are supported by the TSA
+
+**Structure of a time-stamping request**
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-01-29 14.15.11_KaS26X.jpg" alt="Screenshot_2024-01-29 14.15.11_KaS26X" style="zoom:50%;" />
+
+**Structure of a time-stamping response**
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-01-29 14.15.52_DK7WQI.jpg" alt="Screenshot_2024-01-29 14.15.52_DK7WQI" style="zoom:50%;" />
+
+**timeStampToken**
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-01-29 14.16.30_39YDLP.jpg" alt="Screenshot_2024-01-29 14.16.30_39YDLP" style="zoom:50%;" />
 
 
 
