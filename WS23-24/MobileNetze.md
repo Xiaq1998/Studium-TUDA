@@ -533,3 +533,132 @@ A link can be terminated by either master or slave
 
 ## Chapter 05, Module 02
 
+### WPAN Overview
+
+**Design Requirements**
+
+* Battery power: Maximize battery life. A few hours to a few years on a coin cell
+* Dynamic topologies: Short duration connections and then device is turned off/goes to sleep
+* No infrastrucuture
+* Interference avoidance capability: due to higer powered LAN devices
+* Simple and extreme interoperability: among billions of devices
+* Low cost: a few euros
+
+**802.15.4 Overview**
+
+* 2.4 GHz PHY (2400 - 2483.5 MHz ISM band)
+* Data rate: 250 kbps PHY rate
+* 16 5-MHz channels (#11 to #26)
+* Every 4 data bits are grouped into a symbol (4 nits per symbol)
+* DSSS (direct sequence spread spectrum): each symbol (16 possibilities) is mapped to a 32 chip sequence (Pseudo Noise code)
+* The chips are Offset QPSK (OQPSK) modulated
+* TX power at least -3 dBm (0.5 nW)
+  + lower rate, short distance &rarr; lower power &rarr; low energy
+* Similar to 802.11: CSMA/CA, Backoff, Beacon, Coordinator (similar to Access point)
+
+
+
+### IEEE 802.15.4 PHY
+
+**Direct Sequence Spread Spectrum (DSSS) 直接序列扩频**
+
+* DSSS maps a message symbol into a PN (pseudo noise) chip sequence
+* Advantages:
+  + very low energy consumption
+  + correct chip errors &rarr; robust against interference (time domain)
+  + increase bandwidth &rarr; robust to narrow-band interference (frequency domain)
+  + coexist with other wireless communications (e.g., Bluetooth, WiFi)
+  + line of sight is not required. Pass through walls
+  + low cost chips
+* Disadvantages:
+  + low data rate in terms of the used bandwidth
+
+**PHY Frame Format**
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-01-30 22.38.55_VOdQcA.jpg" alt="Screenshot_2024-01-30 22.38.55_VOdQcA" style="zoom:50%;" />
+
+* Preamble: 4 bytes of 0x00.
+  + Synchronize the receiver
+* SFD (start-of-frame delimiter): 0x47. 
+  + Indicate the start of the frame
+* PHY Header: the total number of bytes in PSDU
+  + How much btyes to receive in the following frame
+* PSDU: data payload
+
+
+
+### IEEE 803.15.4 MAC
+
+**Device Classes**
+
+* Network type: Star, and peer-to-peer (mesh, cluster tree)
+* PAN Coordinator 个人区域网协调员: a coordinator that is the principle controller of a PAN
+* Coordinator: a node that provides coordination and other services to the network
+* Full Function Device (FFD) 全功能装置: a device that can become a coordinator if it starts a PAN. An FFD can talk to any other node
+* Reduced Function Device (RFD) 减少功能装置: a device that can not become a coordinator. A RFD can only talk to FFD or coordinator
+* Each PAN has exactly one PAN coordinator, and zero or more other device
+
+**Cluster Tree Network**
+
+* **Cluster tree 聚类树** is one type of peer-to-peer topology
+* A PAN coordinator instructs an FFD to become the PAN coordinator of a new cluster (PAN) adjacent to it
+* Cluster tree grows like a tree &rarr; no loops
+* Each piconet (cluster) has a unique PAN ID
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-01-31 00.28.01_HeOIxK.jpg" alt="Screenshot_2024-01-31 00.28.01_HeOIxK" style="zoom:50%;" />
+
+**Device Addressing**
+
+* There are two types of addresses:
+  + Extended address
+    + Typically set by manufacturer
+    + Each device has a unique extended address which is a 64-bit extended universal identifier (EUI-64)
+  + Short address
+    + A device has a 16-bit short address that is unique in the PAN
+    + Short address saves frame size
+      + Addressing field is in the PSDU (0, 2, or 8 bytes)
+* If a device is the PAN coordinator, its short address is chosen before the PAN starts
+* If a device is not the PAN coordinator, the short address is assigned by a coordinator during association
+* Both the extended address and the short address can be used for communication
+
+**MAC Frame Format**
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-01-31 00.37.24_j2H7Ir.jpg" alt="Screenshot_2024-01-31 00.37.24_j2H7Ir" style="zoom:50%;" />
+
+**Superframe structure**
+
+MAC supports two modes: Beacon-enabled mode & non-beacon modes
+
+* Beacon-enabled CSMA/CA
+  + Coordinator sends beacons periodically
+    + To synchronize nodes, identify PAN, and describe superframes structure
+  + The active portion consists of 16 equally sized slots
+    + CAP (contention access period): any node can use slotted CSMA/CA to access the channel
+    + CFP (contention free period): one or more GTS (guranteed time slots)
+  + In inactive Portion, everyone sleeps
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-01-31 00.45.31_pQNHll.jpg" alt="Screenshot_2024-01-31 00.45.31_pQNHll" style="zoom:50%;" />
+
+* Non-beacon-enabled (beaconless) CSMA/CA mode (used by ZigBee)
+  + The coordinators do not send beacons, therefore there is no superframe structure
+  + No back-off slot alignment is necessary
+  + Use unslotted CSMA/CA to access the channel
+  + The random back-off period in both slotted and unslotted CSMA/CA is an integer multiple of the unit back-off period
+
+**The Inter-frame Spacing**
+
+* Acknowledgements if requested by the sender
+* Short inter-frame spacing (SIFS) if previous transmission is shorter than a specified duration, otherwise, long inter-frame spacing (LIFS)
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-01-31 00.50.32_Mzj9YB.jpg" alt="Screenshot_2024-01-31 00.50.32_Mzj9YB" style="zoom:50%;" />
+
+**IEEE 802.15.4 CSMA-CA Protocol (ZigBee): Unslotted**
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-01-31 00.51.27_HF5cQR.jpg" alt="Screenshot_2024-01-31 00.51.27_HF5cQR" style="zoom:50%;" />
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-01-31 00.52.57_hQRhvy.jpg" alt="Screenshot_2024-01-31 00.52.57_hQRhvy" style="zoom:50%;" />
+
+
+
+### ZigBee
+

@@ -109,20 +109,20 @@ The server does not know any secret information.
 
 #### Why PKI?
 
-**Assure that the public key is available (Availability)**
+**Assure that the public key is available 可用的**
 
 * Directories: (L)DAP, Active Directory
 * Web PAges: HTTP(s)
 * File transfer: (s)FTP
 * Services: OCSP, SCVP
 
-**Assure that the public key is authentic (Authenticate  真实性)**
+**Assure that the public key is authentic 真实的**
 
 * Bind publick key uniquely to electronic identity
 * Seal the binding
 * Answer for the binding
 
-**Assure that the public key is valid (Validity 有效性)**
+**Assure that the public key is valid 有效的**
 
 * Monitor binding public key &harr; electronic identity &harr; key owner
 * Establish time constraints 设定时间限制
@@ -145,7 +145,7 @@ The server does not know any secret information.
 
 ​    Comply to accepted (international) standards. 遵守公认的（国际）标准
 
-​    **Enforce policies 执行政策**  
+**Enforce policies 执行政策**  
 
 * Certificate policy (CP) 证书政策: States what to comply to
 * Certificate practice statement (CPS) 证书实践证明: States how to comply
@@ -249,15 +249,15 @@ The server does not know any secret information.
 
 **Distinguished Names**
 
-* CN        Common Name
-* L            Locality
-* ST          State or Province
-* O           Organization
-* OU        Organization Unit
-* C            Country
-* Street    Street Address
-* DC         Domain Component
-* UID       User Id
+* CN        Common Name 通用名
+* L            Locality 地点
+* ST          State or Province 州或省
+* O           Organization 组织
+* OU        Organization Unit 组织单位 
+* C            Country 国家
+* Street    Street Address  街道地址
+* DC         Domain Component 域组件
+* UID       User Id 用户ID
 
 #### X.509 extensions
 
@@ -268,7 +268,7 @@ The server does not know any secret information.
 
 <img src="/Users/summer/Pictures/截屏/Screenshot_2024-01-17 11.59.38_svnXgL.jpg" alt="Screenshot_2024-01-17 11.59.38_svnXgL" style="zoom:50%;" />
 
-**Subject Key Identifier (SKI) 主题密钥标识符**
+**Subject Key Identifier (SKI) 主体密钥标识符**
 
 * Identifies certificates that contain a particular public key
 * Must be included in all CA certificates (non-critical)
@@ -280,9 +280,9 @@ The server does not know any secret information.
 * Must be included in all certificates (non-critical)
 * Facilitates certification path construction
 * Consists of the following (optional) fields:
-  + keyIdentifier
-  + authorityCertIssuer
-  + authorityCertSerialNumber
+  + keyIdentifier (as in SKIE, but identifies public key of issuer)
+  + authorityCertIssuer (name of the issuer of the issuer's certificate)
+  + authorityCertSerialNumber (serial number of the issuer's certificate)
 
 **Correlation 相关性 of SKIE - AKIE**
 
@@ -292,14 +292,21 @@ The server does not know any secret information.
 
 * Defines the purpose of the key contained in the certificate
 * CAs conforming to RFC5280 must include this extension
-* Given as a bit string of length 9
+* Given as a bit string of length 9：
+  + digital Signature (0)
+  + non Repudiation (1)
+  + key Encipherment (2) 密钥加密
+  + data Encipherment (3) 数据加密
+  + key Agreement (4)
+  + key Cert Sign (5)
+  + CRL Sign (6)
+  + encipher Only (7) 仅加密
+  + decipher Only (8) 仅解密
 
-**Subject Alternative Name 主题别名**
+**Subject Alternative Name 主体别名**
 
 * Allows additional identites to be bound to the subject of the certificate
-
-  *Example: DNS name, IP address, Internet electronic mail address*
-
++ *Example: DNS name, IP address, Internet electronic mail address*, Uniform resource identifier (URI) 统一资源标识符
 * Before included, this information must be verified since it is bound to a public key
 
 **Issuer Alternative Name 发行人替代名称**
@@ -308,7 +315,7 @@ The server does not know any secret information.
 * Should not be marked critical
 * Same format as Subject Alternative Name extension
 
-**Subject Directory Attributes 主题目录属性**
+**Subject Directory Attributes 主体目录属性**
 
 * Used to convey identification attributes (e.g. nationality) of the subject
 * Sequence of one or more attributes
@@ -316,9 +323,8 @@ The server does not know any secret information.
 
 **Extended Key Usage**
 
-​    Indicates one or more purposes for which the certified publick key may be used, in addition to or in place of the basic puroises indicated in the key usage extension.
-
-*Example: Code signing, OCSP signing, Timestamping*
+* Indicates one or more purposes for which the certified publick key may be used, in addition to or in place of the basic puroises indicated in the key usage extension.
+  + *Example: Code signing, OCSP signing, Timestamping*
 
 * If present, both key usage and extended key usage extensions must be processed independently
 * The certificate must only be used for a purpose consistent with both extensions
@@ -333,7 +339,7 @@ The server does not know any secret information.
 * CRLDistributionPoints
 * Inhibit Any-Policy
 * Freshest CRL
-* Autohority Information Access
+* Authority Information Access
 * Subject Information Access
 
 
@@ -359,15 +365,19 @@ The server does not know any secret information.
 
 **Backwards compatibility 向后兼容性**
 
-​    Assume two entities, e.g. a client and a server,
+Assume two entities, e.g. a client and a server,
 
-​    During transition phase, hybrid certificates should still work if:
+during transition phase, hybrid certificates should still work if:
 
 * The (legacy) server does not understand "Hybrid"
 * The (legacy) client does not understand "Hybrid"
 * Both entities do not understand "Hybrid"
 
 Then: hybrid certificates should appear as common X.509 certificates
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-01-30 18.58.46_1M7qtd.jpg" alt="Screenshot_2024-01-30 18.58.46_1M7qtd" style="zoom:50%;" />
+
+
 
 #### Concatenation
 
@@ -451,6 +461,16 @@ Then: hybrid certificates should appear as common X.509 certificates
   + The algorithm OID and its parameters used for the secondary signature
 * Signature value: Bitstring
   + The actual signature value (over the TBS-part of the certificate)
+
+**Implementation challenges**
+
+* Secondary signature value is part of final tbsCertificate, but can not be included during creation of secondary signature
+
+* tbsCertificate used for creating secondary signature must include hybridSig extension with correct byte length
+
+  &rarr; otherweise the tbsCertificate changes when added later
+
+* Original tbsCertificate for secondary signature needs to be recreated during verification
 
 **Certificate creation**
 
@@ -544,9 +564,11 @@ In PKI, trust means::
 * That certifiers reliably check authenticity of entities
 * Follow certain standards and policies regarding their processes
 
-We can trust, that an entity is who it pretends to be & that the used keys/crypto are secure,
+We can trust, that an entity is who it pretends to be & that the used keys/crypto are secure.
 
 **But not,** that an entity is indeed trustworthy in its behavior, e.g., that the online shop owner actually sends out the goods you pated for — not in the scope of PKI.
+
+
 
 ### Direct trust
 
@@ -572,7 +594,7 @@ User receives public key directly from owner or User verifies public key directl
 
 * Step 1: Get software
 * Step 2: Download checksum and signatures
-* Step 3: Retrieve correct signature key
+* Step 3: Retrieve correct signature key 检索正确的签名密钥
 * Step 4: Verify Signature
 * Step 5: Check the ISO
 
