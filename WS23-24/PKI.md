@@ -2113,11 +2113,11 @@ Adaptations of standard path validation algorithm:
 
   
 
-* Welche zwei Dokumente geben Aufschluss über die für eine CA spezifizierten Sicherheitsrichtlinien und wie diese umgesetzt werden?
+* Welche zwei Dokumente geben Aufschluss über die für eine CA spezifizierten Sicherheitsrichtlinien und wie diese umgesetzt 把...付诸实施 werden?
 
-  —— CP (Certificat policy)
+  —— CP (Certificate policy): Die CP beschreibt welche Rithlinien sich die teilnehmende Person hält.
 
-  ​        CPS (Certification practice statement): Im CPS beschreiben CAs, wie die in der CP spezifizierten Sicherheitsrichtlinien umgesetzt werden.
+  ​        CPS (Certificate practice statement): Die CPS beschreibt wie in der CP festgelegten Anforderungen in der Praxis umgesetzt werden.
 
   
 
@@ -2310,7 +2310,7 @@ Adaptations of standard path validation algorithm:
 
   
 
-* Nennen Sie die 2 Arten von Perosonal Security Environments, die zur Aufbewahrung von privaten Schlüsseln dienen können. Nennen Sie jeweils ein Beispiel.
+* Nennen Sie die 2 Arten von Perosonal Security Environments, die zur Aufbewahrung von privaten Schlüsseln dienen können. 列出可用于存储私钥的2种个人安全环境 Nennen Sie jeweils ein Beispiel.
 
   —— Hardware PSE. Z.B., Smartcard
 
@@ -2320,9 +2320,9 @@ Adaptations of standard path validation algorithm:
 
 * Erklären Sie stichpunktartig, wie der Proof-of-Possession (PoP) für verschiedene Schlüsselarten durchgeführt wird
 
-  + Signature key: Signieren einer Nonce, oder des Certificate Requests
-  + Encryption key: Entschlüsselung eines durch den CSP verschlüsselten Datums
-  + Key-agreement key: Vereinbarung eines gemeinsament geheimen Schlüssels
+  + Signature key: Signieren einer Nonce, oder des Certificate Requests 签署随机数或证书请求
+  + Encryption key: Entschlüsselung eines durch den CSP verschlüsselten Datums 对CSP加密的日期进行解密
+  + Key-agreement key: Establishment of a shared secret key between CSP and entity
 
 
 
@@ -2330,7 +2330,7 @@ Adaptations of standard path validation algorithm:
 
 * Können zwei unterschiedliche Zertifikate den selben Key Identifier Wert in der SKIE haben? Begründen Sie ihre Antwort.
 
-  —— Ja, das ist bei Zertifikaten, die den selben Schlüssel haben der Fall.
+  —— Ja, das ist bei Zertifikaten die denselben Schlüssel haben der Fall.
 
   
 
@@ -2530,7 +2530,7 @@ OCSP
 
   + Welchen Zweck hat die BaseCRLNumber?
 
-    ——Die BaseCRL Number identifiziert diejenige complete CRL, whlche als Startpunkt für die Erzeugung der delta CRL verwendet wurde.
+    ——Die BaseCRL Number identifiziert diejenige complete CRL, whelche als Startpunkt für die Erzeugung der delta CRL verwendet wurde.
 
   + Was enthält eine delta CRL?
 
@@ -2571,6 +2571,8 @@ OCSP
 * Würde es ausreichen die keyUsage Extension von Bobs Zertifikat um Certificate Sign zu erweitern, damit Bob mit seinem Schlüssel Zertifikate ausstellen darf? Begründen Sie ihre Antwort. 将证书签名添加到Bob证书的keyUsage扩展中好是否足够，使得Bob可以使用他的密钥颁发证书？
 
   —— Nein. RFC5280 erfordert, dass CA Zertifikat zusätzlich die Basic Constraints Extension beinhalten.
+
+  
 
 * Wie funktioniert die Revokation in GPG? Ist es möglich einen Schlüssel zu revozieren wenn man seinen privaten Schlüssel verloren hat?
 

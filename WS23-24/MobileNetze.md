@@ -1,5 +1,17 @@
 # Mobile Networking
 
+## Chapter 01, Module 01
+
+## Chapter 01, Module 02
+
+## Chapter 02, Module 01
+
+## Chapter 03, Module 01
+
+## Chapter 03, Module 02
+
+## Chapter 04, Module 01
+
 ## Chapter 04, Module 02
 
 ### DMG channel access mechanisms DMG通道访问机制
@@ -981,11 +993,437 @@ Addr(Y~1~) = Addr(X) + (i - 1) * Cskip(level(X)) + 1
 
 ### The Ad Hoc On-demand Distance Vector Protocols (AODV)
 
+**Taxonomy**
+
+* Uniform routing: all nodes behave equally
+* Destination-based routing: distance vector principle
+* Reactive routing:
+  + Route is established on-demand
+  + Source-initiated route discovery
+
+**Route discovery cycle for route finding**
+
+* Flood/broadcast Route Request (RREQ)
+* Unicast Route Reply (RREP) along reverse path of RREQ
+* Unicast Route Error (RERR)
+
+**No overhead on data packets**
+
+**Loop freedem is achieved through sequence numbers, also sloves "count to infinity" problem**
+
+**AODV established the faster route, not the shortest**
+
+
+
+**Route Discovery**
+
+* Route discovery from source **S** to destination **D**
+  + **S** broadcasts a Route Request (RREQ) &rarr; flooding
+    + A RREQ must never be broadcast more than once by any node
+    + Nodes set up a reverse path pointing towards the source S
+  + **D** unicasts a Route Reply (RREP) to **S**
+    + Nodes set up a forward path pointing to D
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-02-05 16.16.12_V2EoTl.jpg" alt="Screenshot_2024-02-05 16.16.12_V2EoTl" style="zoom:50%;" />
+
+* Example Routing Table
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-02-05 16.17.09_XrJHyN.jpg" alt="Screenshot_2024-02-05 16.17.09_XrJHyN" style="zoom:50%;" />
+
+
+
+**Route Maintenance**
+
+* Timers to keep route alive
+  + A routing table entry maintainging a reverse path is purged after a timeout interval
+    + Timeout should be long enough to allow RREP to come back
+  + A routing table entry maintaining a forward path is purged if not used for an active_route_timeout interval
+    + If no data is being sent using a particular routing table entry, that entry will be deleted from the routing table (even if the route many actually still be valid)
+* Destination sequence numbers (DSN): to determine fresh routes
+  + To avoid using old/broken routes
+  + To prevent formation of loops
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-02-05 16.21.50_yI3Gly.jpg" alt="Screenshot_2024-02-05 16.21.50_yI3Gly" style="zoom:50%;" />
+
+* Movement along active path triggers action
+  + If source moves, reinitiate route discovery
+* When destination or intermediate node moves
+  + Upstream node of the broken link broadcasts *Route Error (RERR)*
+  + RERR contains list of all destinations no longer reachable due to link break
+  + RERR propagated until node with no precursors for destination is reached
+
+
+
+**Loop Formation**
+
+* Assume that **A** does not know about failure of link **C-D** becasue Route Error (RERR) sent by **C** is lost
+* Not **C** performs a route discovery for **D**, node **A** receives the RREQ (say, via path **C-E-A**)
+* Node **A** will reply since **A** knows a route to **D** via node **B**
+* Results in a loop (for instance, **C-E-A-B-C**)
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-02-05 16.57.54_icJo6d.jpg" alt="Screenshot_2024-02-05 16.57.54_icJo6d" style="zoom:50%;" />
+
+**Loop Avoidance**
+
+* Link failure reporting / repairing routes
+  + When node **C** is unable to forward packt **P** (from node S to node D) on link (C-D), it generates a Route Error (RERR) message
+  + Node **C** increments the destination sequence number for **D** cached at node **C**
+  + The incremented sequence number *N* is included in the RERR, which is sent out based upon precursor lists
+  + When node **S** reveives the RERR, it initiates a now route discovery for **D** using destination sequence number at least as large as *N*
+* Example
+  + Link failure increments the DSN at **C** (now is 10)
+  + If **C** needs route to **D**, RREQ carries the DSN (10)
+  + **A** does not reply as its own DSN is less than 10
+  + S initiate new route discovery for D
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-02-05 17.14.00_PegL5w.jpg" alt="Screenshot_2024-02-05 17.14.00_PegL5w" style="zoom:50%;" />
+
+
+
+**Other Features of AODV**
+
+* Target networks
+  + Where routing churn is high enough that proactively maintaining routes is unproductive, and that can absorb a network wide broadcast rate
+  + The authors claim scalability up to 10,000 nodes
+* Multiple optimizations
+  + AODV-LR (Local Repair)
+  + AODV-ESP (Expanding-Ring-Search)
+  + Multi-path extension proposed (AODVM, AOMDV)
+* Multiple open issues
+  + Security
+  + QoS
+  + Protocol needs operational experience to discover further issues
+
+
+
+**AODV Optimizations Gossiping**
+
+* Flooding is very inefficient, esp. if node density is high
+  + Probabilistic techniques are expected to deal better with the highly dynamic and mobile characteristics of the network
+  + Probabilistic techniques may easily be adapted to network density without breaking symmetric conditions
+* Gossiping as an example of epidemiological algorithm
+  + Assume a large population of n people
+  + A rumor is initially transmitted to one member of the population
+  + This person passes (forwards) the rumor to a fixed number of confidants with probability p, the rumor is kept secret with probability 1-p (other modes possible)
+* Other prominent networking applications of gossiping
+  + Application level multicasting, content addressable networks
+* Gossip-variants
+  + General forwarding probability *p~1~*
+  + Number of neighbors *n*; probability *p~2~* for *n < n~0~ , p~2~ > p~1~*
+  + Hop count *k*; forwarding probability *p = 1 for k =<k~0~*
+  + Number of overhead messages *m*, *p = 1 for m =< m~0~*
+* Pseudo-Algorithm for Gossip (p~1~, k)
+  + upon reception of message *m* at node *n*
+  + if message *m* received for the first time then
+    + if hop count *k* less or equal *k~0~* then
+      + broadcast (m) with probability 1
+    + else
+      + broadcast (m) with probability *p~1~*
+    + end if
+  + end if
+* Multiple variants implemented
+  + Gossip (p~1~), Gossip (p~1~, k), Gossip (p~1~, k, m), Gossip(p~1~, k, p~2~, n) &rarr; proactive behavior, hello messages
+
+
+
+**AODV Extension - Multipath (AODVM)**
+
+* Multipath variants for multiple protocols
+  + easy for source routing algorithms
+  + not trival for optimized protocols like AODV
+  + "Multipath" should not be mixed up with "Multicast"
+* AODVM
+  + Ad Hoc On-Demand Distance Vector Multipath (AODVM) Routing
+  + Instead of dropping duplicate RREQ packets, AODVM uses an RREQ table to store the redundant RREQ information
+* AODVM Explained (Path Discovery Procedure)
+  + Destination initiates an RREP for each RREQ that is received (from different neighbors)
+  + Nodes overhear the RREP packets
+  + A node that is assigned to a route is deleted from its neighbor's RREQ tables
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-02-05 17.37.34_qtBh7u.jpg" alt="Screenshot_2024-02-05 17.37.34_qtBh7u" style="zoom:50%;" />
+
+
+
+**Summary**
+
+* At most one route per destination maintained at each node
+  + After link break, all routes using the failed link are erased
+* Expiration based on timeout
+* Use of sequence numbers to prevent loops
+* Optimizations
+  + Routing tables instead of storing full routes
+  + Control flooding (incrementally increase 'region')
+
+
+
 ### Dynamic Source Routing (DSR)
+
+* Taxonomy
+  + Uniform: all nodes behave equally
+  + Topology-based: nodes maintain large-scale topology information
+  + Reactive: establish routes on demand
+* Shares some principles with AODV
+  + When node **S** wants to send a packet to node **D**, but does not know a route to **D**, node **S** initiates a route discovery
+  + Source node **S** floods Route Request (RREQ)
+* Main differences from AODV
+  + Each node appends its own identifier when forwarding RREQ
+  + Nodes do not maintain routing tables
+
+
+
+**Route Discovery in DSR**
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-02-05 18.37.31_2buHSi.jpg" alt="Screenshot_2024-02-05 18.37.31_2buHSi" style="zoom:50%;" />
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-02-05 18.37.47_tDPZ3z.jpg" alt="Screenshot_2024-02-05 18.37.47_tDPZ3z" style="zoom:50%;" />
+
+
+
+* Node H receives packet RREQ from two neighbors: potential for collision
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-02-05 18.37.58_Ek8sEW.jpg" alt="Screenshot_2024-02-05 18.37.58_Ek8sEW" style="zoom:50%;" />
+
+
+
+* Node C receives RREQ from **G** and **H**, but does not forward it again, becasue node **C** has already forwarded RREQ once
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-02-05 18.38.06_qXX2vc.jpg" alt="Screenshot_2024-02-05 18.38.06_qXX2vc" style="zoom:50%;" />
+
+
+
+* Node J and K both broadcast RREQ to node **D**
+* Sine nodes J and K are hidden from each other, their transmissions may collide
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-02-05 18.38.13_uhtB8S.jpg" alt="Screenshot_2024-02-05 18.38.13_uhtB8S" style="zoom:50%;" />
+
+
+
+* Node D does not forward RREQ, becasue node D is the intended target of the route discovery
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-02-05 18.38.23_mdNqZe.jpg" alt="Screenshot_2024-02-05 18.38.23_mdNqZe" style="zoom:50%;" />
+
+
+
+**Route Discovery - Route Reply (RREP)**
+
+* Destination **D** on receiving the first RREQ, sends a (RREP)
+* RREP is sent on a route obtained by reversing the route appended to received RREQ
+* RREP includes the route from **S** to **D** on which RREQ was received by node **D**
+* Route Reply can be sent by reversing the route in Route Request (RREQ) only if links are guaranteed to be bi-directional
+* If unidirectional (asymmetric) links are allowed, then RREP may need a route discovery for **S** from node **D**
+  + unless node D already knows a route to node S
+* Each node maintains a **Route Cache** which records routes it has learned and overhead over time
+
+
+
+**Route Reply in DSR**
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-02-05 21.19.41_rqi8fb.jpg" alt="Screenshot_2024-02-05 21.19.41_rqi8fb" style="zoom:50%;" />
+
+
+
+**Data Delivery in DSR**
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-02-05 21.20.38_mKwzyN.jpg" alt="Screenshot_2024-02-05 21.20.38_mKwzyN" style="zoom:50%;" />
+
+
+
+**Route Maintenance**
+
+* Route maintenance performed only while route is in use
+* Error detection:
+  + Monitors the validity of existing routes by passively listening to data packets transmitted at neighboring nodes
+  + Lower level acknowledgements
+* When problem detected, send Route Error packet to original sender to perform new route discovery
+* Route Error is sent back to the sender the packet - original source
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-02-05 21.23.27_PTmpnk.jpg" alt="Screenshot_2024-02-05 21.23.27_PTmpnk" style="zoom:50%;" />
+
+
+
+**Summary**
+
+* Entirely on-demand, potentially zero control message overhead
+* Trivially loop-free with source routing
+* Conceptually supports unidirectional links as well as bidirectional links
+* High packet delays/jitters associated with on-demand routing
+* Space overhead in packets and route caches
+* Promiscuous mode operations consume excessive amount of power
+
+
+
+**AODV vs. DSR**
+
+* Main common features
+  + On-demand route requesting
+    + Route discovery based on requesting and replying control packets
+    + Broadcast route discovery mechanism
+* Main differences
+  + DSR can handle uni- and bi-directional links, AODV uses only bi-directional
+  + In DSR, using a single RREQ-RREP cycle, source and intermediate nodes can learn routes to other nodes on the route
+  + DSR maintains many alternate routes to the destination, instead of AODV that maintains at most one entry per destination
+  + DSR does not contain any explicit mechanism to expire stale routes in the cache. In AODV if a routing table entry is not recently used, the entry is expired
+
+
 
 ### Location Aided Routing (LAR)
 
+* Taxonomy
+  + Non-uniform: nodes may behave differently / take distinguished roles
+    + LAR: based on location &rarr; **reduces routing overhead** by limiting the number of nodes involved in network flooding
+  + Geographical: utilizes geographical location in the pgysical world
+* LAR exploits location information to limit scope of flooding for route discovery
+  + Location information may be obtained using GPS
+* **Expected Zone** is determined as a region that is expected to hold the current location of the destination node (D)
+  +  Expected region determined based on previous location information, and knowledge of the destination's speed and direction
+* Route requests limited to a **Request Zone** that contains the Expected Zone and location of the sender node (S)
+
+
+
+**Expected Zone in LAR**
+
+* S = Source node, D = Destination node
+* X = last known location of node D, at time t0
+* Y = location of node D at current time t1, unknown to sender S
+* v = =estimated speed of D
+* r = (t1 - t0) * v
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-02-05 22.25.19_DbR2fQ.jpg" alt="Screenshot_2024-02-05 22.25.19_DbR2fQ" style="zoom:50%;" />
+
+
+
+**Request Zone in LAR**
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-02-05 22.25.57_vQPuE4.jpg" alt="Screenshot_2024-02-05 22.25.57_vQPuE4" style="zoom:50%;" />
+
+
+
+**Operation of LAR**
+
+* Only nodes within the **request zone** forward route requestes
+  + Node A does not forward RREQ, but node B does
+  + Request zone explicitly specified in the route request
+  + Each node must know its physical location to determine whether it is within the request zone
+* If route discovery using the smaller request zone fails to find a route, the sender initiated another route discovery (after timeout) using a larger request zone
+  + the largest request zone may be the entire network
+* The rest of the route discovery protocols is similar to DSR
+* Possible variations and optimizations
+  + Loaction information is piggybacked on any message from Y to X
+  + Y distributes its location information proactively
+
+
+
+**LAR Variations - Adaptive Request Zone**
+
+* Source explicitly specifies a request zone, but each node may modify the request zone included in the forwarded request
+  + Modified request zone may be determined using more recent information and may differ from original request zone
+* Implicit Request Zone
+  + A node X forwards a route request received from Y if node X is deemed to be closer to the expected zone as compared to Y
+  + The motivation is to attempt to bring the route request physically closer to the destination node after each forwarding
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-02-05 22.38.15_EL3hmo.jpg" alt="Screenshot_2024-02-05 22.38.15_EL3hmo" style="zoom:50%;" />
+
+
+
+**LAR Variations - Query Localization**
+
+* Limits route request flood without using physical information
+  + Route requests are propagated only along paths that are close to the previously known route
+  + The closeness property is defined without using physical location information
+* Path locality heuristic: Look for a new path that contains at most **k** nodes that were not present in the previously known route
+  + Old route is piggybacked on a Route Request
+  + Route Request is forwarded only if the accumulated route in the Route Request contains at most k nodes that were absent in the old route
+  + This limits propagation of the route request
+
+
+
+**Location-Aided Routing**
+
+* The basic proposal assumes that, initially, location information for node X becomes known to Y only furing a route discovery
+  + This location information is used for a future route discovery
+  + Each route discovery yields more updated information which is used for the next discovery
+* LAR - Advantages
+  + Reduces the scope of route request flooding
+  + Reduces overhead of route discovery
+* LAR - Disadvantages
+  + Nodes need to know their physical locations
+  + Does not take into account possible existence of obstrucitions for radio transmissions
+
+
+
 ### Optimized Link State Routing (OLSR)
+
+* Taxonomy
+  + Non-uniform: nodes nay take different roles
+    + optimization aspect: reduce routing overhead by using relay node
+  + Flat: non-hierarchical routing
+  + Proactive: continuously maintain routing information
+    + Local information is disseminated network-wide
+  + Topology-based: nodes keep track of the network's topology
+* Links state routing in general: Nodes ... 
+  + ... periodlically flood status of their links
+  + ... re-broadcast link state information received from other neighbors
+  + ... keep track of link state information received from other nodes
+  + ... use this information to determine next hops to destinations
+* Optimization: Reduce overhead of flooding link state information
+  + The broadcast from X is only forwarded by selected nodes, so-called **Multipoint relays (MPR)**
+  + Usage of MPRs reduces global flooding overhead by optimizing it locally
+
+
+
+**OLSR - Multipoint Relays**
+
+* MPR Definitions
+  + A node is selected with two rules
+    + Any 2-hop neighbor must be covered by at least one multipoint relay
+    + The number of multipoint relays should be minimized (per node)
+  + A node forwards the flooding packets with the flollowing rules
+    + Forward if the packet has not already been received
+    + The node is multipoint relay of the last transmitter
+* A simple heuristic for computing MPRs
+  + Start with an **empty MPR set**
+  + Add to the MPR set each neighbor that is the only one covering one or more 2-hop neighbor (must be an MPR anyway)
+  + Until all 2-hop neighbors are covered repeat:
+    + Add to the MPR set a neighbor that covers a maximum of still uncovered 2-hop neighbors
+
+
+
+**OLSR - MPR Selection**
+
+* Nodes E and K are multipoint relays for node H
+  + Node K has forwarded the information received from H in the next step
+  + E has already forwarded the same information once
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-02-05 23.09.39_B1ImPa.jpg" alt="Screenshot_2024-02-05 23.09.39_B1ImPa" style="zoom:50%;" />
+
+
+
+**OLSR - Core Protocl Functionality**
+
+* Link sensing
+* MPR selection and MPR signaling
+* Topology control message diffusion (Link State Message)
+* Route calculation
+* The OLSR standard specifies all messages + mechanisms
+
+
+
+**Summary**
+
+* Target networks
+  + Large, dense networks
+  + Low routing latency due to proactive routing
+  + Various extensions exist, so-called auxiliary functions to complement the core functionality of OLSR
+* Multipoint relays reduce the flooding overhead because:
+  + only MPRs forward control messages
+  + MPRs may flood partial link state, that is, only MPRs generate link state information including MPR Selector information
+  + A MPR Selector of node X is a node which has selected its 1-hop neighbor, node X, as its multipoint relay
+
+
+
+
+
+## Chapter 08, Module 01
 
 
 
