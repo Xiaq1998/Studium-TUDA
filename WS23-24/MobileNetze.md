@@ -662,3 +662,330 @@ MAC supports two modes: Beacon-enabled mode & non-beacon modes
 
 ### ZigBee
 
+ #### ZigBee Overview
+
+* ZigBee is an ultra-low power, low data rate, short-range (1 to 100 m) WPAN's technology
+* ZigBee is mainly designed for communication in monitoring and control applications (ZigBee and BLE are competitors)
+* ZigBee allows running applications on two AA batteries for years (research shows that BLE is even more energy-saving)
+* ZigBee supports multi-hop communication (so is Bluetooth mesh)
+* ZigBee builds on a subset of the IEEE 802.15.4 PHY and MAC (non-beacon-enabled PANs), and adds upper layer functionalities
+* ZigBee standardization is managed by ZigBee Alliance. The first standard came out in 2004
+* ZigBee supports up to 254 devices or ^~^65000 simpler nodes
+* Multi-hop ad-hoc mesh network
+  + Multi-Hop Routing: message to non-adjacent nodes
+  + Ad-hoc Topology: no fixed topology. Nodes discover each other
+  + Mesh Routing: end-nodes help route messages for others
+  + Mesh Topology: loops are possible
+* Tri-Band:
+  + 16 channels at 250kbps in 2.4GHz ISM
+  + 10 channels at 40kbps in 915 MHz ISM band (Americas)
+  + 1 channel at 20kbps in European 868 MHz band, 920 MHz in Japan
+* ZigBee Application Profiles
+  + Smart energy
+    + electrical, gas, water meter reading
+  + Commercial building automation
+    + Smoke detectors, lights
+  + Home automation
+    + remote control lighting, heating, doors
+  + Personal, home, and hospital care (PHHC)
+    + Monitor blood pressure, heart rate
+  + Telecom applications
+    + mobile phones
+  + Industrial process monitoring and control
+    + temperature, pressure, position (RFID)
+
+**ZigBee Topologies & Device Classes**
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-01-31 18.02.25_cz4qyW.jpg" alt="Screenshot_2024-01-31 18.02.25_cz4qyW" style="zoom:50%;" />
+
+* ZigBee Coordinator (ZC)
+  + Selects channel, starts the network, assigns short addresses to other nodes
+* ZigBee Router (ZR)
+  + Nodes that can route packets to/from other nodes
+* ZigBee End-Device (ZED)
+  + Can sleep to extend battery life, not capable of being a coordinator or a router, leaf node
+
+
+
+#### ZigBee Address Assignment
+
+* Each node gets a unique 16-bit address
+* Two schemes
+  + Distributed scheme
+    + Called Cskip address assignment
+    + Good for tree structure
+    + Each child is allocated a sub-range of address
+    + Need to limit
+      + **L~m~ (maximum tree depth)**: MaxDepth
+        + If MaxDepth = 6, it is not possible to fit it in 16-bit space
+      + **C~m~ (maximun number of children per node)**: MaxChildren
+      + **R~m~ (maximum number of router children per parent node)**: MaxRouters
+  + Stochastic scheme
+    + Parent draws a 16 bit random number between 0 and 2 ^16^-1, a new number is drawn if the result is all-zero (null) or all-one (broadcast)
+    + Parent then advertises (broadcasts) the number to the network 4 times
+      + If another node has the same address, an address conflict message is returned and the parent draws another number and repeats until no conflict
+    + There is no limit for the number of children, router, or depth
+
+**Hierarchical (Tree) Topology**
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-01-31 18.15.49_7fcWwR.jpg" alt="Screenshot_2024-01-31 18.15.49_7fcWwR" style="zoom:50%;" />
+
+**Cskip Address: Example**
+
+* Parameters: 
+  + L~m~ = 3 (MaxDepth)]
+  + C~m~ = 5 (MaxChildren)
+  + R~m~ = 3 (MaxRouter)
+* Calculate Cskip (child skip) at each level:
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-01-31 18.18.14_exVnpS.jpg" alt="Screenshot_2024-01-31 18.18.14_exVnpS" style="zoom:50%;" />
+
+* Two ways of computing Cskip:
+
+  + Method 1: resursively computed from high lever to low level
+    $$
+    Cskip(n-1)=(Cskip(n)-1)\cdot R~m~+C~m~+1
+    $$
+
+    + At level MaxDepth, node has no children, thus **Cskip(3) = 0**
+    + At level MaxDepth - 1, node has only leaf children, thus **Cskip(2) = 1**
+    + For our problem,
+      + Cskip(3) = 0
+      + Cskip(2) = 1
+      + Cskip(1) = (Cskip(2) - 1)*3 + 5 + 1 = 6
+      + Cskip(0) = (Cskip(1) - 1)*3 + 5 + 1 = 21
+
+  + Method 2: computed for any level
+
+    <img src="/Users/summer/Pictures/截屏/Screenshot_2024-01-31 19.25.36_xj0KVq.jpg" alt="Screenshot_2024-01-31 19.25.36_xj0KVq" style="zoom:50%;" />
+
+    <img src="/Users/summer/Pictures/截屏/Screenshot_2024-01-31 20.12.32_4IHSX8.jpg" alt="Screenshot_2024-01-31 20.12.32_4IHSX8" style="zoom:50%;" />
+
+* Address is assigned from low level to high level
+
+* Let *Y* be the i^th^ router child of *X*, *Z* be the j^th^ end-device child of *X*, where (*i*,*j* >= 1):
+
+  + Coordinator: Addr(ZC) = 0
+  + Router: Addr(Y) = Addr(X) + (i - 1) * Cskip(level(X)) + 1
+  + End-device: Addr(Z) = Addr(X) + MaxRouter * Cskip(level(x)) + j
+
+* The coordinator address is 0 (decimal)
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-01-31 20.18.20_JLu79o.jpg" alt="Screenshot_2024-01-31 20.18.20_JLu79o" style="zoom:50%;" />
+
+Addr(Y~1~) = Addr(X) + (i - 1) * Cskip(level(X)) + 1
+
+​               = 0 + (1 - 1) * 21 + 1
+
+​               = 1
+
+**Distributed Scheme: Pros & Cons**
+
+* Advantage of Cskip
+  + A node can tell from the address whether it is a descendant or not (address implies topology, helpful for routing)
+  + Address is guaranteed conflict-free
+* Disadvantage of Cskip
+  + Does not support a tree with depth larger than 5
+
+#### ZigBee Routing
+
+**ZigBee supports 4 types of routing**
+
+* Broadcast
+
+  + Broadcast is one-to-many communication
+
+  + Broadcast protocol
+
+    + The initiator sets the destination address (dest addr) and radius (same as TTL)
+    + If a receiver has seen the packet before, it drops the packet
+    + Otherwise, the receiver indicates the packet reception to the upper layer, then it decrements radius
+    + If radius > 0 and the device is not ZED, then retransmit
+
+    <img src="/Users/summer/Pictures/截屏/Screenshot_2024-01-31 20.29.02_KL64Gd.jpg" alt="Screenshot_2024-01-31 20.29.02_KL64Gd" style="zoom:50%;" />
+
+  + Multicast (ZigBee Pro)
+
+    + Multicast is based on the idea of broadcast (flooding) but uses less resource, i.e., only transmit to a group of devices
+    + Each group is identified by a 16-bit multicast group ID
+    + Group members: the devices in the same group
+    + A nonmember can be used to relay multicast message to unreachable member device
+    + non-member radius (NR) field: limits the number of times a multicast frame is rebroadcast by nonmember devices
+
+    <img src="/Users/summer/Pictures/截屏/Screenshot_2024-01-31 20.32.38_aXIrhM.jpg" alt="Screenshot_2024-01-31 20.32.38_aXIrhM" style="zoom:50%;" />
+
+* Tree Routing
+
+  + Tree Routing assumes Cskip addressing
+
+    + a node knows the address range of its descendants
+    + If the address falls within the range, send to the proper child
+    + Otherwise, send to the parent
+
+    <img src="/Users/summer/Pictures/截屏/Screenshot_2024-01-31 20.34.32_8v62OM.jpg" alt="Screenshot_2024-01-31 20.34.32_8v62OM" style="zoom:50%;" />
+
+* Mesh Routing
+
+  + The mesh routing is based on the Ad-Hoc On-Demand Distance Vector (AODV) routing protocol
+  + AODV is a reactive routing protocol: source starts to discover a route to destination when it first needs to send a packet to the destination
+  + Each node maintains a routing table which contains the next hop to a destination node
+  + The AODV protocol
+  + RREQs are broadcast messages
+  + in the example, assume each link has link cost equals 1
+  + The path cost is the accumulation of the link cost
+  + Each intermediate node keeps the reverse path (min cost path to source)
+  + The destination node 5 received the RREQ with min path cost 2 from node 1
+
+  <img src="/Users/summer/Pictures/截屏/Screenshot_2024-01-31 20.39.20_wm4aXF.jpg" alt="Screenshot_2024-01-31 20.39.20_wm4aXF" style="zoom:50%;" />
+
+* Source Routing
+
+  + The problem with AODV is that the routing table may not fit in the memory
+    + E.g., suppose a Gateway may have a routing table with ~2000 entries
+  + In source routing, the routing is only known to the source
+    + only the source potentially requires large memory
+  + Source routing is based on Dynamic Source Routing (DSR) protocol
+  + DSR is a reactive routing protocol
+    1. Route Discover
+    2. Route Reply
+
+
+
+## Chapter 06, Module 01
+
+#### Introduction to MANET
+
+**Terminology and Paradigms**
+
+* "Ad Hoc"
+  + Often omprovised or impromptu; "an ad hoc committee meeting"
+  + Formed or used for specific or immediate problems or needs; "ad hoc solutions"
+  + Fashioned from whatever is immediately available: improvised; "large ad hoc parades and demonstrations"
+* "Spontaneous"
+  + Arising from a momentary impulse
+  + Controlled and directed internally; "self-acting"
+  + Produced without being planted or without human labor; "indigenous"
+  + Developing without appartent external influence, force, casue, or treatment
+
+**Intruduction**
+
+(Mobile) Ad Hoc Communication Networks - MANET
+
+* Historical successor of packet radio networks
+* Self-organizing, mobile and wireless nodes
+* Absence of infrastructure, multi-hop routing necessary
+* Systems are both, terminals (end-systems) and routers (nodes)
+* Constraints (dynamics, energy, bandwidth, link asymmetry)
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-02-03 14.08.18_kAYruo.jpg" alt="Screenshot_2024-02-03 14.08.18_kAYruo" style="zoom:50%;" />
+
+**Why do we need routing protocol fro ad-hoc network?**
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-02-03 14.09.22_xJ1ZXo.jpg" alt="Screenshot_2024-02-03 14.09.22_xJ1ZXo" style="zoom:50%;" />
+
+* Links do not necessarily have the same characteristics in both directions
+* Channel condition changes from time to time
+* Dynamic topology
+* Some nodes may be out of range of others
+* Must use other peer nodes as routers to forward packets
+* Need to find new routes as nodes move or conditions change (highy dynamic and unpredictable)
+* Routing protocol captures and distributes state of network
+* Routing strategy (algorithm) computes shortest paths
+
+**Characteristics of Ad Hoc Communications**
+
+* Characteristics are dominated by heterogeneity and variability
+  + Dynamically changing topology
+  + Absence of fixed infrastructure and centralized administration
+  + Bandwidth constrained wireless links
+  + Energy-constrained nodes
+
+**Main challenges for routing protocol design**
+
+* Mobility of nodes: Dynamic topologies
+  + Path breaks
+  + Partitioning of a network
+  + Inability to use protocols developed for fixed network
+* Bandwidth is a scarce resource
+  + Inability to have full information about topology
+  + Control overhead must be minimized
+* Shared broadcast radio channel
+  + Nodes compete for sending packets
+  + Collisons
+* Erroneous transmission medium
+  + Loss of routing packets
+* Energy-constrained
+* Scalability
+
+
+
+#### MANET Protocols
+
+**Ad Hoc Routing Paradigms**
+
+* Flooding of data packets
+  + simple approach, extremely high overhead
+  + many protocols perform flooding of control packets
+* Uniform protocols
+  + topology-based vs. destination-based
+  + proactive vs. reactive paradigms
+* Non-uniform protocols
+  + hierarchical protocols, cluster-based, flat protocols
+  + geographical protocols
+  + hybrid protocols
+
+**Reactive Routing**
+
+* Goal: Reduction in routing overhead
+  + useful when number of traffic sessions is much lower than the number of nodes
+* No routing structure created a priori: Let the structure emerge in response to a need
+* Advantages
+  + small control overhead
+  + adaptive to network dynamics
+  + low storage requirements
+* Disadvantages
+  + High flood-search overhead with mobility, distributed traffic
+  + high route acquistion latency
+  + low scalability
+* Source initiated
+  + source floodes the network with route request packet when a route is required to a destination
+* Destination replies to request
+  + reply uses reversed path of route request
+  + setes up the forward path
+* Three key protocols
+  + Dynamic Source Routing (DSR)
+  + Ad-hoc On-demand Distance Vector (AODV) Protocol
+  + Location Aided Routing (LAR)
+
+**Proactive Routing**
+
+* Distributed shortest-path protocols
+* Based on periodic updates
+  + high routing overhead
+* Advantages
+  + Low delay of route setup process: all routes are immediately available
+* Disadvantages
+  + high bandwidth requirements 
+  + low scalability
+  + high storage requirements 
+* Routing Protocol
+  + Optimized Link State Routing (OLSR)
+
+**Taxonomy of Routing Protocols**
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-02-03 14.34.31_0kuxoN.jpg" alt="Screenshot_2024-02-03 14.34.31_0kuxoN" style="zoom:50%;" />
+
+
+
+## Chapter 06, Module 02
+
+### The Ad Hoc On-demand Distance Vector Protocols (AODV)
+
+### Dynamic Source Routing (DSR)
+
+### Location Aided Routing (LAR)
+
+### Optimized Link State Routing (OLSR)
+
+
+

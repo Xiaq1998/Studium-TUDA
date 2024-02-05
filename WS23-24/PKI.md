@@ -863,7 +863,7 @@ Levels: unknown &rarr; none &rarr; marginal &rarr; complete &rarr; ultimate
 
 **Certificate revocation**
 
-Abortive ending of the binding between:
+Abortive ending 异常终止 of the binding between:
 
 * subject and key (public key certificate)
 * subject and attributes (attribute certificate)
@@ -919,7 +919,21 @@ The revocation is initiated by **the subject** or **the issuer**.
 * Can be used offline (CRL caching)
 * Easy implementation & management
 * High information content (extendable)
-* The CRL (Full CRL) contains information about all revoked certificates
+* The CRL (Full CRL) contains information about all revoked certificates &rarr; size increases monotonically
+* All information is transferred at the same time
+  + High load (peak) at "next update" time
+  + Long validity period &rarr; bad timeliness
+  + Short validity period &rarr; bad performance
+  + Workarounds & modifications
+    + Lean CRLs
+      + expired certificates are removed from the CRL 过期的证书将从CRL中删除
+      + expired certificates can not be checked anymore
+    + Variants of CRLs beside basic complete CRLs
+      + Over-issued CRLs
+      + Delta CRLs
+      + Indirect CRLs
+      + Partitioned CRLs
+      + Redirect CRLs
 
 **Publishing CRLs**
 
@@ -960,9 +974,9 @@ CRL extensions affect the CRL as a whole or each single CRL entry (all of them)
 
 **CRL Number**
 
-* Monotonically increasing sequence number
+* Monotonically increasing sequence number 单调递增的序列号
 * **Non-critical** extensions, ==must be included in all CRLs==
-* To determine when a particular CRL supersedes another CRL
+* To determine when a particular CRL supersedes another CRL 确定特定的CRL何时取代另一个CRL
 * Two CRLs for same scope generated at different times must not have same CRL number
 * Supports the use of Delta CRLs
 
@@ -1014,9 +1028,9 @@ CRL entry extensions affect the current CRL entry and maybe some following ones 
 
 **Delta CRL**
 
-* Format like a "normal" CRL + Delta CRL Indicator extension
+* Format like: a "normal" CRL + Delta CRL Indicator extension
 * Contains ALL changes since Base CRL was issued
-* Associated to Base CRL by the BaseCRLNumber
+* Associated to Base CRL by the **BaseCRLNumber**
 
   &rarr; Better network load, netter scalability
 
@@ -1042,14 +1056,14 @@ CRL entry extensions affect the current CRL entry and maybe some following ones 
 * CRL numbers are used to identify complementary complete CRLs and Delta CRLs
 * CRL numbering conventions for Delta CRLs
   + Complete and Delta CRLs for a given scope must share one numbering sequence
-* A complete and a Delta CRL issued at the same time must have same CRL number and provide same revocation information
+* A complete and a Delta CRL issued at the same time must have same CRL number and provide same revocation information 同时颁发的完整CRL和Delta CRL必须具有相同的CRL编号并提供相同的吊销信息
 
 **Delta CRL Indicator** 
 
 * Critical extension
 * Identifies a CRL as being a Delta CRL
 * Contains a single value called **BaseCRLNumber**
-* The BaseCRLNumber identifies the CRL used as the starting point in the generation of the Delta CRL
+* The BaseCRLNumber identifies the CRL used as the starting point in the generation of the Delta CRL. BaseCRLNumber标识用作生成此Delta CRL起点的CRL
 * The reference base CRL must be published as a complete CRL
 
 **Freshest CRL** 
@@ -1098,7 +1112,7 @@ Possible responses (basic version):
 * Unknown, nothing known about the certificate, e.g., issuer unknown
 * Revoked, certificate revoked or may not exist
 * Good, no such certificates is within its validity period and is revoked
-  + Good means that the certificate is not revoked, but it may be expired or even not exist at all
+  + Good means that the certificate is not revoked, but it may be expired 到期 or even not exist at all
 
 **Structure of an OCSP request**
 
@@ -1137,7 +1151,7 @@ Approaches:
 Transport Layer Security (TLS) Extensions: Extensions Definitions - RFC 6066:
 
 * During the TLS handshake, servers may return a suitable certificate status response along with their certificate
-* Servers can cahce OCSP responses and reuse them (until nextUpdate time)
+* Servers can cahce OCSP responses and reuse them (until nextUpdate time) 服务器可以缓存OCSP响应并重用它们
 
 Transport Layer Security (TLS): Multiple Certificate Status Request Extension - RFC6961:
 
@@ -1208,14 +1222,14 @@ Transport Layer Security (TLS): Multiple Certificate Status Request Extension - 
 #### CRT (Tree-based system)
 
 * Choose a cryptographically strong (one-way) hash function h
-* Randomly generate 2^Y^ numbers as leaves of a binary tree
+* Randomly generate **2^Y^** numbers as leaves of a binary tree
 * Build a hash-tree
 * Put the value of the root node into the certificate (replacing Y~365~ from Micali's system)
 * On a day i, release the values of the path from leaf node i and all nodes on the path needed to compute the root
 
 **Effect**
 
-* O(log(#leaves)) hash values have to be released each day, so updates are a little worse than original Micali, but not much
+* **O(log(#leaves))** hash values have to be released each day, so updates are a little worse than original Micali, but not much
 * Computation time is now als O(log(#leaves)), which is much better
 
  
@@ -1683,7 +1697,7 @@ Only use certificates found in:
 **Input variables - 1: Prospective certification path of length n**
 
 * The certification path to be validated
-* Note: A certificaste must not appear more than once in a prospective certification path
+* Note: A certificaste must not appear more than once in a prospective certification path 证书不得在预期的认证路径中出现多次
 * Exapmle: (Path length = 3)
 
 <img src="/Users/summer/Pictures/截屏/Screenshot_2024-01-27 17.58.19_IOblxv.jpg" alt="Screenshot_2024-01-27 17.58.19_IOblxv" style="zoom:50%;" />
@@ -1749,6 +1763,10 @@ Only use certificates found in:
 * For each name type: a set of subtrees defining the prohibited names
 * &rarr; X.509 extension Name Constraints
 
+**Initialization**
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-02-02 22.30.20_nU05ED.jpg" alt="Screenshot_2024-02-02 22.30.20_nU05ED" style="zoom:50%;" />
+
 
 
 #### X.509 extension
@@ -1784,6 +1802,7 @@ Only use certificates found in:
   + Allowed number of subsequent certificates before anyPolicy is no longer permitted
   + Self-issued certificates not counted, may still use anyPolicy
 * Example: Policy evaluation (User requires "Gold")
+* E.g. Value of "1" &rarr; anyPolicy may be processed in next certificate in the path, but not in additional ones.
 
 <img src="/Users/summer/Pictures/截屏/Screenshot_2024-01-27 19.00.56_Mklaly.jpg" alt="Screenshot_2024-01-27 19.00.56_Mklaly" style="zoom:50%;" />
 
@@ -1891,15 +1910,15 @@ depth 0:
 
 <img src="/Users/summer/Pictures/截屏/Screenshot_2024-01-27 22.54.30_GbwdFG.jpg" alt="Screenshot_2024-01-27 22.54.30_GbwdFG" style="zoom:50%;" />
 
-1. Determine the set of policy nodes whose parent nodes have a valid_policy of anyPolicy
+1. Determine the set of policy nodes whose parent nodes have a **valid_policy 有效策略** of anyPolicy
 
    <img src="/Users/summer/Pictures/截屏/Screenshot_2024-01-27 22.57.29_5yww1c.jpg" alt="Screenshot_2024-01-27 22.57.29_5yww1c" style="zoom:50%;" />
 
-2. If the valid_policy of any node in the valid_policy_node_set is not in the user_initial_policy_set and is not anyPolicy, delete this node and all its children
+2. If the valid_policy of any node in the **valid_policy_node_set 有效策略节点集** is not in the user_initial_policy_set and is not anyPolicy, delete this node and all its children
 
    <img src="/Users/summer/Pictures/截屏/Screenshot_2024-01-27 22.59.28_aFh6GG.jpg" alt="Screenshot_2024-01-27 22.59.28_aFh6GG" style="zoom:50%;" />
 
-3. If the valid_policy_tree includes a node of depth n with the valid_policy anyPolicy and the user_initial_policy_set is not anyPolicy, perform the following steps:
+3. **(Wrap-up)** If the valid_policy_tree includes a node of depth n with the valid_policy anyPolicy and the user_initial_policy_set is not anyPolicy, perform the following steps:
 
    + for each P-OID in the user_initial_policy_set that is not the valid_policy of a node in the valid_policy_node_set, create a child node whose parent is the node of depth n-1 with the valid_policy anyPolicy
    + delete the node of depth n with the valid_policy anyPolicy
@@ -2066,7 +2085,520 @@ Adaptations of standard path validation algorithm:
 
 
 
+## Alte Klausur
+
+### SS2022
+
+* Bennen Sie das Vertrauensmodell von PGP.
+
+  —— Web of Trust
+
+  
+
+* Welches Gültigkeitsmodell wird in der Web PKI verwendet?
+
+  —— Chain Model
+
+  
+
+* Nennen Sie die drei grundlegenden Komponenten eines Certificate Service Providers.
+
+  —— RA (Rigistration Authority), CA (Certification Authoirty), DS (Directory Services)
+
+  
+
+* Nennen Sie zwei Standard-Erweiterungen, die für das Path Building verwendet werden, aber für die Path Validation unwichtig sind.
+
+  —— Authority Information Access, CRL Distribution Points
+
+  
+
+* Welche zwei Dokumente geben Aufschluss über die für eine CA spezifizierten Sicherheitsrichtlinien und wie diese umgesetzt werden?
+
+  —— CP (Certificat policy)
+
+  ​        CPS (Certification practice statement): Im CPS beschreiben CAs, wie die in der CP spezifizierten Sicherheitsrichtlinien umgesetzt werden.
+
+  
+
+* Nennen Sie eine Art hybride Zertifikate zu erstellen, die Sie in der Vorlesung kennengelernt haben.
+
+  —— Concatenation, Certificate encapsulation, Key-signatur encapsulation
+
+  
+
+* Sie haben in der Vorlesung die alternativen Revokationssysteme CRS und CRT kennengelernt. Nehmen Sie jeweils für CRS bzw. CRT an, dass das System 52 Woche verwendet werden soll und jede Woche der aktuelle Revokationsstatus veröffentlicht wird. Beantworten Sie die folgenden Fragen jeweils für CRS sowie für CRT. Kennzeichnen Sie eindeutig auf welches der beiden Verfahren sich die Antwort bezieht. (32<52<64)
+  + Wie viel initiale Zufallswerte werden benötigt?
+
+    —— CRS: 2, CRT: 65(64+1)
+
+  + Bei Veröffentlichung des Zertifikats wird auch der Wert *Y* veröffentlicht. Dieser wird mittels einer Einwegfunktion *f* aus einem oder mehreren der initial gewählten Zufallswerte berechnet. Wie oft muss *f* angewendet werden, um *Y* zu berechnen?
+
+    —— CRS: 1, CRT: [log^2^(60)] + 1 =7
+
+  + Wie viel Werte werden pro Woche für die Verifikation veröffentlich?
+
+    —— CRS: 1, CRT: 7
+    
+    
+
+* Was ist die aktuelle Version bei X.509 Zertifikaten und was war die Neuerung beim Übergang zu dieser Version?
+
+  —— Version 3. Es kamen die Erweiterung hinzu.
+
+
+
+### SS2019
+
+#### Verschiedenes
+
+* Zeitstempel
+
+  1. Was versteht man unter einem Zeitstempel (Timestamps)? 如何理解时间戳？
+
+     —— Eine von einer vertrauenswürdigen Partei signierte Zeitangabe.  一个由受信任方签署的时间公告.
+
+  2. Wozu verwendet man Zeitstempel-Ketten? 时间戳的作用？
+
+     —— Gültigkeitserhat von Signaturen über lange Zetiräume, bspw. Bei der Archivierung. 长期保留签名的有效性，例如在归档期间.
+
+  
+
+* PKCS
+
+  1. Wofür wird PKCS#10 verwendet?
+
+     —— Certification Requests
+
+  2. Wofür wird PKCS#12 verwendet?
+
+     —— Sichere Speicherung privater Schlüssel 私钥的安全存储
+
+  
+
+* Alternative zum CA System
+
+  1. Wie nennt man das System, bei dem Nutzer die Schlüssel anderer Nutzer signieren? 用户签署其他用户密钥的系统叫什么？
+
+     —— PGP
+
+  2. Bei diesem System werden mit jedem Schlüssel zwei Werte, die jeweils unterschiedliche Level haben können, assoziiert. Wie heißen diese beiden Werte?
+
+     —— Owner Trust, Key Validity
+
+  3. Wie nennt man die Datenstruktur, in der Nutzer die öffentlichen Schlüssel anderer Nutzer speichern? 用户存储其他用户公钥的数据结构叫什么？
+
+     —— Public Keyring
+
+  4. Wer ist in diesem System für die Revokation von Schlüsseln verantwortlich?
+
+     —— der Schlüssel Eigentümer
+
+  
+
+* Alternativen zu CRLs
+
+  1. Wie nennt man die Rovokationsmethode, bei der Clients den Revokationsstatus von Zertifikaten bei einem Server anfragen können? 客户端通过该方法可以查询服务器的证书吊销状态
+
+     —— OCSP (Online Certificate Status Protocol) 在线证书状态协议
+
+  2. Wie nennt man die Methode, bei der bspw. ein TLS Server sämtliche Revokationsinformationen zu seinen Zertifikaten direkt bei Verbindungsaufbau mitliefert? 例如，TLS服务器在建立连接时直接提供其证书的所有吊销信息
+
+     —— OCSP Stapling
+
+  3. Sie haben in der Vorlesung einen Revokationsmechanismus kennen gelernt, bei dem statt Revokationen explizite Gültigkeitstoken veröffentlich werden. 发布显式有效令牌而不是撤销. Welches kryptographische Primitiv wird als Basis für diesen Mechanismus verwendet? 使用哪种加密原语作为该机制的基础？
+
+     —— Hash-Function (in RCS/CRT)
+
+  
+
+* Zertifikatsklassen
+
+  1. Wie nennt man die Klasse von Zertifikaten, bei der eine besonders gründliche Überprüfung der antragsstellenden Organisation erfolgt? 对申请组织进行特别彻底检查的证书类别名称
+
+     —— Extended Validation (EV) Zertifikate
+
+  2. Was ist die zugehörige OID?
+
+     —— 2.23.140.1.1
+
+
+
+#### Hybride Zertifikate
+
+* Bennen Sie zwei der drei Verfahren und beschreiben Sie stichpunktartig wie diese Verfahren funktionieren.
+
+  1. Concatenation 级联
+
+     —— Die beiden im Zertifikate enthaltenen Schlüssel, sowie die beiden Signaturen werden jeweils konkateniert.
+
+  2. Certificate encapsulation 证书封装
+
+     —— Ein komplettes Zertifikat enthält den zweiten Schlüssel, sowie die zweite Signatur, wird in eine spezielle Extension (hybridCert extension) geschrieben.
+
+  3. Key-signature encapsulation 密钥签名封装
+
+     —— Es werden zwei zusätzliche Extensions erstellt, hybridKey- and hybridSig extensions.
+
+     hybridKey: enthält den zusätzlichen Schlüssel
+
+     hybridSig: enthält die zusätzliche Signatur über das Zertifikat
+
+
+
+* Abwärtskompatibilität (Backward Compatibility) 向下兼容. D.h.die hybriden Zertifikate können auch auf Legacy Systemen verwendet werden, die noch nicht für die Unterstützung von hybriden Zertifikaten vorbereitiet wurden.
+
+  1. Welches der von Ihnen in a) benannten Verharen unterstützt Abwärtskompatibilität? Nennen Sie ein Verfahren.
+
+     —— Certification encapsulation / Key-signature encapsulation
+
+  2. Nenne Sie eine notwendige Bedingung, damit das genannte Verfahren Abwärtskompatibilität bietet. Begründen Sie Ihre Antwort.
+
+     —— Die extension muss non-critical sein.
+
+
+
+#### Hierarchical Trust, AKIE
+
+* Können zwei unterschiedliche Zertifikate denselben Wert im keyIdentifier Feld in der AKIE haben, jedoch einen unterschiedlichen Wert im authorityCertIssuer Feld?
+
+  —— Ja, wenn die Zertifikate von derselben CA mit demselben Schlüssel ausgestellt worden sind. Und die CA mehrere Zertifikate für diesen Schlüssel von unterschiedlichen Issuern hat.
+
+
+
+#### CRLs
+
+* Mit welcher Extension kann eine CA bekannt machen, dass sie Delta-CRLs ausgibt und wo man diese herunterladen kann? Wo ist diese Erweiterung überall zu finden?
+
+  —— Freshest CRL (Delta CRL Distribution Point).
+  
+  ​         In Zertifikaten und Full-CRLs zu finden
+
+
+
+* Geben Sie 3 weitere Arten von CRLs an, die Sie neben Full-, Base-, Delta-CRLs kennengelernt haben und geben Sie deren Haupt-Eigenschat an.
+
+  —— over-issued CRLs: CRLs die öfter ausgegeben werden als durch "nextUpdate" erforderlich wäre.
+
+  —— indirect CRL: der Issuer der CRL ist nicht der Issuer der enthaltenen Zertifikate.
+
+  —— Segmented CRL: CRLs, die nur Zertifikate mit einem bestimmten Scope beinhalten.
+
+
+
+### SS2018
+
+#### Verschiedenes
+
+* Definieren Sie kurz Public Key Zertifikate. Benennen Sie dabei den Hauptzweck und wie die Authentizität von Zertifikaten geschützt wird.
+
+  —— Zertifikate sind datenstrukturen die einen öffentlichen Schlüssel an eine Identität/ Subject binden.
+
+  ​        Zertifikate sind von einer vertrauenswürdigen Partei (CA) digital signiert.
+
+  
+
+* Benennen Sie 3 Vertrauensmodelle, die Sie in der Vorlesung kennengelernt haben.
+
+  —— Direct Trust, Web of Trust, Hierarchical Trust
+
+  
+
+* Was ist die aktuelle Version bei X.509 Zertifikaten und was war die Neuerung beim Übergang zu dieser Version.
+
+  —— Version 3. Es kamen die Erweiterungen hinzu.
+
+  
+
+* Nennen Sie die 2 Arten von Perosonal Security Environments, die zur Aufbewahrung von privaten Schlüsseln dienen können. Nennen Sie jeweils ein Beispiel.
+
+  —— Hardware PSE. Z.B., Smartcard
+
+  ​         Software PSE. Z.B., PKCS#12
+
+  
+
+* Erklären Sie stichpunktartig, wie der Proof-of-Possession (PoP) für verschiedene Schlüsselarten durchgeführt wird
+
+  + Signature key: Signieren einer Nonce, oder des Certificate Requests
+  + Encryption key: Entschlüsselung eines durch den CSP verschlüsselten Datums
+  + Key-agreement key: Vereinbarung eines gemeinsament geheimen Schlüssels
+
+
+
+#### X.509 Extension
+
+* Können zwei unterschiedliche Zertifikate den selben Key Identifier Wert in der SKIE haben? Begründen Sie ihre Antwort.
+
+  —— Ja, das ist bei Zertifikaten, die den selben Schlüssel haben der Fall.
+
+  
+
+* Welcher Extension kann man entnehmen:
+
+  + Wo die zugehörige CRL (关联的CRL) zu finden ist?
+
+    —— CRL Distribution Points
+
+  + Wo/Wie der zuständige OCSP Responder zu erreichen ist?
+
+    —— Authoirty Information Access
+
+
+
+#### Zertifikatssperrung
+
+OCSP
+
+* Mit welcher Art von Architektur ist OCSP umgesetzt?
+
+  —— Client-Server Architektur
+
+  
+
+* Nennen Sie die 3 möglichen OCSP Statusantworten.
+
+  —— Good, Revoked, Unknown
+
+  
+
+* Wie kann eine CA einen OCSP Responder autorisieren, Revokationsinformationen für sie bereitzustellen? CA如何授权OCSP响应者向他们提供吊销信息
+
+  —— Die CA gibt ein Zertifikat für den OCSP Responder aus, bei dem "OCSP Signing" in der Extended Key Usage Erweiterung enthalten ist.
+
+  
+
+* Erklären Sie kurz OCSP Stapling. Nennen Sie außerdem einen Vorteil von OCSP Stapling gegenüber herkömmlichem OCSP.
+
+  —— TLS Extension die es dem Server erlaubt, beim Handshake OCSP responses für das Serverzertifkat und den Zertifizierungspfad mitzuschicken. TLS扩展，允许服务器在握手期间发送服务器证书和证书路径的OCSP响应
+
+  —— Vorteil: Load-Reduzierung beim OCSP Server
+
+
+
+#### Certificate Path Processing
+
+* Benennen Sie die Zertifikatserweiterung mit der eine CA das PolicyMapping in nachfolgenden Zertifikaten unterbinden kann. CA可以使用该扩展来阻止后续证书中的策略映射.
+
+  —— Policy Constraints
+
+  
+
+* Ein CA Zertifikat in einem Zertifizierungspfad beinhaltet die Inhibit anyPolicy Erweiterung mit dem Wert 2. Was bedeutet das für die Pfadvalidierung?
+
+  —— Die anyPolicy darf noch in maximal 2 nachfolgenden Zertifikaten verarbeitet werden.
+
+
+
+### SS2017
+
+#### Gültigkeitsmodelle
+
+**Kettenmodell**
+
+* Um das Kettenmodell in der Praxis einsetzen zu können sei folgendes gegeben: Alle involvierten CAs sind vertrauenswürdig und Endentitäten fügen vor dem Signieren eines Dokuments immer eine Zeitangabe hinzu, die mitsigniert wird. Wozu wird diese Zeitangabe benötigt? 为了能够在实践中使用链模型，给出以下条件：所有涉及的CA都是值得信赖的，并且最终实体总是在签署文档之前添加时间指示，该文档也被签名。为什么需要这个时间信息？
+
+  —— Eine Signatur enthält per se keine Zeitangabe. Ohne zusätzliche Zeitangabe kann nicht nachvollzogen werden, wann eine Signatur erstellt wurde und somit ist unklar zu welchem Zeitpunkt verrifiziert werden muss. 签名本身不包含时间指示。如果没有额外的时间信息，就无法确定签名的创建时间，因此不清楚需要在那个时间点进行验证
+
+  
+
+* Nehmen Sie nun an, ein Angreifer gelangt zum Zeitpunkt X in den Besitz des Schlüssels einer teilnehmenden CA. Wird die Verwendung des Kettenmodells dadurch (bei Zertifikatsketten die diese CA enthalten) unsicher, wenn alle angegebenen Signaturestellungsdaten vor Zeitpunkt X liegen? Begründen Sie ihre Antwort. 现在假设攻击者在时间X拥有参与CA的密钥。如果所有指定的签名创建日期都在时间X之前，这是否会使链模型的使用不安全？
+
+  —— Ja. Da der Angreifer den Schlüssel hat, kann er beliebige Zertifikate, mit beliebigen Zeitabgaben (auch vor Datum X) erstellen. Der Verifizierer kann daher nicht sicher sein, ob ein Zertifikat tatsächlich vor der Kompromittierung von der CA erstellt, oder nach der Kompromittierung durch den Angreifer erstellt und rückdatiert wurde. 由于攻击者拥有密钥，因此它可以在任何时间（甚至在日期X之前）创建任何证书。因此，验证者无法确定证书实际上是由CA在泄露之前创建的，还是由攻击者在泄露之后创建并回溯的
+
+  
+
+* Nennen Sie zwei Möglichkeiten, die einen sicheren Einsatz des Kettenmodells trotz der Annahme möglicher Schlüsselkompromittierungen oder nicht vertrauenswürdiger Teilnehmer ermöglichen. 列出两种能够安全部署链模型的方法，尽管假设可能存在关键泄露或参与者不可信
+
+  —— Verwendung vorwärtssicherer Signaturverfahren
+
+  ​        Verwendung von Zeitstempeln durch vertrauenswürdige Dritte
+
+  
+
+* Nennen Sie ein Szenario, in dem das Kettenmodell verwendet werden kann, nicht jedoch das Schalenmodell.
+
+  —— Jede Anwendung, bei der Signaturen auch nach Ablauf der Zertifikatsgültigkeit überprüfbar bleiben müssen. 即使在证书过期后签名也必须保持可验证的任何应用程序
+  
+  
+
+**Web PKI**
+
+* Welches Gültigkeitsmodell kommt in der Web PKI zum Einsatz?
+
+  —— Chain Model
+
+  
+
+* Es stellt sich heraus, dass eine große CA, welche einige Millionen Serverzertifikate ausgegeben hat, nicht mehr vertrauenswürdig ist. Dieser CA kann jedoch nicht ohne Weiteres das Vertrauen entzogen werden (durch Revolution ihres Signaturschlüssels). Warum ist das der Fall? Unter welcher Bezeichnung ist dieses Problem bekannt? 事实证明，颁发了几百万张服务器证书的大型CA不再值得信任。然而，不能轻易的从该CA撤销信任（通过彻底改变其签名密钥），为什么会这样？这个问题的名称是什么？
+
+  —— Die Revokation würde alle ausgegeben Serverzertifikate auf einen Schlag ungültig machen. Es wäre dann nicht mehr möglich zu den Servern eine sichere Verbindung aufzubauen. 撤销将使所有颁发的服务器证书一举失效，这样就无法再与服务器建立安全连接了
+
+  ​        Too-big-to-fail Problem
+
+  
+
+* Wie kann das Problem aus (ii) ohne zusätzliche Infrastruktur verhindert werden? Benennen Sie eine notwendige Eigenschaft der verwendeten Signatureverfahren, das eingesetzte Gültigkeitsmodell und erläutern Sie kurz wie Revokation durchgeführt wird.
+
+  —— Vorwärtssicherheit Signaturverfahren
+
+  ​        Kombination aus Kettenmodell und Schalenmodell
+
+  ​        Feingranulare Revokation, i.e. bei Revokation muss mitgeteilt werden, ab welchem Schlüsselindex revoziert wird.
+
+
+
+#### Certificate Path Processing
+
+* Wie nennt man es, wenn sich 2 CAs gegenseitig Zertifikate ausstellen?
+
+  —— Cross-Certification
+
+  
+
+* Wie kann eine CA erreichen, dass eine ihr untergeordnete CA ausschließlich Zertifikate für Endentitäten, nicht aber für untergeordnete CAs ausstellen kann? CA如何确保其下属CA只能为最终实体颁发证书，而不能为下级CA颁发证书？
+
+  —— Die CA setzt in der *Basic Constraints Extension* die pathLen = 0 
+
+
+
+### SS2016
+
+#### Gültigkeitsmodelle
+
+* Kann man den in RFC5280 angegebenen Prüfalgorithmus zur Pfadvalidierung so verwenden, dass er nach dem Hybridmodell prüft? Wenn ja, wie? Wenn nein, begründen Sie Ihre Antwort. 是否可以使用RFC5280中规定的路径验证测试算法来根据混合模型进行测试？
+
+  —— Ja, indem man dem Algorithmus bei Initialisierung anstelle der aktuellen Werte Datum/Zeit-Werte als Input übergibt, zu denen die Prüfung nach Hybridmodell durchgeführt werden soll. 通过在初始化期间将算法日期/时间值而不是当前值作为输入，应执行混合模型检查
+
+  
+
+* Es sollen Dokumentensignaturen archiviert werden. 文件签名应存档 Welches Gültigkeitsmodell muss angewandt werden, sodass eine Signaturprüfung auch in Zukunft zum Resultat gültig führt, insofern das zum Zeitpunkt der Archivierung der Fall war? Begründen Sie ihre Antwort.
+
+  —— Hybridmodell oder Kettenmodell
+
+  ​        Beide Modelle haben die Eigenschaft, dass einmal gültige Signaturen immer gültig bleiben, da der/die Verifikationszeitpunkte unabhängig vom Zeitpunkt der Durchführung der Verifikation sind.
+
+
+
+#### Zertifikatssperrung
+
+* Nennen Sie 2 Anforderung (Requirements) die bei der Zertifikatssperrung erfüllt sein müssen. Geben Sie genau 2 Lösungen an. Es werden nur die ersten 2 Lösungen gewertet. 列出证书吊销必须满足的2项要求
+
+  —— Revokationsinformationen sind öffentlich verfügbar
+
+  ​         Die Authentizität der Revokationsinformationen ist durch jedermann prüfbar
+
+  
+
+* Wer ist in einer hierarchischen PKI für Revokation und deren Veröffentlichung verantwortlich? Wer ist bei PGP dafür zuständig?
+
+  —— Hierarchischen PKI: CAs
+
+  ​         PGP: die Nutzer selbst
+
+  
+
+* Alice hat Bobs X.509 Zertifikat und möchte es auf Revokation prüfen. Wo im Zertifikat findet Alice die Addresse des zuständigen OCSP Responders, wo die URL für den Download der entsprechenden CRL? Alice在证书的哪个位置找到负责的OCSP响应者的地址？ 下载相应CRL的URL在哪里？
+
+  —— OCSP Responder: in der Authoirty Information Access Extension
+
+  ​        CRL Zugriffspunkte: in der CRL Distribution Points Extension
+
+  
+
+* Nennen Sie die 3 möglichen OCSP Status Antworten für ein Zertifikat und erklären Sie kurz deren Bedeutung
+
+  —— Unknown, nothing known about the certificate
+
+  ​         Revoked, certificate revoked or may not exist
+
+  ​         Good, es liegen keine Revokationsinformationen zu diesem Zertifikat vor.
+
+  
+
+* Wie nennt man CRLs, die häufiger ausgegeben werden als das NextUpdat Datum es erfordern würde?
+
+  —— Over-issued CRL
+
+  
+
+* Neben compelte CRLs und indirekten CRLs haben Sie auch delta CRLs kennen gelernt.
+
+  + Wie erkennt man delta CRLs?
+
+    —— an der Delta CRL Indicator Extension
+
+  + Welchen Zweck hat die BaseCRLNumber?
+
+    ——Die BaseCRL Number identifiziert diejenige complete CRL, whlche als Startpunkt für die Erzeugung der delta CRL verwendet wurde.
+
+  + Was enthält eine delta CRL?
+
+    —— Alle Revokationen, die seit der Ausgabe der Base CRL hinzugekommen sind.
+
+  + Wenn man eine complet CRL hat, woran kann man erkennen, ob es auch delta CRLs von dieser CA gibt und wo man diese findet?
+
+    —— Freshest CRL Extension (Delta Distribution Point Extension).
+
+    ​        In Zertifikaten und Full-CRL zu finden.
+
+
+
+### SS2015
+
+* Welches Gültigketismodell kommt in RFC5280 zum Einsatz?
+
+  —— Shell Model (SchalenModell)
+
+  
+
+* Erklären Sie kurz das Funktionsprinzip von OCSP Stapling. Nennen Sie 2 Vorteile gegenüber der herkömmlichen Verwendung von OCSP
+
+  —— Beim OCSP Stapling sendet ein Web Server die entsprechenden Status Responses für seine Zertifikatskette direkt beim TLS Handshanke an den Client. 通过OCSP装订，Web服务器使用TLS Handshake将其证书链的响应状态响应直接发送到客户端
+
+  ​         Vorteile: Die Privacy des Clients wird geschützt.
+
+  ​                         Performanzverbesserung
+  
+  
+  
+* Welche zwei Möglichkeiten gibt es, den öffentlichen Schlüssel des Ausstellers eines Zertifikats A mithilfe von *Subject Key Identifier Extension (SKIE)* und *Authoirty Key Identifier Extension (AKIE)* zu finden?
+
+  —— Erste Möglichkeit: Man sucht ein Zertifikate B, bei dem der keyIdentifier des SKIE mit dem keyIdentifier des AKIE von Zertifikat A übereinstimmt.
+
+  
+
+* Würde es ausreichen die keyUsage Extension von Bobs Zertifikat um Certificate Sign zu erweitern, damit Bob mit seinem Schlüssel Zertifikate ausstellen darf? Begründen Sie ihre Antwort. 将证书签名添加到Bob证书的keyUsage扩展中好是否足够，使得Bob可以使用他的密钥颁发证书？
+
+  —— Nein. RFC5280 erfordert, dass CA Zertifikat zusätzlich die Basic Constraints Extension beinhalten.
+
+* Wie funktioniert die Revokation in GPG? Ist es möglich einen Schlüssel zu revozieren wenn man seinen privaten Schlüssel verloren hat?
+
+  —— Um einen PGP Schlüssel zu revozieren veröffentlicht man ein Revokationszertifikat. Das Revokationszertifikat wird mithilfe des privaten Schlüssels erstellt.
+
+  ​        Sollte der private Schlüssel verloren gehen und man hat zuvor kein Revozierungszertifikat erstellt, oder ist dieses nicht mehr zugereifbar, kann man sein Zertifikat in PGP nicht revozieren.
+
+  
+  
+* Wird der Owner Trust berechnet? Falls ja geben Sie die Berechnungsregel an. Falls nein, wie wird der Owner Trust bestimmt?
+
+  —— Der Owner Trust wird nicht berechnet.
+
+  ​        Es wird von der Person, welche den Keyring besitzt, gesetzt.
 
 
 
 
+### SS2014
+
+* Bei Hybrid- sowie beim Kettenmodell werden die Signaturerstellungszeitpunkte benötigt.
+
+  + Nennen Sie eine Möglichkeit, diese auf sichere Art und Weise zu bestimmen.
+
+    —— Zeitstempel durch vertrauenswürdige Dritte.
+
+  + Warum ist eine durch den Signatureersteller eingebrachte Zeitangabe im allgemeinen nicht als sicher zu betrachten? 为什么签名创建者指定的时间通常被认为不安全？
+
+    —— Würde ein Schlüssel in der Zukunft kompromittiert, so könnte der Angreifer (da er selbst signieren kann) beliebige Zeitangaben einbringen. Damit wäre es einem Angreifer möglich bspw. ein durch ihn signiertes Dokument auf einen Zeitpunkt vor der Revokation zurückzudatieren und es dadurch als gültig erscheinen zu lassen. 如果将来密钥被泄露，攻击者可以（因为他可以自己签名）输入任何时间信息。例如，这将允许攻击者将他签署的文档回溯到撤销之前的时间，从而使其看起来有效
+
+    
