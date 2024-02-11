@@ -2,9 +2,558 @@
 
 ## Chapter 01, Module 01
 
+### Frequencies for wireless communications  无线通信频率
+
+**Wireless channel guide the signal from transmitter to receiver 无线通道将信号从发射器引导至接收器**
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-02-10 16.53.46_TF6rTW.jpg" alt="Screenshot_2024-02-10 16.53.46_TF6rTW" style="zoom:50%;" />
+
+**Electromagnetic spectrum (光谱) has variable wavelengths and frequencies 电磁波谱具有可变的波长和频率**
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-02-10 16.55.46_78S4pn.jpg" alt="Screenshot_2024-02-10 16.55.46_78S4pn" style="zoom:50%;" />
+
+**Frequencies for mobile communication is regulated by ITU-R**
+
+* **VHF (Very high frequency, 30 - 300 GHz)** to **UHF (ultra-high frequency, 300 - 3000GHz)** -ranges for ==mobile radio== 
+
+  + simple, small antennas for cars
+  + good propagation characteristics, reliable connections
+
+* **SHF (Super high frequency, 3 - 30GHz)** and higher for directed links, ==satellite== communication
+
+  + small antenna, focusing the transmitted signal
+  + high bandwidth available
+
+* Wireless **LAN (local area network)** or **MAN (metropolitan area network)** use frequencies in UHF to SHF spectrum
+
+  + some systems planned up to **EHF (extremely high frequency)**
+
+  + limitations due to absorption by water and oxygen molecules (resonance frequencies)
+
+    + weather dependent fading, sighnal loss caused by heavy rainfall etc.
+
+      
+
+### Radio propagation 无线电传播
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-02-10 17.09.17_Q9pcji.jpg" alt="Screenshot_2024-02-10 17.09.17_Q9pcji" style="zoom:50%;" />
+
+**Singal propagation ranges 信号传播范围**
+
+* Transmission range
+
+  + communication possible
+  + low error rate
+
+* Detection range
+
+  + detection of the signal possible
+  + no communication possible
+
+* Interference range 干扰范围
+
+  + signal may not be detected
+  + signal adds to the background noise
+
+  <img src="/Users/summer/Pictures/截屏/Screenshot_2024-02-10 17.11.14_hrmHCz.jpg" alt="Screenshot_2024-02-10 17.11.14_hrmHCz" style="zoom:50%;" />
+
+**Wave propagation modes**
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-02-10 17.12.42_xeuJTz.jpg" alt="Screenshot_2024-02-10 17.12.42_xeuJTz" style="zoom:50%;" />
+
+* Ground Waves (up to 2MHz) 地波
+  + Radio transmission energy that travelling roughly follow (run parallel to) the earth's surface and is subject to surface attenuations 大致传播的无线电传输能量跟随 (平行于) 地球表面并受制于表面衰减
+  + &rarr;  the lower the frequency, the less the attenuation (衰减)
+* Sky Waves (3 - 30MHz) 天波
+  + Radio transmission energy that is **reflected or refracted** by the ionosphere (电离层). 被电离层反射或折射的无线电传输能量
+  + Sky waves will continue to reflect or refract between the earth's surface and the ionosphere until complete attenuation occurs
+* Space Waves (VHF & UHF band) 空间波
+  + Radio transmission energy that continues through the inonsphere (without reflection or refraction) into space
+  + Space waves neither follow the curvature of the earth, nor bend around obstructions 空间波既不遵守地球曲率，也不绕障碍物弯曲
+
+#### Signal: electromagnetic wave 电磁波
+
+* In wireless communication, electromagnetic waves are used as a mean to transmit information
+
+* Signal is a physical representation of data
+
+  <img src="/Users/summer/Pictures/截屏/Screenshot_2024-02-10 17.27.44_uaKPEl.jpg" alt="Screenshot_2024-02-10 17.27.44_uaKPEl" style="zoom:50%;" />
+
+* Radio Wave Cycle 周期
+
+  + The interval between any two points that measures the completion of a single wave movement
+
+* Wave Length 波长
+
+  + The actual linear measurement, in meters, of one wave
+
+* Amplitude 振幅
+
+  + The strength or width of one wave &rarr;  the greater the distance from the transmitting site, the smaller this the amplitude
+  + Signal strength decreases over time and distance
+
+**Signal: Transmit Signal**
+
+Sine wave (正弦波) is special periodic signal for a carrier 正弦波是一种特殊的载波周期信号
+
+* Frequency is measured in Cycles/sec or Hertz
+* The most important characteristic of a periodic signal, or the signal parameters are **amplitude 振幅, frequency 频率, and phase shift 相移**
+
+$$
+s(t)=A\sin(2\pi ft+\varphi)
+$$
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-02-10 17.38.34_9tgx3o.jpg" alt="Screenshot_2024-02-10 17.38.34_9tgx3o" style="zoom:50%;" />
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-02-10 17.39.08_PWPaGQ.jpg" alt="Screenshot_2024-02-10 17.39.08_PWPaGQ" style="zoom:50%;" />
+
+* Wavelength
+
+  <img src="/Users/summer/Pictures/截屏/Screenshot_2024-02-10 17.41.09_LcqTty.jpg" alt="Screenshot_2024-02-10 17.41.09_LcqTty" style="zoom:50%;" />
+
+  + Distance occupied by one cycle
+
+  + Distance between two points of corresponding phase in two consecutive cycles
+
+  + Assuming signal velocity *v* (速度)
+    $$
+    \lambda =vT, \lambda f=v,c=3\cdot10^8m/s
+    $$
+
+**The effects of signal propagation**
+
+* Path loss
+* Effects that causes multipath propagation
+  + Shadowing
+  + Reflection
+  + Scattering
+  + Diffraction
+  + Penetration
+  + Refraction
+
+
+
+#### Path loss or path attenuation
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-02-10 17.48.06_ryI6qh.jpg" alt="Screenshot_2024-02-10 17.48.06_ryI6qh" style="zoom:50%;" />
+
+* Strength of signal degrades with distance over transmission medium 信号强度随着距离的增加而减弱
+  + The reduction of power density of an electromagnetic wave as it propagates through space
+* Attenuation factors for unguided (wireless) media:
+  + Received signal must have sufficient strength so that circitry in the receiver can interpret and decode the signal
+  + Signal must maintain a level sufficiently higher than noise to be received without error
+* Path loss is a function of frequency and distance
+  + Attenuation is greater at higher frequencies 频率越高，衰减越大
+
+**Free space path loss (FSPL) 自由空间路径损耗**
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-02-10 17.57.18_KgkuBq.jpg" alt="Screenshot_2024-02-10 17.57.18_KgkuBq" style="zoom:50%;" />
+
+* Propagation in free space:
+  + FSPL for line-of-sight (LoS) communication 视距通信的自由空间路径损耗
+
+$$
+FSPL(dB)=P_t(dBm)-P_r(dBm)
+$$
+
+* If transmitter and receiver has transmit and receive antenna gain of G~t~ and G~r~, respectively, the path loss is computed using the Friis Formula
+  $$
+  \frac{P_r}{P_t}=G_tG_r\cdot\frac{1}{FSPL}=G_tG_r(\frac{\lambda}{4\pi d})^2=G_tG_r(\frac{c}{4\pi fd})^2
+  $$
+
+  $$
+  P_r[dBm]=P_t[dBm]+G_t[dB]+G_r[dB]-FSPL[dB]
+  $$
+
+  
+
+  + P~t~ = signal power at transmitting antenna
+
+  + P~r~ = signal power at receiving antenna
+
+  + d = distance between antennas
+
+  + 入 = carrier wavelength
+
+    + c = speed of light (~ 3x10^8^m/s)
+
+    + f = frequency
+
+    + $$
+      \lambda=\frac{c}{f}
+      $$
+
+* FSPL for ideal isotropic antenna
+  $$
+  FSPL=\frac{P_t}{P_r}=(\frac{4\pi d}{\lambda})^2=(\frac{4\pi fd}{c})^2
+  $$
+
+  $$
+  FSPL(dB)=20\log10(\frac{4\pi d}{\lambda})=20\log10(\frac{4\pi df}{c})
+  $$
+
+  
+
+#### Channel capacity 通道容量
+
+* Capacity refers to the maximum data rate for a channel
+  + Data rate is the rate, in bits per second (bps), at which data can be communicated
+* Channel capacity is the rate at which data can be transmitted over a given communication path, or channel, under given conditions
+* Channel capacity is a function of
+  + *B*: the bandwidth of the transmitted signal as constrained by the transmitter and the nature of the transmission medium, expressed in cycles per second, or Hertz
+  + *S*: the average received signal power
+  + *N*: the average level of noise over the communications path
+
+**Shannon-Hartley theorem tells the maximum rate**
+
+* Shannon-Hartley theorem computes the theoretical maximum channel capacity or rate that can be transmitted over a communication channel of specific bandwidth in the presence noise
+  $$
+  C[bps]=B[bps]\log_2(1+SNR)
+  $$
+
+  + C is the capacity of the channel in bits per second
+  + B is the bandwidth in bits per second
+  + SNR is the signal to noise ratio
+
+* SNR (Signal-to-noise ratio) 信噪比
+
+  + The ratio of the power in a signal to the power contained in the noise that is present at a particular point in the transmission:
+
+    **SNR~dB~ = P~r~(dBm) - kTB(dBm)**
+
+  + The above formula expresses the amount, in decibels, that the intended signal exceeds the noise level
+
+  + A high SNR means high-quality signal
+
+**Thermal Noise** 热噪声
+
+* Also called white noise
+* Due to agitation of electrons inside electrical conductor
+  + Except at absolute zero temperature, the electrons in every conductor (resistor) are always in thermal motion
+* Present in all electronic devices and transmission media
+* Can not be eliminated
+* Function of temperature of the components such as resistor
+* Particularly significant for satellite communication
+  + The sun contributes to the thermal noise at the receiver
+
+**Computation of noise for SNR**
+
+* SNR~dB~ = P~r~(dBm) - kTB(dBm)
+* The amount of thermal noise to be found in a bandwidth of 1Hz in any device or conductor (导体) is:
+  + **N~0~ = kT (W/Hz)**
+  + N~0~ = noise power density in watts per 1 Hz of bandwidth
+  + k = Boltzmann's constant = 1.3803 x 10^-23^ J/K
+  + T = temperature, in kelvins (absolute temperature)
+* Nosie depends on temperature and bandwidth
+  + Noise is assumed to be independent of frequency
+  + Noise depends on temperatue and bandwidth of the system
+  + Thermal noise present in a bandwidth of B [Hz] when T = 300K is:
+    + **N = kTB**
+    + N[dBm] = 10log~10~(kT x 1000) + 10log~10~B
+    + N[dBm] = -174[dBm] + 10log~10~B(Hz)    (when B = 1Hz)
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-02-10 19.28.38_TEPCoU.jpg" alt="Screenshot_2024-02-10 19.28.38_TEPCoU" style="zoom:50%;" />
+
+
+
+#### Other factors that influence receive power
+
+* Shadowing
+
+  + power fluctuation due to objects obstructing the propagation path between the transmitter and receiver 由于物体阻碍发射器和接收器之间的传播路径而导致的功率波动
+
+* Reflection at large obstacles
+
+  + occurs when signal encounters a surface that is larger relative to the wavelength of the signal 当信号遇到相对于信号更大的表面时发生
+
+* Scattering at small obstacles
+
+  + occurs when the plane waves are incident upon an object whose dimensions are on the order of a wavelength or less and causes energy to be redirected in many directions 当平面波入射到物体上时发生尺寸约为波长或更小，导致能量在多个方向上重新定向
+
+* Diffraction at edges
+
+* Penetration loss
+
+* Refraction
+
+  
+
+#### Multipath propagation
+
+*  What is causing multipath propagation?
+  + Signal from transmitter propagates through different paths due to reflection, scattering, diffraction
+* What is the results of multipath propagation?
+  + Signal arrives at the received via multiple paths, which include the line-of-sight (LoS) and the non-line-of-sight (Nlos) paths
+  + Receiver receives multiple copies of different phases signal
+* Advantages:
+  + it allows Nlos transmitter and receiver to be able to communicate with each other
+
+**Multipath Propagation causes ISI (inter symbol interference 符号间干扰)**
+
+* The energy of a symbol spills over into succeeding (or adjacent) symbols, and causes interference
+* The first symbol arrived at the received interfered with next symbol
+
+**Multipath Propagation: Path loss and fading (衰退)**
+
+* Fading is the variation in signal strength with respect to time as it is received at the antenna from the transmitter
+
+* Two types of fading
+
+  + **Fast fading** varies quickly with the frequency and it is a result of constructive and destructive interference patterns which is caused due to multipath
+  + **Slow fading** varies slowly with the frequency and it is the result of signal path changes due to shadowing and obstructions such as trees or buildings
+
+  <img src="/Users/summer/Pictures/截屏/Screenshot_2024-02-10 23.28.01_A8O5io.jpg" alt="Screenshot_2024-02-10 23.28.01_A8O5io" style="zoom:50%;" />
+
+  
+
+### Antennas 天线
+
+
+
 ## Chapter 01, Module 02
 
+### Modulation 调制
+
+Modulation is a process of encoding information from a message source in a manner suitbale for transmission 调制是以适合传输的方式对来自消息源的信息进行编码的过程
+
+**Basic types of digital modulation (keying)**
+
+* ASK (Amplitude shift keying) 幅移键控
+
+  + Advantage: very simple and low bandwidth requirements
+  + Disadvantage: very susceptible to noise interference 非常容易受到噪音影响
+  + Application: transmit digital data over optical fiber 通过光纤传输数字数据
+
+  <img src="/Users/summer/Pictures/截屏/Screenshot_2024-02-10 23.35.39_kvZuMQ.jpg" alt="Screenshot_2024-02-10 23.35.39_kvZuMQ" style="zoom:50%;" />
+
+* FSK (Frequency shift keying) 频移键控
+
+  + Advantage: less susceptible to noise than ASK
+  + Disadvantage: needs larger bandwidth (the bandwidth needed for FSK depends on the distance between the carrier frequencies)
+  + Application: high-frequency radio transmission
+
+  <img src="/Users/summer/Pictures/截屏/Screenshot_2024-02-10 23.39.21_0IQjFr.jpg" alt="Screenshot_2024-02-10 23.39.21_0IQjFr" style="zoom:50%;" />
+
+* PSK (Phase shift keying) 相移键控
+
+  + Advantage:
+
+    + less susceptible to errors than ASK, but it uses the same bandwidth as ASK
+    + more bandwidth efficient than FSK
+
+  + Disadvantage: more complex signal detection / recovery process than ASK and FSK
+
+  + Application: widely use in existing technologies (WLAN): **BPSK, QPSK**
+
+    <img src="/Users/summer/Pictures/截屏/Screenshot_2024-02-10 23.42.20_hRQ7hv.jpg" alt="Screenshot_2024-02-10 23.42.20_hRQ7hv" style="zoom:50%;" />
+
+**BPSK (Binary Phase Shift Keying) 二进制相移键控**
+
+* The simplest modulation method
+
+* Bit value 0: sine wave 正弦波
+
+* Bit value 1: inverted sine wave 反正弦波
+
+* Low spectral efficiency 频谱效率低
+
+* Robust, used in satellite systems
+
+  <img src="/Users/summer/Pictures/截屏/Screenshot_2024-02-10 23.46.01_y0tgmt.jpg" alt="Screenshot_2024-02-10 23.46.01_y0tgmt" style="zoom:50%;" />
+
+  <img src="/Users/summer/Pictures/截屏/Screenshot_2024-02-10 23.46.07_usujWi.jpg" alt="Screenshot_2024-02-10 23.46.07_usujWi" style="zoom:50%;" />
+
+**QPSK (Quadrature phase shift keying) 正交相移键控** 
+
+* 2 bits coded as one symbol
+
+* Symbol determines shift of sinewave
+
+* Needs less bandwidth compared to BPSK
+
+* Higher data rate than BPSK
+
+  <img src="/Users/summer/Pictures/截屏/Screenshot_2024-02-10 23.47.40_OgbQWb.jpg" alt="Screenshot_2024-02-10 23.47.40_OgbQWb" style="zoom:50%;" />
+
+  <img src="/Users/summer/Pictures/截屏/Screenshot_2024-02-10 23.47.43_b8Cmv6.jpg" alt="Screenshot_2024-02-10 23.47.43_b8Cmv6" style="zoom:50%;" />
+
+**OFDM (Orthogonal Frequency Division Multiplexing) 正交频分复用**
+
+* OFDM is a multi-carrier modulation
+
+* Ten 100kHz channels are better than one 1MHz channel
+
+* Frequency band is divided into 256 or more sub-bands
+
+  + Orthogonal carrier is used: Peak of one at null of others
+
+* Advantage
+
+  + the ability to mitigate ISI
+  + using this scheme, frequency selective fading only influences some subcarriers, and not the whole signal
+
+* Eachcarrier is modulated with a BPSK, QPSK, 16-QAM etc. depending on the noise (Frequency selective fading)
+
+  <img src="/Users/summer/Pictures/截屏/Screenshot_2024-02-10 23.53.59_Qn6l3u.jpg" alt="Screenshot_2024-02-10 23.53.59_Qn6l3u" style="zoom:50%;" />
+
+  
+
+### Multiplexing 多路复用
+
+Multiplexing describes how several users can share a medium with minimum or no interference 多路复用描述了多个用户如何在最小干扰或无干扰的情况下共享媒体
+
+**Multiplexing in 4 dimensions**
+
+* SDM (Space Division Multiplex) 空分复用
+
+  + Goal: multiple use of a shared medium
+
+  + Can be achieved using
+
+    + Beamforming 波束成形
+    + Sectorization
+
+  + The channels k1 to k3 can be mapped onto the 3 'spaces' s1 to s3 which clearly separate the channels and prevent the interference ranges from overlapping 通过k1至k3可以映射到三个通道空间s1至s3，清楚地分割通道并防止干扰范围重叠
+
+    + Guard spaces is needed
+
+      <img src="/Users/summer/Pictures/截屏/Screenshot_2024-02-11 00.01.28_XGrEf7.jpg" alt="Screenshot_2024-02-11 00.01.28_XGrEf7" style="zoom:50%;" />
+
+* FDM (Frequency Division Multiplex) 频分复用
+
+  + FDM subdivide the frequency dimension into several non-overlapping frequency bands 频分复用将频率维度细分为几个不重叠的频段
+
+  + A channel gets a certain band of the spectrum for the whole time 信道获得特定频段的频谱全程
+
+  + Advantages:
+
+    + no dynamic coordination necessary 无需动态协调
+
+  + Disadvantages:
+
+    + waste of frequency resources if the traffic is distributed unevenly
+
+    + the fixed frequency assignment to a sender makes the scheme very inflexible and limits the number of senders
+
+    + Guard spaces is needed to avoid adjacent channel interference
+
+      <img src="/Users/summer/Pictures/截屏/Screenshot_2024-02-11 00.04.49_fveNqV.jpg" alt="Screenshot_2024-02-11 00.04.49_fveNqV" style="zoom:50%;" />
+
+* TDM (Time Division Multiplex) 时分复用
+
+  + A channel gets the whole bandwidth for a certain amount of time 通道在一定时间内获取整个带宽
+
+  + Advantages:
+
+    + only one carrier in the medium at any time
+    + High utilization and flexible
+
+  + Disadvantages:
+
+    + guard spaces, which represent time gaps, have to separate the different periods when then transmitters use the medium
+
+    + If two transmission overlap in time, this is called co-channel interference. To avoid co-channel interference, precise synchronization is necessary
+
+      <img src="/Users/summer/Pictures/截屏/Screenshot_2024-02-11 00.17.18_Am5uqr.jpg" alt="Screenshot_2024-02-11 00.17.18_Am5uqr" style="zoom:50%;" />
+
+* CDM (Code Division Multiplex) 码分复用
+
+  + Each transmitter has a unique code
+
+  + All channels use the same spectrum (communication channel) at the same time
+
+  + Advantages
+
+    + bandwidth efficient
+    + no coordination and synchronization necessary
+    + provides good protection against interference and tapping: inherently secure
+
+  + Disadvantages: requirements for a successful CSM
+
+  + Implemented using spread spectrum technology
+
+    <img src="/Users/summer/Pictures/截屏/Screenshot_2024-02-11 00.23.10_KW36e9.jpg" alt="Screenshot_2024-02-11 00.23.10_KW36e9" style="zoom:50%;" />
+
+**Time and Frequency Multiplex**
+
+* Combination of both methods
+* A channel gets a certain frequency band for a certain amount of time
+* Example: GSM
+* Advantages
+  + higher multiplexing degree
+  + provides protection against tapping
+  + more robust against frequency
+* Disadvantages
+  + precise coordination between different transmitters is required 需要不同发射机之间的精准协调
+
+**Spread Spectrum 扩频**
+
+Spread Spectrum techniques involve spreading the bandwidth needed to transmit data 扩频技术涉及扩展传输数据所需的带宽
+
+**Two common types**
+
+* FHSS (Frequency Hopping Spread Spectrum) 跳频扩频
+
+  + The total available bandwidth is split into many channels of smaller bandwidth plus guard spaces between the channels
+
+  + Two versions
+
+    + Fast Hopping: multiple hops per symbol
+    + Slow Hopping: more than one symbols per one frequency hop
+
+  + Advantages 
+
+    + frequency selective fading and interference limited to short period
+    + simple implementation
+    + uses only small portion of spectrum at any time
+
+  + Disadvantages 
+
+    + not as robust as DSSS
+
+    + simpler to detect
+
+    + coordination of all transmitter and their hopping sequences is required
+
+      <img src="/Users/summer/Pictures/截屏/Screenshot_2024-02-11 00.43.47_YJc2pm.jpg" alt="Screenshot_2024-02-11 00.43.47_YJc2pm" style="zoom:50%;" />
+
+* DSSS (Direct-Sequence Spread Spectrum) 直接序列扩频
+
+  + XOR of the signal with pseudo-random number (chipping sequence)
+
+    + many chips per bit results in higher bandwidth of the signal
+
+  + Advantages 
+
+    + reduces frequency selective fading 减少频率选择性衰落
+
+  + Disadvantages 
+
+    + precise power control necessary 需要精准的功率控制
+
+      <img src="/Users/summer/Pictures/截屏/Screenshot_2024-02-11 00.46.59_twhtSh.jpg" alt="Screenshot_2024-02-11 00.46.59_twhtSh" style="zoom:50%;" />
+
+**DSSS vs. FHSS**
+
+* FHSS systems only use a portion of the total band, while DSSS systems always use the total bandwidth available
+* DSSS systems are more resistant to fading and multi-path effects
+* DSSS signals are much harder to detect (on needs to knwo the spreading code)
+
+
+
 ## Chapter 02, Module 01
+
+### Motivation of MAC
+
+
+
+### Contention-Free MAC
+
+### Contention-Based MAC
+
+### Hidden- & Exposed- Terminal Probles
+
+
 
 ## Chapter 03, Module 01
 
@@ -1425,5 +1974,630 @@ Addr(Y~1~) = Addr(X) + (i - 1) * Cskip(level(X)) + 1
 
 ## Chapter 08, Module 01
 
+### Introduction to Cellular Network (蜂窝网络)
+
+**Basic Concept**
+
+* AT&T Bell Labs designed a cellular structure to **reuse frequency**
+* In Cellular Netowork, a **based station (BS)** transmits to and receives from mobiles station at the assigned spectrum
+* When multiple base stations use the same spectrum, this scenario is known as **spectral / spatial / reuse / frequency reuse**
+* The service area of each base station is called a cell typically represented by hexagonal shape
+* Each mobile station is typically served by the closest base station
+* When mobile station moves, it is handed over to another base station
+
+**Cell Size**
+
+* Macro: Sections of a city, more than 1km radius
+* Micro: Neighborhoods, less than 1km
+* Pico: Busy public areas, i.e., Malls airports, 200m
+* Femto: Inside a home, 10m
+
+**Why Cellular Network?**
+
+* Sloves the problem of spectral congestion and increases user capacity &rarr; Frequency Reuse
+* Offer very high capacity in a limited spectrum
+* Reuse of radio channel in different cells
+* Enable a fixed number of channels to serve an arbitrarily large number of users by reusing the channel throughout the coverage region
 
 
+
+### Evolution to Cellular Network
+
+**From 1G to 4G**
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-02-09 01.38.21_O8IZuq.jpg" alt="Screenshot_2024-02-09 01.38.21_O8IZuq" style="zoom:50%;" />
+
+**Evolution of Cellular Network**
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-02-09 01.39.02_ydrrJn.jpg" alt="Screenshot_2024-02-09 01.39.02_ydrrJn" style="zoom:50%;" />
+
+**GSM (2G)**
+
+* GSM is European standard, adopted worldwide and increasingly in US
+* Each voice band is 13kbps (versus 64kbps fiber)
+* Standatd GSM has 124 channels
+* Each channel is 270.8kbps carried in 200kHz
+  + 8 users per channel
+  + GSM can (re)use 1/3 of channels in each cell, due to good error correction
+* GSM data is carried over GPRS (General Packet Radio Services), often considered 2.5G
+
+**3G wireless**
+
+* Worldwide standard, though frequency bands vary by region
+  + Roaming phones must use different bands
+  + There are a few common frequency bands worldwide
+* Designed for many services
+  + Real-time gaming
+  + Voice
+  + File download and upload
+  + Video
+  + Web and email
+* 3G data protocols are WCDMA and HSPA
+  + In broad use, continue to evolve new features
+    + Supported for many years until full 4G usage
+    + Data rates of 500kbps to 1Mbps typical
+
+**4G (LTE)**
+
+* 4G is also called LTE (long term evolution)
+  + Standard is 3GPP
+  + Not backward compatible with 3G
+  + Entirely IP based; no voice switched traffic
+  + Supports spectrum flexibility for worldwide operation
+  + Handoffs at 350km/hr to support high speed rail
+  + Data rates of up to 20Mbps typical
+  + Scarcity of bandwidth resulting in throttling of use
+* LTE appears to solve the last-mile problem for residences
+  + (low / medium density) and low / medium density small business, but not high bandwidth users
+
+
+
+### Frequency Reuse and Capacity
+
+**Cell Structure**
+
+* Implements **space divison multiplexing**: base station covers a certain transmission area (cell)
+* Mobile stations communicate only via the base station
+* Advantages of cell structures
+  + higher capacity, higher number of users
+  + less transmission power needed
+  + more robust, decentralized
+  + base station deals locally with interference, transmission area, ... 
+* Characteristics
+  + fixed network needed for the base stations
+  + handover (changing from one cell to another) necessary
+  + interference with other cells
+* Cell sizes from **35km** on the country side (GSM) to some **100m** in cites - even less for higher frequencies
+* Base station transmission areas overlap (safety margin to ensure full coverage). Standard model using 7 frequencies: *Cluster size, N = 7*
+* Types of frequency allocation
+  + **Fixed frequency allocation (FCA)**: aka Fixed frequency assignment
+    + certain frequencies are assigned to a certain cell
+    + Problem: different traffic load in different cells
+  + **Dynamic frequency allocation (DCA)**: aka Dynamic frequency assignment
+    + base station chooses frequencies depending on the frequencies already used in neighbor cells
+    + more capacity in cells with more traffic
+    + assignment can also be based on interference measurement
+    + the allocation scheme is more complex
+  + Hybrid channel allocation
+    + give two sets of channels to each: a set of local channels and a set of borrowable channels
+    + allow to dynamic allocate channels but with intermediate complexity
+
+
+
+#### Cellular Frequency Reuse
+
+**Characterizing Frequency Reuse**
+
+* **D** = minimum distance between centers of cells that use the same frequency band (called co-channels)
+
+* **R** = radius of a cell
+
+* **d** = distance between centers of adjacent calls: 
+  $$
+  d=R\sqrt{3}
+  $$
+
+* **N** = number of cells in repetitious pattern (Cluster)
+
+  + Reuse factor
+  + Each cell in pattern uses unique band of frequencies
+
+* Hexagonal cell pattern, following values of N possible
+
+  + N = I^2^ + J^2^ + (I x J), I, J = 0, 1, 2, 3 &rarr; determine the relative location of co-channels
+
+* Reuse Ratio = ReuseDistance / Radius:
+  $$
+  Reuse Ratio=D/R=\sqrt{3N}
+  $$
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-02-09 19.47.17_qVK4OT.jpg" alt="Screenshot_2024-02-09 19.47.17_qVK4OT" style="zoom:50%;" />
+
+**Frequency Reuse Notation**
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-02-09 19.48.20_j5QmPl.jpg" alt="Screenshot_2024-02-09 19.48.20_j5QmPl" style="zoom:50%;" />
+
+&rarr; N x S x K: 1 x 3 x 3
+
+* N x S x K frequency reuse pattern
+
+  + N = Number of cells per cluster
+  + S = Number of sectors in a cell
+  + K = Number of frequency allocations per cell
+
+* Example: Capacity
+
+  + Assume the total bandwidth, B = 25MHz and each user requires W = 30KHz, what is the number of supported users *n* if the cluster size, N = 7, and there are c = 20 cells ?
+
+  + Answer:
+
+    + A cluster can support 25000/30 = 833 users
+
+    + In a cluster of seven cells each cell can support 833/7 = 119 users
+
+    + If there are 20 cells, then the cluster can support 833/7 x 20 = 2380 users
+      $$
+      n=\frac{(\frac{B}{W})}{N}\cdot c
+      $$
+      
+
+#### Capacity Enhancement
+
+**Cell-splitting**
+
+* To Accommodate a very high density of mobile subscribers, a cell can be divided into a smaller coverage area
+  + This smaller cell is called microcell.
+  + Microcells are traditionally used in convention centers, airports, and similar areas. 
+  + A microcell can be further splitted into picocells
+  + The number of handoffs is increased
+
+**Sectorization**
+
+* To further reduce inter-cluster interference, each cell is quite often sectored - i.e. directional antennas are used at the mobile base stations
+  + A cell is normally partitioned into three 120-degree sector or six 60-degree sectors
+  + The number of handoffs is increased
+
+
+
+**Interference**
+
+* Two types of interferences in cellular systems:
+  + Co-channel interference results from the use of same frequencies in different clusters
+  + Adjacent channel interference results due to usage of adjacent frequencies within a cluster
+* Fractional frequency reuse
+  + Users close to the BS use all subchannels
+  + Users at the cell boundary use only a fraction of available subchannels
+
+
+
+### Mobility Management
+
+#### Handover
+
+**Basic Principle**
+
+* Handover: Change radio channel during communication
+* Reasions for handover
+  + User (mobile) is moving between cells while communicating
+  + Current channel has bad radio conditions
+  + Balance traffic load between cells
+  + Minimize mobile power consumption and global interference level
+* Handover techniques
+  + Network Controlled Handoff (NCHO)
+    + Link quality is only monitored by the serving BS and the surrounding BSs
+    + The handoff decision is made under the centralized control of a mobile telephone switch
+  + Mobile Assisted Handoff (MAHO): Network Control with MS assisting
+    + Both the serving BS and MS measure link quality
+    + Link quality measurements of the alternate BSs are only obtained by the MSs
+    + The MS periodcally relays the link quality measurements back to the serving BS
+  + Mobile Controlled Handoff (MCHO)
+    + Link quality is measured by both BS and the MS
+    + Like MAHO, the measurements of link quality for alternate BSs are done at the MS, and both inter and intracell handoffs are supported
+    + Unlike MAHO, the link measurements at the serving BS are relayed to the MS, and the handoff decision is made by the MS
+
+
+
+#### Handover Phases
+
+1. Monitoring and lin (signal quality) measurement
+
+   + Performed continuously
+   + In GSM: done by mobile, data sent to network ~2x per second
+   + Parameters:
+     + RSSI - Reveived signal strength indication
+     + BER - Bit error rate
+     + Distance to base station
+     + BS identity
+
+2. Target cell determination and handover triggering
+
+   + Handover triggering algorithms
+
+     + a) Relative signal strength
+
+       + Selects the strongest received BS at all times
+       + The decision is based on a mean measurement of the received signal
+       + The handoff would occur at position A
+       + Disadvantages: provode too many unnecessary handoffs
+
+     + b) Relative signal strength with threshold
+
+       + Allows a MS to handoff only if the current signal is sufficiently weaker/lesser than the threshold and the other is the stronger of the two
+         + If threshold is T1, the handoff occur immediately when the signal strenght of BS2 is larger, which is at position A
+         + If the threshold is T2, handoff only occur when the signal is lower than T2, which is at position B
+         + If the threshold is T3, handoff occurs when the signal is lower than T3, which is at position D
+       + If threshold is set too low, handoff doesn't occur fast enough so call dropped may occur
+
+     + c) Relative signal strength with hysteresis
+
+       + If new signal > current signal + hysteresis margin *h*, select new BS pos. C
+
+       <img src="/Users/summer/Pictures/截屏/Screenshot_2024-02-10 03.20.08_XhoP3y.jpg" alt="Screenshot_2024-02-10 03.20.08_XhoP3y" style="zoom:50%;" />
+
+3. Handover execution procedures
+
+   + Hard handover
+     + Radio link to existing base station is released before radio link to new base station is established
+     + Network link is established in advance (from switch/router to base station)
+     + Interruption of data flow
+     + Mobile only needs to support 1 radio channel
+   + Seamless handover
+     + Radio link to existing base station is released after radio link to new base station is established
+     + For a short period, 2 radio links are available, during which network link is switched
+     + No interruption of data flow
+   + Soft handover
+     + => 2 radio links are available and active for a relatively long period of time
+     + Data is flowing over 2 (or more) radio links simultaneously
+     + Improved Quality of Service
+
+**Handover Failures**
+
+In the link transfer procedure, there are several reasons why handoff hailures occur:
+
+* No channel is available on the selected BS
+* Handoff is denied by the network for reasons such as lack of resources, e.g., the MS has exceeded some limit on the number of handoffs that may be attempted in a period of time
+* It takes the network too long to set up the handoff after it has been initiated
+* The target links fails in some way during the execution of the handoff
+
+**Types of Handover Flows**
+
+1. Intra-cell handover
+
+   + Same base station, different channel (e.g., to avoid interference between users within the same cell)
+
+2. Inter-cell handover
+
+   + Other base station (to avoid call drop due to coverage range)
+
+3. Inter-system handover
+
+   + Another technology (e.g., between 3G and LTE, to avoid call drop due to change of system)
+
+     <img src="/Users/summer/Pictures/截屏/Screenshot_2024-02-10 03.32.49_a3Wm7F.jpg" alt="Screenshot_2024-02-10 03.32.49_a3Wm7F" style="zoom:50%;" />
+
+**Layered cell structure**
+
+* Small cells
+  + High capacity
+  + Many handover for fast-moving mobiles
+* Large cells
+  + Limited capacity
+  + Fewer handover
+* Solution
+  + Layered Cell Structures
+
+
+
+## Chapter 08, Module 02
+
+### Towards LTE
+
+In Nov. 2004, 3GPP began a project to define the long-term evolution (LTE) of Universal Mobile Telecommunications System (UMTS) cellular technology
+
+* Higher performance
+* Backwards compatible
+* Wide application
+
+**Network Solutions from GSM to LTE**
+
+* GSM: developed to carry real time services, in a circuit switched manner
+* GPRS: the first step towards an IP-based packet switched solution
+  + Developing UTRAN and WCDMA to achieve higher data rates
+* EPS (Evolved Packet System): Purely IP-based
+  + A flat, all-IP architecture with separation of control plane and user plane traffic
+  + Composed with E-UTRAN/LTE and packet-switched EPC (Evolved Packet Core)
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-02-10 14.10.40_KJ7HGN.jpg" alt="Screenshot_2024-02-10 14.10.40_KJ7HGN" style="zoom:50%;" />
+
+**LTE Access Network**
+
+* LTE access network is a network of base stations, evolved NodeB (eNB), generating a flat architecture
+* No centralized intelligent controller
+* eNBs are inter-connected via X2 interface
+  + Speed up connection set-up
+  + Reduce the time required for a handover
+* Each eNB is connected to the core network via S1 interface
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-02-10 14.14.27_mc2hA3.jpg" alt="Screenshot_2024-02-10 14.14.27_mc2hA3" style="zoom:50%;" />
+
+**IP-Based Flat Network Architecture**
+
+* Flat - Less hierarchical and fewer nodes
+* All services (Voice/multimedia) over IP
+* For backward compatibility some non-IP protocols and services are still used in LTE network
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-02-10 14.28.57_KpOCfj.jpg" alt="Screenshot_2024-02-10 14.28.57_KpOCfj" style="zoom:50%;" />
+
+**Evolved Packet Core (EPC)**
+
+Four new elements:
+
+* Serving Gateway (S-GW): Demarcation point between RAN and Core. Serves as mobility anchor when terminals move
+* Packet Data Network Gateway (P-GW): Termination of EPC towards Internet or IMS network. IP services, address allocation, deep packet inspection, policy enforcement
+* Mobility Management Entity (MME): Loaction tracking, paging, roaming, and handovers. All control plane functions related to subscriber and session management
+* Policy and Charging Rules Function (PCRF): Manages QoS
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-02-10 14.39.53_YntQ27.jpg" alt="Screenshot_2024-02-10 14.39.53_YntQ27" style="zoom:50%;" />
+
+**Evolved Packet System (EPS)**
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-02-10 14.40.38_eC03dT.jpg" alt="Screenshot_2024-02-10 14.40.38_eC03dT" style="zoom:50%;" />
+
+
+
+### LTE Key Features
+
+* Long Term Evolution, 3GPP Release 8, 2009
+* The Evolved Packet System (EPS) is purely IP based
+* 3.9G (Pre-4G) cellular technology. Sold as 4G by some providers
+* 4G = International Mobile Telecommunication (IMT) Advanced Requirements in ITU M. 2134-2008
+* Many different bands: 700 / 1500 / 1700 / 2100 / 2600 MHz
+* Flexible & large bandwidth: 1.4 / 3 / 5 / 10 / 15 / 20 MHz
+* Frequency Division Duplexing (FDD) and Time Division Duplexing (TDD)
+  + Both paired and unpaired spectrum
+* 4x4 MIMO, Multi-user collaborative MIMO
+* Beamforming in the downlink
+* Data Rate: 326 Mbps/down 86 Mbps up (4x4 MIMO 20 MHz)
+* Modulation: OFDM with QPSK, 16 QAM, 64 QAM
+* OFDMA downlink, Single Carrier Frequency Division Multiple Access (SC-FDMA) uplink
+
+* A multicarrier approach for multiple access that was chosen by 3GPP scheduling in both time and frequency domain
+* Hybrid ARQ Transmission for rate adaptation
+* Short Frame Sizes of 10ms and 1ms faster feedback and better efficiency at high speed
+* Persistent scheduling to reduce control channel overhead for low bit rate voice transmission
+* IP based flat network architecture
+
+**OFMDA Downlink**
+
+* Transmitter at based station: IFFT converts frequency to time
+
+  <img src="/Users/summer/Pictures/截屏/Screenshot_2024-02-10 14.58.53_QsHeZw.jpg" alt="Screenshot_2024-02-10 14.58.53_QsHeZw" style="zoom:50%;" />
+
+* Receiver at user terminal: FFT converts time to frequency
+
+  <img src="/Users/summer/Pictures/截屏/Screenshot_2024-02-10 14.58.30_xjFTMN.jpg" alt="Screenshot_2024-02-10 14.58.30_xjFTMN" style="zoom:50%;" />
+
+* OFDM
+
+  + Each carrier modulated according to specific channel condition
+  + High variation of power levels
+  + has high peak-to-average power ratio (PAPR)
+  + higher cost of amplifiers
+
+* Amplifiers are linear only over a restricted region
+
+  + costly amplifier or reduce average signal power significantly
+  + can afford such amplifiers in base stations but not in mobiles
+
+  <img src="/Users/summer/Pictures/截屏/Screenshot_2024-02-10 15.04.23_xgPiOh.jpg" alt="Screenshot_2024-02-10 15.04.23_xgPiOh" style="zoom:50%;" />
+
+**SC-FDMA**
+
+* Single-Carrier Frequency Division Multiple Access
+
+* OFDMA causes high power consumption for signal generation but handheld devices have limited power capacity thus SC-FDMA is used at the receiver
+
+* Each user get contiguous subset/part of the channel
+
+* Uses single carrier modulation and adds a cyclic prefix
+
+* Lower PAPR
+
+  + Single carrier, therefore not much variation in amplitude
+
+* Better for uplink because slight mis-synchronization among users does not affect the decoding significantly
+
+* With OFDMA, each user's subcarriers are spread all over the band and may affect other users subcarriers all over the band
+
+* Transmitter at the user termianl
+
+  <img src="/Users/summer/Pictures/截屏/Screenshot_2024-02-10 15.08.42_IJIc1u.jpg" alt="Screenshot_2024-02-10 15.08.42_IJIc1u" style="zoom:50%;" />
+
+* Receiver at the base station
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-02-10 15.08.19_xTT4Vm.jpg" alt="Screenshot_2024-02-10 15.08.19_xTT4Vm" style="zoom:50%;" />
+
+**LTE Frame Structure**
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-02-10 15.45.50_uGJAYj.jpg" alt="Screenshot_2024-02-10 15.45.50_uGJAYj" style="zoom:50%;" />
+
+* Subframe = 2 slots of 0.5ms for DL and 0.5ms for UL
+
+* 1 Slot = 6 or 7 symbols of 66.7us each
+
+* Normal Cyclic Prefix: 5.2us for 1^st^ symbol, 4.7us for others
+
+  <img src="/Users/summer/Pictures/截屏/Screenshot_2024-02-10 15.47.50_4axBpV.jpg" alt="Screenshot_2024-02-10 15.47.50_4axBpV" style="zoom:50%;" />
+
+* Extended Cyclic Prefix: for larger networks. 16.7us
+
+  <img src="/Users/summer/Pictures/截屏/Screenshot_2024-02-10 15.47.40_v4HURp.jpg" alt="Screenshot_2024-02-10 15.47.40_v4HURp" style="zoom:50%;" />
+
+**Resource Allocation**
+
+* Time slot: 0.5ms 6 or 7 OFDM symbols
+* Subcarrier: 15kHz
+* Physical Resource Block: 12 subcarriers (180 kHz) over 1 time slot
+* Minimum Allocation: 2PRBs per subframe
+
+**LTE Resource Grid**
+
+* Two slots form a subframe with a duration of 1 millisecond
+* A subframe represents the LTE scheduling time, which means that at each millisecond the eNB decides as to which users (UEs) are to be scheduled and which RBs are assigned to which user
+* The number of parallel RBs in each subframe depends on the system bandwidth
+  + If a 10MHz carrier is used (15kHz for each subcarrier) &rarr; 600 subcarriers are available &rarr; 50RBs
+* To enable mobile devices to detect LTE carriers during a network search and to estimate the channel quality later on, reference symbols are inserted with predefined pattern (there are 504 different patterns exists)
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-02-10 15.53.14_NNTfnC.jpg" alt="Screenshot_2024-02-10 15.53.14_NNTfnC" style="zoom:50%;" />
+
+**ARQ (Automatic Repeat reQuest)**
+
+* Retransmit a packet if it is received in error
+
+* Previous (bad) bits are discarded
+
+  <img src="/Users/summer/Pictures/截屏/Screenshot_2024-02-10 15.54.32_EqxSFy.jpg" alt="Screenshot_2024-02-10 15.54.32_EqxSFy" style="zoom:50%;" />
+
+* Hybrid-ARQ
+
+  + PHY and MAC layers work together &rarr; Hybrid
+
+  + PHY layer sends some bits first (uses puncturing)
+
+    + Sends additional bits only if necessary
+    + Additional bits are sent until the decoding is successful (Incremental redundancy or Type II H-ARQ)
+    + Another alternative is to combine the good bits of multiple transmissions (Chase combining or Type I H-ARQ)
+
+    <img src="/Users/summer/Pictures/截屏/Screenshot_2024-02-10 15.57.00_Ju9ldK.jpg" alt="Screenshot_2024-02-10 15.57.00_Ju9ldK" style="zoom:50%;" />
+
+    
+
+## Chapter 09, Module 01
+
+### WSN (Wireless Sensor Networks)
+
+**Sensor Nodes: Common Architecture**
+
+Sensor nodes usually contain a variation of these components:
+
+* MCU: embedded processor, usually running a real-time OS, limited memory and processing power. Often low-power optimized
+
+* Radio Module: Communication with the WSN, controlloed by the MCU
+
+* Power Supply: Often USB for development, battery for deployment. Constaints energy budget. Supply of other components (sensors, radio) often can be cut off if not used
+
+* Sensors: Strongly application-dependent, to gather data from the environment
+
+  <img src="/Users/summer/Pictures/截屏/Screenshot_2024-02-10 16.33.52_wUEtZx.jpg" alt="Screenshot_2024-02-10 16.33.52_wUEtZx" style="zoom:50%;" />
+
+**WSN Applications: GDI (Great Duck Island Project)**
+
+WSNs offer a non-intrusive observation methodology
+
+* Large spatial and temporal dataset
+* Correlation with climate and occupancy data
+* Near real-time data access
+
+Result from the GDI Project
+
+* High energy efficiency: 2% duty cycle
+* Low throughput: reading every 20 min.
+* Low reliability: 30% - 70%
+* High latency
+
+
+
+### IoT (Internet of Things)
+
+* The idea behind this term:
+  + take a physical, real-world object enable it with communication technology make it available on the Internet
+* Focus: Make device available on the Internet, allow interaction with other Things or humans
+  + "Internet" as main enabler for connectivity and interaction
+  + Connecting to the Internet more important than direct communication
+  + Spatial coverage not by devices themselves
+
+**IoT: Network Architecture**
+
+* WSNs make use of mesh topologies to cover larger areas, requiring multi-hop wireless protocols
+
+* In the IoT, devices more often talk directly to the gateway/base station/...:
+
+  + Cellular Netwokrs
+
+  + LPWANs (LoRaWAN, Sigfox, NB-IoT, ...)
+
+  + WiFi or ZigBee
+
+    
+
+### WSN vs. the IoT
+
+* Same:
+
+  + Embedded devices
+  + Wireless communication (BTLE, 802.15.4, LoRa, ...)
+
+* Different:
+
+  + WSNs
+
+    + Single & Special Purpose Network (Non-IP Network)
+    + Homogeneous Sensor Devices
+    + Mesh / Multi-Hop Networks
+    + Measuring External Phenomena
+
+  + IoT
+
+    + General Network Infrastructure (Internet) (IP-Network)
+
+    + Heterogeneous Devices
+
+    + Often: Node-Gateway-Internet
+
+    + Create Virtual Representation of Physical Device
+
+      
+
+## Chapter 09, Module 02
+
+### The Glossy Protocol
+
+* One-to-All Communication, Goals:
+
+  + Network-wide flooding using constructive interference
+  + Free network-wide time-sychronization with us precision
+  + High packet reliability while maintaing low latency and low energy consumption
+
+* Basic Protocol:
+
+  + All nodes wake up simultaneously and periodcally for communication
+
+  + Multiple nodes broadcast the same packet concurrently
+
+  + Result: wave-like flooding
+
+    
+
+#### Propagation in Glossy
+
+
+
+### Physical Layer Properties
+
+
+
+### Outlook: Other WSN Protocols
+
+
+
+## Chapter 09, Module 03
+
+## Chapter 09, Module 04
+
+## Chapter 09, Module 05
+
+
+
+
+
+ 

@@ -311,19 +311,19 @@ The server does not know any secret information.
 
 **Issuer Alternative Name 发行人替代名称**
 
-* Associates Internet style identities with the certificate issuer
+* Associates Internet style identities with the certificate issuer 将互联网风格的身份与证书颁发者相关联
 * Should not be marked critical
 * Same format as Subject Alternative Name extension
 
 **Subject Directory Attributes 主体目录属性**
 
-* Used to convey identification attributes (e.g. nationality) of the subject
+* Used to convey identification attributes (e.g. nationality) of the subject 用于传达主体的识别属性（例如国籍）
 * Sequence of one or more attributes
 * Must be non-critical
 
 **Extended Key Usage**
 
-* Indicates one or more purposes for which the certified publick key may be used, in addition to or in place of the basic puroises indicated in the key usage extension.
+* Indicates one or more purposes for which the certified publick key may be used, in addition to or in place of the basic puroises indicated in the key usage extension. 指示除了或替代密钥使用扩展中指示的基本目的之外，还可以使用经认证的公钥的一个或多个目的
   + *Example: Code signing, OCSP signing, Timestamping*
 
 * If present, both key usage and extended key usage extensions must be processed independently
@@ -2445,6 +2445,42 @@ OCSP
   ​        Kombination aus Kettenmodell und Schalenmodell
 
   ​        Feingranulare Revokation, i.e. bei Revokation muss mitgeteilt werden, ab welchem Schlüsselindex revoziert wird.
+
+
+
+#### Certificate Revocation System / Tree
+
+* Welce Rolle spielt der Parameter *C* ? Welce unterschiedlichen Bedeutungen kann er dabei annehmen?
+
+  —— Der Parameter *C* dient entweder Beweis, dass das Zertifikat nicht revoziert ist (C = *f^i^(Y~0~)*, für ein *i* mit 1 =< i <= n)
+
+  ​        Oder zur Revokation (C = N~0~)
+
+  
+
+* Am Anfang der 47. Woche nach der Veröfftentlichung wurde das Zertifikat gesperrt. Welche Informationen wurden im Zeitraum von Veröffentlichung (inklusive) bis Sperrung (inklusive) veröffentlicht?
+
+  —— *N = f(N~0~), Y = f^52^(Y~0~)* (bei der Veröffentlichung mit oder im Zertifikat enthalten)
+
+  ​        *f^52-i^(Y~0~)*, i = 1, ..., 46 (von Veröffentlichung bis zum Anfang der 46. Woche)
+
+  ​       *N~0~* (am Anfang der 47. Woche)
+
+  
+
+* In der 31. Woche will ein PKI-Teilnehmer die Gültigkeit eines Zertifikats zum ersten Mal prüfen. Hierfür verwendet er den aktuellen Reovkationsstatus C. Was muss er berechnen, um festzustellen, ob das Zertifikat gültig oder gesperrt ist? Wie oft wird die Einwegfunktion *f* angewendet falls das Zertifikat immer noch gültig ist?
+
+  —— Er berechnet zuerst *X = f(C)* und prüft ob *X = N*. Trifft das zu, so ist das Zertifikat gesperrt.
+
+  ​        Anderenfalls berechnet er *f^30^* und prüft ob *f^30^(X) = Y* ist. Trifft das zu, so ist das Zertifikat gültig.
+
+  ​       In dem Fall, dass das Zertifikat gültig ist, wird die Einwegfunktion 31 Mal angewendet.
+
+  
+
+* Nennen Sie eine Möglichkeit, wie CRT noch effizienter verwendet werden könnte. Geben Sie für diesen Fall die maximal Länge *m* des Gültigkeitszeitraumes für den obigen Baum an.
+
+  —— Eine Möglichkeit besteht darin, auch die innern Knoten des Baumes als Gültigkeitsnachweis zu verwenden.
 
 
 
