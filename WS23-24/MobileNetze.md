@@ -299,11 +299,12 @@ $$
 
 * Two types of fading
 
-  + **Fast fading** varies quickly with the frequency and it is a result of constructive and destructive interference patterns which is caused due to multipath
-  + **Slow fading** varies slowly with the frequency and it is the result of signal path changes due to shadowing and obstructions such as trees or buildings
-
+  + **Fast fading** varies quickly with the frequency and it is a result of constructive and destructive interference patterns which is caused due to multipath 随频率快速变化，这是有多径引起的相长和相消干涉图案的结果
+  + 
+  + **Slow fading** varies slowly with the frequency and it is the result of signal path changes due to shadowing and obstructions such as trees or buildings 随频率缓慢变化，这是由于阴影和树木或建筑物等障碍物导致信号路径变化的结果
+  
   <img src="/Users/summer/Pictures/截屏/Screenshot_2024-02-10 23.28.01_A8O5io.jpg" alt="Screenshot_2024-02-10 23.28.01_A8O5io" style="zoom:50%;" />
-
+  
   
 
 ### Antennas 天线
@@ -468,7 +469,7 @@ Multiplexing describes how several users can share a medium with minimum or no i
     + no coordination and synchronization necessary
     + provides good protection against interference and tapping: inherently secure
 
-  + Disadvantages: requirements for a successful CSM
+  + Disadvantages: requirements for a successful CDM
 
   + Implemented using spread spectrum technology
 
@@ -545,8 +546,6 @@ Spread Spectrum techniques involve spreading the bandwidth needed to transmit da
 
 ### Motivation of MAC
 
-
-
 ### Contention-Free MAC
 
 ### Contention-Based MAC
@@ -557,7 +556,111 @@ Spread Spectrum techniques involve spreading the bandwidth needed to transmit da
 
 ## Chapter 03, Module 01
 
+### IEEE 802 Families
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-02-11 23.00.54_cVpBN2.jpg" alt="Screenshot_2024-02-11 23.00.54_cVpBN2" style="zoom:50%;" />
+
+
+
+### IEEE 802.11 Basics
+
+* Technical standard for LAN (Local Area Networks) 局域网
+* Original IEEE 802.11-1997 was at 1 and 2 Mbps
+* All versions use "License-exempt" spectrum or band
+* Need ways to share spectrum among **multiple users** and multiple LANs &rarr; Spread Spectrum (CDMA)
+* **PHY Layer**
+  + Single carrier
+    + DSSS (Direct Sequence Spread Spectrum) using ISM band 
+  + Multiple carriers
+    + OFDM
+    + OFDMA
+* **MAC Layer**
+  + CSMA (carrier sense multiple access)
+
+
+
+### IEEE 802.11 Architecture
+
+* BSA (Basic Service Area) 基本服务器
+  + A cell. Each BSA may have several APs (Access Points) 每个BSA可能有多个接入点
+* BSS (Basic Service Set) 基本服务集
+  + Set of stations associated with one AP
+* IBSS (Independent Basic Service Set) 独立基本服务集
+  + Set of computers in ad-hoc mode. May not be connected to wired backbone
+* DS (Distribution System) 分配系统
+  + wired backbone
+* ESA (Extended Service Area) 扩展服务区
+  + Multiple BSAs interconnected via a distribution system 多个BSA通过分布互连系统
+* ESS (Extended Service Set) 扩展服务集
+  + = Set of stations in an ESA
+  + Ad-hoc networks coexist and interoperate with infrastructure- based networks
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-02-11 23.09.56_D53m1d.jpg" alt="Screenshot_2024-02-11 23.09.56_D53m1d" style="zoom:50%;" />
+
+
+
 ## Chapter 03, Module 02
+
+### 802.11 Medium Access Control
+
+**Access Methods**
+
+* DCF (Distributed Coordination Function) 分布式协调功能
+  + CSMA/CA (mandatory)
+    + collision avoidance via randomized "back-off" mechanism 通过随机“退避”机制避免碰撞
+    + minimum distance between consecutive packets 连续数据包之间的最小距离
+    + ACK packet for acknowledgment (not for broadcast) 用于确认的ACK数据包
+  + DFC w/RTS/CTS (optional)
+    + reduces hidden problem
+* PCF (Point Coordination Function) 点协调功能
+  + access point polls terminals according to a list
+* HCF (Hybrid Coordination Function) 混合协调功能
+  + EDCA (Enhanced Distributed Channel Access)
+  + CCA (Controlled Channel Access)
+    + improved polling 改进轮询
+
+**IFS (Inter frame spacing) 帧间距**
+
+* IFS is a time interval in which frames can not be transmitted by stations within a BSS
+
+* This ensure that the frames do not overlap with each other
+
+* IFS types:
+
+  + SIFS (Short Inter Frame Spacing) 短帧间距
+
+    + highest priority, for ACK, CTS, polling response
+
+  + PIFS (PCF Inter Frame Spacing)
+
+    + medium priority, for time-bounded service using PCF
+
+  + DIFS (DCF Inter Frame Spacing)
+
+    + lowest priority, for asynchronous data service
+
+  + EIFS (Extended Inter Frame Spacing)
+
+    + If a previously received frame contains an error then a station has to defer EIFS duration instead of DIFS before transmitting a frame
+
+      <img src="/Users/summer/Pictures/截屏/Screenshot_2024-02-11 23.30.03_6UmtqM.jpg" alt="Screenshot_2024-02-11 23.30.03_6UmtqM" style="zoom:50%;" />
+
+**Timing Intervals**
+
+* Timing intervals are defined to control a station's access to the medium/channel
+* Slot Time (A slot time)
+  + 1
+* SIFS (Short Inter Frame Spacing)
+* PIFS (PCF Inter Frame Spacing)
+* DIFS (DCF Inter Frame Spacing)
+
+### Distributed Coordination Function (with and w/o RTS/CTS)
+
+### Point Coordination Function
+
+### Frame Types
+
+
 
 ## Chapter 04, Module 01
 
@@ -2088,16 +2191,16 @@ Addr(Y~1~) = Addr(X) + (i - 1) * Cskip(level(X)) + 1
 
 **Characterizing Frequency Reuse**
 
-* **D** = minimum distance between centers of cells that use the same frequency band (called co-channels)
+* **D** = minimum distance between centers of cells that use the same frequency band (called co-channels) 使用相同频段（称为同信道）的中心之间的最小距离
 
-* **R** = radius of a cell
+* **R** = radius of a cell 半径
 
-* **d** = distance between centers of adjacent calls: 
+* **d** = distance between centers of adjacent calls: 相邻呼叫中心之间的距离
   $$
   d=R\sqrt{3}
   $$
 
-* **N** = number of cells in repetitious pattern (Cluster)
+* **N** = number of cells in repetitious pattern (Cluster) 重复模式中的细胞数
 
   + Reuse factor
   + Each cell in pattern uses unique band of frequencies
@@ -2121,9 +2224,9 @@ Addr(Y~1~) = Addr(X) + (i - 1) * Cskip(level(X)) + 1
 
 * N x S x K frequency reuse pattern
 
-  + N = Number of cells per cluster
-  + S = Number of sectors in a cell
-  + K = Number of frequency allocations per cell
+  + N = Number of cells per cluster 每个簇的单元数
+  + S = Number of sectors in a cell 单元中的扇区数
+  + K = Number of frequency allocations per cell 每个单元的频率分配数量
 
 * Example: Capacity
 
@@ -2176,7 +2279,7 @@ Addr(Y~1~) = Addr(X) + (i - 1) * Cskip(level(X)) + 1
 
 **Basic Principle**
 
-* Handover: Change radio channel during communication
+* Handover: Change radio channel during communication 通信期间更改无线电频道
 * Reasions for handover
   + User (mobile) is moving between cells while communicating
   + Current channel has bad radio conditions
@@ -2215,14 +2318,14 @@ Addr(Y~1~) = Addr(X) + (i - 1) * Cskip(level(X)) + 1
 
      + a) Relative signal strength
 
-       + Selects the strongest received BS at all times
-       + The decision is based on a mean measurement of the received signal
+       + Selects the strongest received BS at all times 始终选择最强的接收BS
+       + The decision is based on a mean measurement of the received signal 该决定基于接收信号的平均测量
        + The handoff would occur at position A
        + Disadvantages: provode too many unnecessary handoffs
 
-     + b) Relative signal strength with threshold
+     + b) Relative signal strength with threshold 相对信号强度与阀值
 
-       + Allows a MS to handoff only if the current signal is sufficiently weaker/lesser than the threshold and the other is the stronger of the two
+       + Allows a MS to handoff only if the current signal is sufficiently weaker/lesser than the threshold and the other is the stronger of the two 仅当当前信号足够弱/小于阀值且另一个信号是两者中较强的信号时，才允许MS进行切换
          + If threshold is T1, the handoff occur immediately when the signal strenght of BS2 is larger, which is at position A
          + If the threshold is T2, handoff only occur when the signal is lower than T2, which is at position B
          + If the threshold is T3, handoff occurs when the signal is lower than T3, which is at position D
@@ -2595,6 +2698,204 @@ Result from the GDI Project
 ## Chapter 09, Module 04
 
 ## Chapter 09, Module 05
+
+
+
+VHF, 30-300
+
+UHF, 300-3000
+
+for mobile radio, car
+
+SHF, 3-30. 
+
+for satellite communication
+
+EHF, 30-300
+
+
+
+transmission range, communication possible
+
+detection range, detection of signal possible, no communication possible
+
+interference range, signal may not be detected, signal only adds to the background noise
+
+ground wave, the radio transmission energy that travelling roughly follow the earth's surface and it subject to surface attenuations.
+
+sky wave, the radio transmission energy that is reflected or refracted by the ionosphere.
+
+space wave, the radio transmission energy that continues through the ionosphere without reflection or refraction into space.
+
+path loss, strength of signal degrades with distance over transmission medium.
+
+impact FSPL, the distance between transmitter and receiver; the carrier frequency
+
+Shadowing, power fluctuation due to objects obstructing the propagation path between the transmitter and receiver.
+
+scattering, occurs when the signal encounters a surface that is larger relative to the wavelength of the signal.
+
+slow fading, varies slowly with the frequency, it is the result of signal path changes due to shadowing and obstruction.
+
+fast fading, varies quickly with the frequency, it is the result of constructive and destrucitve interference patterns.
+
+Omni-directional antenna, radiates power in all directions
+
+directional antenna, directs power in a specific, desired direction
+
+isotropic antenna, radiates power in all directions equally.
+
+ASK,amplitude, low bandwidth, susceptible to noise interference
+
+FSK, less susceptible, larger bandwidth
+
+PSK, less susceptible to error, more bandwidth efficient, more complex signal detection/ recovery process
+
+SDM, multiple use a shared medium, guard spaces necessary
+
+FDM, a channel gets a certain band of spectrum for the whole time, no dynamic coordination necessary, waste of frequency resources, guard spaces necessary
+
+TDM, a channel gets the whole band of spectrum for a certain amout of time, high utilization and flexible, if two transmission overlap in time, it called "co-channel", to avoid this, precise synchronization is necessary.
+
+CDM, all channels use the same band of spectrum for the same time, bandwidth efficient, requirements for a successful CDM
+
+DSSS, robust against narrow-band interference, low data rate in terms of the used bandwidth
+
+Pured ALOHA, use ACK, allows nodes to access the medium immediately.
+
+Slotted ALOHA, a station may commence transmission only at predefined points in time, synchronization is necessary
+
+mmWave can provide high-speed communication thus ensuring low delay. online gaming, smart home
+
+large bandwidth, small antenna footprint, low interference
+
+very high reflection on most surfaces, high scattering on rough surfaces, prone to blockage as it has high penetration loss, very low diffraction
+
+device discovery, neighbor discovery, beam discovery, beam tracking
+
+beam training, allows the device to use a fine directional beamforming mode with higher gain.
+
+beam tracking, it ensures the optimality of the fine diectional beamforming mode. with this phase, the optimality of the fine diectional beamforming modes is checked over time to account for slow variations in the channel or device mobility.
+
+divides the network into piconets with each piconet having a piconet controller. not suitable for large network, beacuse this would incur a high overhead at piconet controller to schedule the tansmission of all decives.
+
+CBAP: is used for nodes that want to access using contention-free
+
+SP: is used to enable the simultaneous communication of multiple scheduled links 
+
+highly directional beam steering at mmWave frequencies is sensitive to blockage of the beam.
+
+reinitialize the links by perfoming beam discovery.
+
+multiple beams are maintained between transmitter and receiver
+
+other nodes are used to route signals around blockages when the direct path is blocked.
+
+either transmit or receive but not both at the same time
+
+the relay can listen/recive and retransmit at the same time
+
+continuous data streaming, wireless speakers, wireless headset
+
+short burst data transmission, sport&fitness devices, health&wellness devices
+
+Scatternet, increase the network throughput, consist of two or more interconnected piconets
+
+joins more than one piconet
+
+can only be active in one piconet at a time
+
+timeshare and must be synchronize to the master of the current piconet
+
+Frequency Hopping, shares channel with WiFi networks, which caused it to experience more interference, robust against narrow-band interference, co-existence
+
+AFH, avoid interference in WiFi and similar environment to improve reliability.
+
+BLE optimization: short packets, delay and piggybacked acknowledgements, low overhead in packets
+
+Bluetooth mesh, many-to-many communication
+
+ZigBee WPAN requirement, no infrastructure, battery power
+
+FFD, a device that can become a coordinator if it starts a PAN
+
+RFD, a device that can not become a coordinator
+
+extended address 64bit
+
+short address 16bit
+
+beam-enabled mode, coordinator sends beacon periodically
+
+non-beam mode, coordinator do not send beacons, therefore there's no superframe structure.
+
+4 common topologies, star, tree, cluster tree, mesh
+
+ZigBee Coordinator, selects channel, starts network, assigns short addresses to other nodes
+
+ZigBee Router, nodes that can route packets to/from other nodes
+
+ZigBee End-Device, can sleep to extend battery life, not capable of being coordinator, router, or leaf node.
+
+Cskip address assignment, address is guaranteed conflict-free, a node can tell from the addres whether it's a descendant or not, does not support the tree with depth larger than 5.
+
+stochastic scheme, parent draws a 16bit random number between 0 and 2^16^-1, a new number is drawn if the result is all-zero or all-one, parent then broadcasts the number to the network 4 times
+
+ZigBee Routing: broadcast, tree routing, mesh routing, source routing
+
+AODV, uniform, reactive, destination-based, established the faster route.
+
+RREQ, Route Request (broadcast), RREP Route Reply (unicast), RERR, Route Error (unicast)
+
+route discovery, node S broadcasts a Route Request, node D unicasts a Route Reply to node S
+
+Timer to keep route alive
+
+a routing table entry maintaining a reverse/forward path is purged after a timeout interval.
+
+DSN, to prevent formation of loops, to avoid old/broken routes, to determine fresh routes
+
+DSR, uniform, reactive, topology-based
+
+route discovery, node S broadcasts a Route Request, each node appends its own identifier when forwarding RREQ, node D on receving the first RREQ, sends a RREP
+
+error detection, when problem detected, send a Route Error packet to original sender to perform a new route discovery.
+
+LAR, non-uniform, based on location, geographical, 
+
+LAR exploits location information to limit scope of flooding, only nodes within the Request Zone forward Route Request, if route discovery using the smaller zone fails to find a route, the sender initiates another route discovery (after timeout) using a larger request zone.
+
+reduce the scope of route request flooding, reduce overhead of route discovery, nodes need to know their physical location.
+
+OLSR, non-uniform, proactive, topology-based
+
+small cell, increase capacity and data rate, higher depolyment costs
+
+handover to change radio channel during communication
+
+why: current channel has bad radio conditions, user is moving between cells while communicating
+
+NCHO: link quality is only monitored by the serving BS and surrounding BSs
+
+MAHO: network control with MS assisting, both the serving BS and MS measure link quality
+
+MCHO: link quality is measured by both BS and MS
+
+A: if threshold is T1, the handoff occur immediately when the signal strength of BS2 is larger
+
+B: if threshold is T2, the handoff only occur when the signal is lower than T2
+
+D: if threshold is T3, the handofff only occur when the signal is lower than T3
+
+C: if new signal > current signal + hysteresis margin h, select new BS
+
+Antenna footprint at mmWave frequencies is very small. It's possible to implement high-data-rate mmWave communication using multiple antenna technology in mobile devices.
+
+Due to the directional transmission, its coverage area is limited, thus mmWave systems need to perform beam training for device discovery. 
+
+
+
+
 
 
 
