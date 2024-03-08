@@ -1071,7 +1071,455 @@ $$
 
 
 
-## Application Layer - Basics
+## 7. Routing - Basics
+
+### Foundations of Routing
+
+**Classes of Routing Algorithms**
+
+* Non-adaptive Algorithms
+  + current network state not taken into consideration
+  + Spanning tree
+  + Flow-based routing
+  + Flooding
+* Adaptive Algorithms
+  + desicisons are based on current network state
+  + centralized routing
+  + isolated routing - backward learning
+  + distance vector algorithms
+  + link state routing
+
+**Non-Adaptive Shortest Path Routing**
+
+* Static Procedure
+  + network operator generates tables
+  + Tables 
+    + are loaded when IS operation is initiated and will not be changed any more
+* Pros: 
+  + simple
+  + good results with relatively consistent topology and traffic
+* Cons:
+  + very poor performance
+
+
+
+### Non-Adaptive Flow-Based Routing
+
+**Procedure**
+
+1. Computation of the average delay per edge 每个边沿平均延迟的计算
+   $$
+   T_i=\frac{1}{edge capacity-average edge utilization}=\frac{1}{\mu C_i-\lambda_i}
+   $$
+   
+2. Computation of the total average delay of a subnetwork 子网平均延迟的计算
+
+3. Different total average delays result from selecting different paths 通过单边延迟的加权和
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-02-20 15.54.22_ZSH74R.jpg" alt="Screenshot_2024-02-20 15.54.22_ZSH74R" style="zoom:50%;" />
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-02-20 15.54.28_GaVeFb.jpg" alt="Screenshot_2024-02-20 15.54.28_GaVeFb" style="zoom:50%;" />
+
+* Example: from B to D
+  + path BFD with 3 packets/sec
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-02-20 15.56.40_ki2eLm.jpg" alt="Screenshot_2024-02-20 15.56.40_ki2eLm" style="zoom:50%;" />
+
+* 入~xy~: average load 平均负载
+
+  + the sum of all mean packets/sec at the respective edge 相应边缘处的所有平均数据包/秒的总和
+  + 入~AB~ = AB (AB=9) + AC (ABC=4) + AD (ABFD=1) = 14
+
+* C~xy~: capacity of eache edge in kbps 每条边的容量
+
+  + AB: 20 kbit/sce
+
+* uC~xy~: capacity of each edge at given mean packet size 给定平均数据包大小下每条边的容量
+
+  + AB: 20 kbit/sec and packets in mean 800 bit/packet
+
+  + $$
+    \mu C_{AB}=\frac{20kbits/sce}{800bit/packet}=25packets/sec
+    $$
+
+* T~xy~: average delay on each edge 每个边沿的平均延迟
+
+  + $$
+    T_{xy}=\frac{1}{\mu C_{xy}-\lambda_{xy}}=\frac{1}{25packets/sec-14packets/sec}=90.909msec/packet
+    $$
+
+* Weight: the relative traffic of data using this edge 使用该边缘的数据的相对流量
+
+  + $$
+    Weight(AB)=\frac{\lambda_{AB}}{\sum_{all lines xy}\lambda_{xy}}=\frac{14}{82}=0.1707
+    $$
+
+* total average delay of a subnetwork
+
+  + $$
+    \sum Weight(xy)\cdot T_{xy}=86msce
+    $$
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-02-20 16.11.53_Ob7c7J.jpg" alt="Screenshot_2024-02-20 16.11.53_Ob7c7J" style="zoom:50%;" />
+
+
+
+### Adaptive Distributed – Distance-Vector Routing
+
+**Principle**
+
+* IS maintains table stating best known distance to all known destinations and line to be used when sending to a certain destination
+* ISs update tables by exchanging routing information with their neighbors
+
+**Node X receives list E(Z) from neighbor Y**
+
+* knows distance X to neighbor Y: e
+* gets distance (neighbor) Y to Z: E(Z)
+* computes distance X to Z via (neighbor) Y: E(Z) + e
+* decides which path to use
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-02-20 16.56.22_Zeg9Pg.jpg" alt="Screenshot_2024-02-20 16.56.22_Zeg9Pg" style="zoom:50%;" />
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-02-20 16.56.13_6yIOcv.jpg" alt="Screenshot_2024-02-20 16.56.13_6yIOcv" style="zoom:50%;" />
+
+**Example: Initialization of Distance Tables and Sending Vector for 1^st^ time**
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-02-20 17.10.31_tncTNR.jpg" alt="Screenshot_2024-02-20 17.10.31_tncTNR" style="zoom:50%;" />
+
+* each node sends "updates" to its neighbors
+  + update message contains (node, distance) pairs
+  + which indicate that the sending node has "distance" hops to "node"
+* when another node receives update, it checks:
+  + if "announced distance + distance to the announcer" < current distance to "node"
+  + then use that route to "node"
+
+**Link Cost DEcreases / INcreases - Property “Count to Infinity”**
+
+* Case A) Link Cost Decreases
+
+  + short paths & route improvement
+
+    &rarr; fast
+
+  <img src="/Users/summer/Pictures/截屏/Screenshot_2024-02-20 17.20.04_TMuHxT.jpg" alt="Screenshot_2024-02-20 17.20.04_TMuHxT" style="zoom:50%;" />
+
+* Case B) Link Cost Increases
+
+  + long path & route deterioration
+
+    &rarr; slow
+
+    <img src="/Users/summer/Pictures/截屏/Screenshot_2024-02-20 17.23.22_CSRCPC.jpg" alt="Screenshot_2024-02-20 17.23.22_CSRCPC" style="zoom:50%;" />
+
+**Split Horizon**
+
+
+
+### Adaptive Distributed – Link State Routing
+
+**1. Phase**
+
+* Gather information about the adjacent intermediate system
+
+**2. Phase**
+
+* Define the "distance"
+
+**3. Phase**
+
+* Organize the information as link state packet 将信息组织为链路状态数据包
+
+  + including own address, sequence number, age, distance
+
+  <img src="/Users/summer/Pictures/截屏/Screenshot_2024-02-20 16.22.12_c40XpH.jpg" alt="Screenshot_2024-02-20 16.22.12_c40XpH" style="zoom:50%;" />
+
+**4. Phase**
+
+* Distribute the local information to all IS 将本地信息分发给所有IS
+  + by applying the flooding procedure (very robust) 通过应用泛洪程序
+
+**5. Phase**
+
+* Compute now routes
+
+  <img src="/Users/summer/Pictures/截屏/Screenshot_2024-02-20 16.25.07_PxbAdA.jpg" alt="Screenshot_2024-02-20 16.25.07_PxbAdA" style="zoom:50%;" />
+
+**Adaptive Distributed Routing**
+
+* Distance Vector Routing
+  + Intermediate Systems IS
+    + maintain table stating
+      + best known distance to all known destinations and line to be used when sending to a certain destination
+    + update tables
+      + by exchanging routing information with their neighbors
+* Link State Routing
+  + measure the "distance" to the directly adjacent IS
+  + distribute information to "everybody" and get this information from the others
+  + calculate the ideal route
+
+
+
+### Further Routing Principles and Enhancements
+
+**Multipath Routing**
+
+**Hierarchical Routing**
+
+**Overlay Routing**
+
+
+
+## 8. Routing - in Mobile Environments
+
+### Challenges in Mobile Communications
+
+**Hidden Terminals**
+
+* Two nodes that are within each others transmission range try to communicate with a third node. This third node is able to receive messages from both nodes and, therefore, collisions may occur at this node.
+* Cons:
+  + more collisions
+  + waste of resources
+* CSMA/CD does not fit
+
+* Solutions:
+  + Busy Tone: a receiver transmits busy tone when receiving data
+  + Reliability achieved by explicitly sent Acknowledgements (ACK)
+  + Karn90
+
+**Exposed Terminals**
+
+* Two nodes communicate with each other, a third node, that is within the transmission of the sender but is not in range of the receiver is not allowed to transmit data when CSMA/CD is used. 
+* However, as this third node is not within the transmission range of the receiver packets, that were sent by this third node would not result in collisions at the receiver. Tererfore, bandwidth is wasted due to CSMA/CD
+* Cons:
+  + CSMA/CD does not fit
+  + lower effective throughput
+
+**Near and Far Terminals**
+
+
+
+### Mobile Routing - Devices making use of Wireless Communications
+
+**Ad Hoc Routing Protocols**
+
+* Proactive
+  + Routing information is computed and updated independent of whether there is any traffic between the nodes or not
+  + Traditional routing protocols are proactive
+    + Link-state
+    + Distance-vector
+  + Pro: routers that are readily available when required
+  + Con: overhead generated due to update mechanism
+* Reactive
+  + Routes maintained on-demand, i.e., when there is traffic, and no route is known
+  + Pro: no overhead due to updates
+  + Con: routing has to be completed before the first pack can be sent
+* Non-Uniform
+  + Some node have dedicated duties wrt routing
+  + LAR, OLSR
+* Uniform
+  + All nodes have the same duties wrt routing
+  + Topology-based & Destination-based
+  + Proactive (table-driven) & Reactive (on-demand)
+  + AODV, DSR
+
+**DSR**
+
+* Reactive routing protocol
+* Principle 
+  + Source node S **floods Route Request (RREQ)**
+  + Each node appends own identifier when forwarding RREQ 每个节点在转发RREQ时附加自己的标识符
+  + Destination D on receiving the first RREQ, sends a **Route Reply (RREP)**
+
+**AODV**
+
+* Reactive routing protocol
+* Characteristics 
+  + no overhead on data packets
+  + sequence numbers
+    + to prevent loops
+    + solves "count to infinity" problem
+    + as route freshness criteria
+* Route discovery
+  + **Broadcast Route Request (RREQ)**
+  + Nodes sets up a reverse path pointing towards the source **Route Reply (RREP)**
+    + Forward links are setup when RREP travels along the reverse path 当RREP沿反向路径传播时，建立前向链路
+* Timers to keep route alive
+* Destination Sequence numbers to determine fresh routes
+
+**LAR**
+
+* Based on flooding
+* Make use of information about the loaction to limit scope of flooding for route request
+* Expected Zone is determined as a region that is expected to hold the current location of the destination node D
+* Route requests limited to a Requested Zone contains:
+  + the Expected Zone
+  + location of the sender node S
+* **Only nodes within the request zone forward route requests**
+* Con: each node must know its physical loaction to determine whether it is within the request zone
+
+
+
+## 9. L4 Transport Layer - Fundamentals
+
+### Transport Layer Function
+
+**Function**
+
+* To provide data tansport reliably, efficiently, at low-cost for process-to-process
+
+**Service**
+
+* to improve the network service quality
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-02-21 15.11.36_tTiN7L.jpg" alt="Screenshot_2024-02-21 15.11.36_tTiN7L" style="zoom:50%;" />
+
+
+
+### Addressing
+
+**Define transport addresses**
+
+* TSAP (Transport Service Access Point) 传输层服务接入点
+* Port
+
+**How does the specific address(es) of a service become known? 如何得知服务的具体地址**
+
+* First Approach: TSAP known implicitly
+* Second Approach: initial connection protocol
+* Third Approach: Name Server (directory server)
+
+**How to localize the respective end-system NSAP(Layer 3)?**
+
+* First Approach: hierarchical addressing
+  + e.g., <country>.<network>.<port>
+* Second Approach: flat addressing
+  + dedicated "name server"
+  + request via broadcast
+
+
+
+### Duplicates
+
+**how to handle duplicates WITHIN a connection?**
+
+* to use temporarily valid TSAPs 使用临时有效的TSAP
+  + TSAP valid for one connection only 只对一个连接有效
+  + generate always new TSAPs
+
+**what characteristics have to be taken into account regarding**
+
+* to dentify connections individually
+  + each individual connection is assigned a new SeqNo and
+  + endsystems remember already assigned SeqNo
+
+**what can be done to ensure that a connection that has been established …**
+
+* to identify PDUs individually: individual sequential numbers for each PDU
+
+
+
+### Connect and Disconnect - Reliable Connection
+
+**Three-way Handshake Protocol**
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-02-21 15.29.53_dm3BUn.jpg" alt="Screenshot_2024-02-21 15.29.53_dm3BUn" style="zoom:50%;" />
+
+* CR: Connect Request
+  + Initiator (A) sends request with SeqNo (X)
+* CC: Connect Confirmation
+  + Receiver (B) responds with SeqNo transmitted by the initiator (X) and selected SeqNo (Y) by receiver
+* Acknowledgment
+  + initiator (A) acknowledges SeqNo X, Y (as received before)
+
+**Disconnect**
+
+* symmetric disconnect
+* asymmetric disconnect
+  + to disconnect in one direction implies to disconnect in both "directions" 在一个方向上断开意味着在两个“方向”上断开
+
+
+
+## 10. Transport Layer Protocols in General UDP - TCP
+
+### UDP - User Datagram Protocol
+
+* UDP is a simple transport protocol
+  + unreliable
+  + connectionless
+  + message-oriented
+* UDP is mostly IP with a short transport header
+* Characteristics
+  + no flow control
+  + no error control or retransmission
+  + may be used with broadcast/multicast and streaming
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-02-21 16.36.25_0AYpY4.jpg" alt="Screenshot_2024-02-21 16.36.25_0AYpY4" style="zoom:50%;" />
+
+
+
+### TCP - Transmission Control Protocol
+
+* TCP is the Internet transport protocol providing reliable end-to-end byte stream over an unreliable internetwork
+* Two-way communications (fully duplex)
+* Point-to-point
+* TCP must ensure reliability
+  + no data loss, no duplicate, no modified data
+* Benefits
+  + reliable data transmission
+  + can be used with LAN and WAN
+* Cons:
+  + higher resource requirement
+  + Connection set-up and disconnect necessary
+
+**Why is connection setup necessary?**
+
+* Mainly to agree on starting sequence numbers
+
+**Set up (3-way handshake)**
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-02-21 16.43.50_kDyhSL.jpg" alt="Screenshot_2024-02-21 16.43.50_kDyhSL" style="zoom:50%;" />
+
+
+
+### Flow Control & Congestion Control
+
+**Flow Control**
+
+* controlled by window: advertised window awnd
+* flow control required to avoid flooding receiver
+
+**Congestion Control**
+
+* controlled by window: congestion window cwnd
+* Phases
+  + Phase 1: Slow start (cwnd < ss_thresh)
+  + Phase 2: Congestion Avoidance (cwnd >= ss_thresh)
+
+**Slow start**
+
+* To quickly discover the proper sending rate
+* **initialize cwnd = 1**
+* each time a segment is acknowledged &rarr; **increment cwnd by one (cwnd++)**
+* continue until
+  + reach ss_thres
+  + packet loss
+* congestion window size grows very rapidly
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-02-21 16.54.54_oOXhZG.jpg" alt="Screenshot_2024-02-21 16.54.54_oOXhZG" style="zoom:50%;" />
+
+**Congestion Avoidance**
+
+* timeout = congestion
+* each time congestion occurs:
+  + ss_thresh is set to 50% of the current size of the congestion window &rarr; ss_thresh = cwnd/2
+  + cwnd is reset to one &rarr; cwnd = 1
+  + and slow start is entered
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-02-21 16.57.24_3IolDe.jpg" alt="Screenshot_2024-02-21 16.57.24_3IolDe" style="zoom:50%;" />
+
+
+
+## 11. Application Layer - Basics
 
 ### Session Layer
 
@@ -1185,7 +1633,7 @@ $$
 
 
 
-## Electronic Mail
+## 12. Electronic Mail
 
 **Basic Functionality of an Email System**
 
@@ -1251,8 +1699,10 @@ $$
 
 **IMAP - Internet Message Access Protocol 互联网消息访问协议**
 
-* used to retrieve e-mail from a mail server
+* used to retrieve e-mail from a mail server 从邮件服务器检索电子邮件
 * uses Port 143, SSL encrypted Prot 993
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-02-21 17.54.30_W7xUls.jpg" alt="Screenshot_2024-02-21 17.54.30_W7xUls" style="zoom:50%;" />
 
 
 
@@ -1307,6 +1757,105 @@ $$
 
 
 
+## 13. Web
+
+**Address - Uniform Resource Locators (URL) 统一资源定位符**
+
+* URL is the "address" of a page
+* Format: <SCHEME>:<SCHEME-SPECIFIC-PART>
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-02-20 13.23.14_Jd3psx.jpg" alt="Screenshot_2024-02-20 13.23.14_Jd3psx" style="zoom:50%;" />
+
+### Hypertext Markup Language (HTML)
+
+* Web pages are accessed using HyperText Transfer Protocol (HTTP) 使用超文本传输协议（HTTP）访问网页
+
+* Browser interprets tags and generates page layout 浏览器解释标签并生成页面布局
+
+* Exapmle HTML tags
+
+  <img src="/Users/summer/Pictures/截屏/Screenshot_2024-02-20 13.27.21_tau3mE.jpg" alt="Screenshot_2024-02-20 13.27.21_tau3mE" style="zoom:50%;" />
+
+  
+
+### Hypertext Transfer Protocol (HTTP)
+
+* Web's application layer protocol
+
+* Client/Server model
+
+  + Client: browser that requests (receives, "displays" web objects)
+  + Server: web server sends objects (in response to requests)
+
+* HTTP uses **TCP** and HTTP/3 as recent version uses QUIC
+
+  + client intiates TCP connection to server **Port 80**
+  + server accepts TCP connection
+  + HTTP messages exchanged between browser (HTTP client) and web server (HTTP server)
+  + TCP connection closed
+
+* HTTP is a stateless protocol
+
+* HTTP connections can be
+
+  + Non-persistent (HTTP 1.0) 非持久性
+
+    + at most one object sent over one TCP connection 通过一个TCP连接最多发送一个对象
+
+      <img src="/Users/summer/Pictures/截屏/Screenshot_2024-02-20 13.38.58_QtWJn7.jpg" alt="Screenshot_2024-02-20 13.38.58_QtWJn7" style="zoom:50%;" />
+
+      + Round Trip Time RTT 往返时间
+        + one RTT to initiate TCP connection
+        + one RTT for HTTP request
+        + **File transmission time = 2RTT + transmission time**
+
+  + Persisten (HTTP 1.1) 持久性
+
+    + multiple objects can be sent over one TCP connection 通过一个TCP连接可以发送多个对象
+    + server leaves connection open after sending response
+    + overhead reduced to ~one RTT for all referenced objects 所有引用对象的开销减少到约一个RTT
+
+**HTTP Request Messages**
+
+* Two types: Request, Response
+* HTTP method types
+  + HTTP/1.0
+    + GET, request file specified in URL field
+    + POST, send request with additional info in entity body
+    + HEAD, asks server to leave requested object out of response
+  + HTTP/1.1
+    + GET, POST, HEAD
+    + PUT, uploads file in entity body to path specified in URL field
+    + DELETED, delete file specified in the URL field
+
+**HTTPS**
+
+* HTTPS is HTTP over Transport Layer Security TLS in order to be encrypted
+* and HTTPS was HTTP over Secure Sockets Layer SSL
+* HTTPS provides
+  + privacy
+  + authentication of the accessed webserver
+  + integrity of the exchanged data at the communication channel
+
+**HTTP/2 - HTTP/3**
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-02-20 13.56.37_nmLz9v.jpg" alt="Screenshot_2024-02-20 13.56.37_nmLz9v" style="zoom:50%;" />
+
+
+
+### Cookies and Web Caches and Semantics
+
+**Cookies**
+
+* Cookies allow to maintain user state on server 允许维护用户服务器上的状态
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-02-20 13.59.11_HdmYIv.jpg" alt="Screenshot_2024-02-20 13.59.11_HdmYIv" style="zoom:50%;" />
+
+**Web Caches (Proxy Servers) 网络缓存 代理服务器**
+
+* to satisfy client request without involving orignin server  满足客户端请求而不涉及源服务器
+* Total average delay = Internet delay + access delay + LAN delay
+
 
 
 ## Pingo
@@ -1322,6 +1871,222 @@ c) Fairness means that packets from sources reducing their traffic shall have a 
 d) Random Early Detection (RED) need a feedback channel to the source
 
 Answer: a, b, c, d
+
+
+
+
+
+Protocol: two instances of the same layer handle a protocol
+
+Service: serivce is used by the layer above
+
+Physical: Signal representation of bits. Sending bit 1 is also recived as bit 1
+
+data link: reliable data transfer between adjacent stations with frames
+
+Network: connection end system to end system
+
+Transport: connection from source to destination
+
+Session: support a session for a longer period
+
+presentation: data presentation independent from the end system
+
+Application: application related services
+
+Connect-oriented service: consists of 3 phases: connect, data transfer, disconnect, more reliable connection service, more bandwidth, telephone service
+
+connectionless service: tansfer of isolated units, postal service
+
+it's unusual that the header data of a layer is stored behind the header data of the layer above
+
+FDM, split btween the users, each user is allocated one frequency band
+
+TDM, using time slot. during the time slot, the user has the full bandwidth
+
+data link layer service: reliable, efficient data transfer between adjacent stations
+
+slotted aloha has hiher delay than pure aloha
+
+when two stations want to send at the same time, and the channel at this time is not used, they both sense the channel available and send immediately, then occurs collision
+
+minmum frame length: to distinguish the faulty from correct frames
+
+Routing: to take a decision which route to use
+
+Forwarding: to define what happens when a packet arrived
+
+congestion avoidance, congestion repair/correction
+
+leaky bucket: does not allow a burst larger than the maximal data rate, relieves the network from the burden to manage bursts
+
+token bucket: the sender can accumulate tokens and send a very high rate for a short time, cause congestion control problem
+
+due to the changing topology, it is impossible to equally distribute permits
+
+packet from one network can be too large for another network
+
+fragmented in every intermediate system
+
+reassembled at destination
+
+if one fragment gets lost, the wohle packet must be retransmitted, beacuse the sender can not know, if and how the packet was fragmented.
+
+looks like the fragment of a new packet, store until timeout, then discard
+
+ICMP is used to communicate network layer infromation
+
+subnet mask is used to split the host part of an address to allow the subdivision of the network
+
+CIDR, classless interdomain routing, allocate IP address in variable-size blocks
+
+broadcast an ARP request datagram on LAN, every machine on this LAN receives ARP request and check address, replys by sending ARP response datagram (it's MAC address), send data
+
+A will not receive a response for its ARP request, because Ethernet broadcasts are not rerouted over a router
+
+Non-adaptive: current network state not taken into consideration, spanning tree, flooding
+
+Adaptive: decisions are based on current network state, link state routing
+
+Proactive: provide routes to each node in the network all the time. routes are readliy available when required, overhead generated due to update mechanism
+
+Reactive: determine route on-demand only. no overhead due to update, routing has to be complete before the first packet can be sent
+
+Uniform: all nodes have the same duties wrt routing
+
+Non-uniform: some nodes have dedicated duties wrt routing
+
+AODV: routes are stored at the routing time locally. each node is aware of the next hop
+
+DSR: the complete route is attached to each message. even intermediate nodes are aware of the complete route
+
+Network: responsible for the communication between systems
+
+Transport: provides an end-to-end communication to process
+
+transport layer isolates upper layers from the technology and improves Network Service Quality
+
+Connect request: initiator sends a request with a sequence number selected by the sender
+
+Connect confirmation: receiver responds with the transmitted number and with an own randomly selected number 
+
+Acknowledgment: sender acknowleges these two sequence numbers. after receiving a valid ACK, receiver accpets data
+
+symmetric disconnect: if one party says disconnect, it means that this party will no longer send but might still receive. the disconnect has to be done by both connected entities.
+
+asymmetric disconnect: one of the entites sends a disconect TPDU, and both parties disconnect
+
+TSAP known implicitly, initial connection protocol, name server
+
+
+
+
+
+UDP is a simple transport protocol, which is unreliable, connectionless, message-oriented and boroadcast support. needs few resources, causes less overhead, no flow control, no erorr control or retransmission
+
+TCP provides reliable end-to-end byte streams over an unreliable network. Two-way communication, point-to-point, no boadcast/multicast/QoS parameters/real-time support, reliable, efficient, connection set up and disconnect necessary, higher resources requirement
+
+Form and Sender tell respectively who composed and sent the message.
+
+Circuit switching: a path through the network is set up and maintained for the whole message exchange. telephone network
+
+message switching: the whole message is routed through the network one hop at a time. Telegraphy network
+
+Packet switching: is still used in todays internet, where the message is limited in size
+
+DHCP, flexibility, automation in managing IP address for devices on a network
+
+client broadcasts a DHCP Discover packet to obtain an IP address and other configuration, server answers with DHCP Offer, with available IP address, client accepts the offer and ask server for its configuration with DHCP Request, server answers with comitted IP address and other configuraion with DHCP ACK.
+
+Iterative: the local name server queries various DNS servers and receives a result.
+
+Recursive: the local name sercer sends a request to the DNS server, which in turn requests other DNS servers.
+
+Scoping: is the way of specifying the sub-hierarchy of the Directory Information Tree where the search query should take place
+
+Filtering: search criteria within the defined scope is specified by filtering
+
+ISN, chooses during TCP connection handshake randomly
+
+use temporarily TSAP numbers, which only valid for one connection. disallows "well-known" TSAPs
+
+Identify all connections individually by assigning a new sequence number. requires connection-oriented system
+
+identigy each packet by an individual sequence number. requires more bandwidht and memory
+
+cwnd is increased 1 MSS for each received ACK
+
+Fragment: IP packets are split into fragment, in oder to adapt them to underlying networks
+
+Segment: TCP data stream is split into segment, segment sents as payload of IP packet
+
+setting IDSN to a random value to improves security, avoid losing data in some special cases
+
+A TCP connection is identifed by source to destination port and IP, once a handover between different networks happens, the IP address changes, then disconnct of TCP connection
+
+MPTCP uses several IP at the same time for the same MPTCP connection
+
+the switching of a connection between different network interfaces without establishment of a new connection
+
+an increased fault tolerance by using one of the subflows as backup
+
+increased throughput achieved by sending and receiving data on multiple IP-enabled interfaces in parallel
+
+Strict: data transmission stalled if one stream is stalled
+
+Partial: data transmission for non-stalled streams can continue
+
+MPTCP options are exchanged encoded in a specified TCP option. some middleboxes might still remove any unknown TCP options, MPTCP automatically falls back to TCP
+
+human readable, supported by many programming languages, text format is less efficient, limited set of datatypes
+
+FTPS: an extension of FTP, which adds an addtional encryption
+
+SFTP: an extension of SSH, retaining benifts from SSH while adding file transfer support
+
+failure transparency: failure unknown to user
+
+access transparency: the interface for local and remote method calls should be equal
+
+all interactions are stateless, relies on simple point-to-point communication via HTTP
+
+space decoupling: the interacting parties do not need to know each other
+
+time decoupling: the interacting parties do not need to be actively participating in the interaction at the same time
+
+synchronization decoupling: publishers are not blocked while producing events, and subscribers are not blocked while receiving events
+
+Topic-based: messages sent to well-known topics and recipients are known a-priori
+
+Content-based: subscribers describe their interest as filter experssions
+
+subscription forwarding, reducing subscription propagation, matching notifications
+
+distributed objects have more meta data, remote method invocations have much higher latency
+
+RPC: processes can call procedures on other computers
+
+RMI Registry, Server Stub, Server Skeleton
+
+RTSP: used to control the media playback
+
+RTP: the protocol used to actually transfer the media content
+
+RTCP: provides out-of-band statistic and control information for RTP
+
+compensate for jitter, compensate for delay
+
+P2P: using less resources, content does no longer come from server/content provider and could be modified in transit
+
+HLS is based on HTTP, this enables better compatibility and scalability for delivering video content over the internet, HLS typically has higher latency
+
+boadcast, expanding ring, random walk, rendzvous idea
+
+overlay network: allow for bootstrapping, do not have to deploy new equipment, higher complexity
+
+The chord protocol achieves log(n) search time with the help of its finger table, which contains references to nodes that are exponentially spaced apart, enabling efficietn routing to the desired node in a distributed hash table network.
+
+
 
 
 
