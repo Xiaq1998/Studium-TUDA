@@ -195,3 +195,86 @@ Scanner类：可以接受键盘输入的数字
 2. 创建对象，开始用Scanner类   `Scanner sc = new Scanner(System.in);`
 3. 接收数据   `int i = sc.netxInt();`
 
+
+
+#### IDEA项目结构
+
+project (项目)
+
+​    module (模块)
+
+​        package (包)，即"文件夹"
+
+​            class (类)
+
+* 文件名和类名需要保持一致
+
+
+
+#### 运算符
+
+* 运算符：对字面量或者变量进行操作的符号
+* 表达式：用运算符把字面量或者变量连接起来，符合java语法的式子，就可以称为表达式
+  + 不同运算符连接的表达是体现的是不同类型的表达式
+
+#####算术运算符
+
+1. 加 `System.out.println(3 + 2);`
+2. 减 `System.out.println(5 - 1);`
+3. 乘 `System.out.println(3 * 2);`
+4. 除 `System.out.println(10 / 2);`
+5. 取模 `System.out.println(10 % 2);`
+
+* 整数参与计算，结果只能得到整数
+* 小数参与计算，结果可能不精确
+
+==练习==：数值拆分（需求：键盘录入一个三位数，将其拆分为个位，十位，百位后，打印在控制台）
+
+* 个位：数值%10
+* 十位：数值/10%10
+* 百位：数值/100%10
+
+```java
+//键盘录入
+Scanner sc = new Scanner(System.in);
+System.out.println("please inter a number:");
+int number = sc.nextInt();
+
+//获取个位，十位，百位
+int ge = number % 10;
+int shi = number / 10 % 10;
+int bai = number / 100 % 10;
+```
+
+**数字相加**：数字进行运算时，数据类型不一样不能运算，需要转成一样的数据类型才能运算
+
+* 隐式转换：取值范围小的数值 &rarr; 取值范围大的数值 (自动)
+
+  + 取值范围小的，和取值范围大的进行运算，小的会先提升为大的，再进行运算
+  + byte / short / char 三种类型的数据在运算的时候，都会直接先提升为int，然后再进行运算
+  + byte < short < int < long < float < double
+
+* 强制转换：取值范围大的数值 &rarr; 取值范围小的数值
+
+  + 格式：目标数据类型 变量名 = （目标数据类型）被强转的数据;
+
+  + 例子：
+
+    ```java
+    //Example 1
+    double a = 12.3;
+    int b = (int)a;
+    
+    //Example 2
+    byte b1 = 10;
+    byte b2 = 20;
+    byte result = (byte)(b1 + b2); //强转b1+b2计算之后的结果
+    System.out.println(result);
+    ```
+
+**字符串相加**：当 “+” 操作中出现字符串时，这个 “+” 是字符串连接符，而不是算术运算符了，会将前后的数据进行拼接，并产生一个新的字符串
+
+* 连续进行 “+” 操作时，从左到右逐个执行
+
+**字符相加**：
+
