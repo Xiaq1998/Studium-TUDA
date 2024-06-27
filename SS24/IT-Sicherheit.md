@@ -287,9 +287,218 @@ Routers connect networks to Internet
 
 ### 1. Interdomain routing with BGP
 
+&rarr; 90s, the Internet takes off and BGP(Border Gateway Protocol 边界网关协议) makes that possible
+
+**How does BGP work? &rarr; Routers exchange BGP messages 路由器交换BGP消息**
+
++ BGP messages (selected fields):
+  + IP prefix is the destination (a.b.c.d/16) IP前缀时目标地址
+  + (Selected) attributes:
+    + AS(自治系统)-PATH: list of ASes on path from origin to destination 从起始点到目标的自治系统列表
+    + NEXT-HOP: next hop AS 下一跳自治系统
++ Router Path Announcement
+  + Border routers exchange BGP advertisements 边界路由器（如AS4）向邻居（如AS3）发送包含路径和前缀的BGP广告
++ Border Gateway Router Path Advertisement
+  + Routers use most specific prefix to route packets 路由器使用最具体的前缀来决定数据包的路有路径
+
+![Screenshot_2024-06-27 13.40.57_e5KkNA](/Users/summer/Pictures/截屏/Screenshot_2024-06-27 13.40.57_e5KkNA.jpg)
+
++ 总结
+  + BGP通过在边界路由器之间交换路由信息来更新路径
+  + 每个AS在接收到路径信息后，会在路径中增加自己的AS，并将更新后的路径信息传递给下一个AS
+  + 最终，每个AS都能获得从源到目的地的完整路径信息，并知道下一跳的AS
+
+**BGP Policy-based Routing 基于策略的BGP路由**
+
++ Policy 策略: to decide which path to accept 决定接受哪条路径
+
+  + e.g., to avoid routing through some countries or to decide if to advertise a path to next AS
+
++ Provider 提供商: tells all neighbors how to reach customer 通知所有邻居如何到达客户
+
+  + announces paths if and only if to or from customer 仅在涉及到客户的情况下才能发布路径信息
+
++ Customer 客户: does not want to provide transmit service 不想提供中转服务 &rarr; no motivation, since traffic that passes through does not generate income 没有动力，因为通过其网络的流量不会产生收入
+
+  <img src="/Users/summer/Pictures/截屏/Screenshot_2024-06-27 14.13.55_kmB3hf.jpg" alt="Screenshot_2024-06-27 14.13.55_kmB3hf" style="zoom:50%;" />
+
++ Peer 对等关系: exchange traffic between customers(no $) 在客户之间交换流量
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-06-27 14.14.11_H3dThj.jpg" alt="Screenshot_2024-06-27 14.14.11_H3dThj" style="zoom:50%;" />
+
+**Path Advertisement to Implement Policy 路径广告以实现策略**
+
++ Shortest path and revenue 最短路径和收益
+
+  + Provider: exports customer's routes to everyone and all routes to a customer 向所有人导出客户的路由，以及所有路由到客户
+  + Customer: exports provider's routes to customers 向客户导出提供商的路由
+  + To a peer or provider: paths to its own resources and to its customers but not to paths learnt from other providers or peers 仅向自己的资源和客户导出路径，不向其他学到的提供商或对等方导出路径
+
++ AS2 advertises(AS1|AS2：路径包含AS1和AS2) to AS4 and AS5:
+
+  + if you want to sent to AS1 send through me 如果你想发送到AS1，请通过我（AS2）发送
+  + if AS2 does not advertise this, no traffic would flow to AS1 through AS2 如果AS2不广告此路径，则不会有流量通过AS2流向AS1
+
++ AS4 routes only to/from its customers 仅路由到/来自其客户的流量
+
++ AS4 does not tell paths to destinations that are not customers 不会告知非客户的目的地路径
+
+  + will not advertise to AS5 a path(AS1|AS2|AS4) 不会向AS5广告（AS1｜AS2｜AS4）的路径
+
+  + AS1 & AS5 are not customers of AS4 &rarr; AS4 does not get paid （AS1和AS5不是AS4的客户，因此AS4不会得到支付）
+
+    + if AS4 tells AS5 that it has a path to AS1, then AS5 could route traffic to AS1 through AS4 &rarr; AS4 has no economic incentive to serve as transmit for traffic from AS5 to AS1 如果AS4告知AS5其有路径到AS1，则AS5可能会通过AS4将流量路由到AS1，而AS4没有经济激励作为AS5到AS1的中转
+
+      &rarr; AS5 does not know there is a route to AS1 via AS4 不知道通过AS4到AS1的路径
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-06-27 14.37.05_9ogC9X.jpg" alt="Screenshot_2024-06-27 14.37.05_9ogC9X" style="zoom:50%;" />
+
+
+
 ### 2. BGP prefix hijack attacks
+
+**BGP Security:**
+
++ Hijacks 劫持: 网络流量被错误的或恶意的重定向到不正确的路径
++ Route Leaks 路由泄露
+
+![Screenshot_2024-06-27 15.31.23_ahoNgm](/Users/summer/Pictures/截屏/Screenshot_2024-06-27 15.31.23_ahoNgm.jpg)
+
+**BGP Hijack Goals**
+
++ Eavesdroppling 窃听
++ Traffic analysis 流量分析
++ DNS poisoning 中毒
++ Spam/phishing 垃圾邮件/网络钓鱼
++ Malware distribution 恶意软件分发
++ Cryptocurrency theft 加密货币盗窃
++ DoS
+
+**BGP Hijack Real Life Example —— April 2010: China Telecom**
+
++ 中国电信的公告
+  + 公告前缀66.174.161.0/24
+  + 可能由于且只错误或故意行为导致
++ ISP 1的路径选择
+  + 选择了中国电信的路径，导致流量通过中国电信传输
+  + 可能因为中国电信的路径看起来更短或其他策略因素
++ Level 3，VZW和22394的路径选择
+  + 类似的，选择了通过中国电信的路径，导致流量被重定向
+
+![Screenshot_2024-06-27 15.40.16_7Fktel](/Users/summer/Pictures/截屏/Screenshot_2024-06-27 15.40.16_7Fktel.jpg)
+
+**Prefix hijack attack**
+
++ prefer shorter route 优先选择较短路径
++ prefer customers over peers and peers over providers 优先选择客户路径而不是对等方和提供商路径
++ Subprefix hijack:
+  + prefer a more specific prefix 优先选择更具体的前缀
+    + 更具体的前缀意味着该前缀的网络部分更长，主机部分更短，从而指定了一个更小、更精确的子网
+
+
 
 ### 3. BGP security with RPKI
 
+**How to validate that AS333 is the legitimate origin of 1.2.0.0/16?**
+
++ Ideas:
+  + A list of valid ASes for each prefix
+  + Online check in a database(Internet Routing Registries)
+  + Offline: digitally signed Route Origin Authorizations
+
+&rarr; Validate BGP announcements with RPKI 使用RPKI验证BGP公告:
+
++ Only signed origin may announce 1.2/16
+  + Routers should filter bogus BGP packets with &**Route Origin Validation** 路由器应该使用 *路由原点验证* 来过滤虚假的BGP数据包
+  + Drop announcement of prefixes within 1.2/16 where origin is not AS333 丢弃前缀为1.2/16但源不是AS333的公告
+
+![Screenshot_2024-06-27 16.59.33_UAzX13](/Users/summer/Pictures/截屏/Screenshot_2024-06-27 16.59.33_UAzX13.jpg)
+
+**Resource Public Key Infrastructure(RPKI) 资源公钥基础设施**
+
++ RFC6480: prefix owner gets Resource Certificate(CR 资源证书)
++ Superprefix owner(e.g., RIPE) signs RC: {prefix, K.owner}~K.RIR~ 
+  + RIPE：Réseaux IP Européens 一个为欧洲互联网社区提供协调服务和支持的组织
++ Prefix owner signs ROA: {prefix, AS.origin}~K.owner~
+  + ROA：Route Origin Authorization 路由原点授权，一种由前缀所有者创建并签署的加密签名文件，用于授权特定AS对外宣布某个IP前缀
++ Only signed origin may announce 1.2/16 只有签名的源AS可以宣布前缀1.2/16
+  + 只有合法的ROA签署的源AS可以对外宣布特定前缀
++ More specific announcement(long prefix) not allowed 不允许更具体的公告（更长的前缀）
+  + 防止子前缀劫持攻击，确保前缀公告的合法性和唯一性
++ Announcement of other origin requires another valid ROA 其他源的公告需要另一个有效的ROA
+  + 任何其他源要公告同一前缀，必须拥有另一个有效的ROA，确保公告的真实性和授权性
+
+**Internet resources**
+
++ The Internet is broken up to five zones, each zone managed by a Regional Internet Registry
++ Routers need to obtain validated ROAs 路由器需要获得经过验证的ROA
+
+**RPKI Repository Delta Protocol (RRDP) 存储库增量协议**
+
+&rarr; RRDP是一种用于从RPKI存储库中下载和同步资源对象的协议，主要用于提高RPKI数据的传输效率和可靠性
+
++ RPs(Relying Party 依赖方) download objects from repositories over RRDP 依赖方从存储库通过RRDP下载对象
++ RRDP lists the data in XML objects 以XML对象的形式列出数据
++ Runs over HTTPS 运行于HTTPS
++ Content of a repository(XML file) can be downloaded over a webserver 存储库的内容（XML文件）可以通过Web服务器下载
++ Data Types:
+  + Snapshot.xml
+    + 内容：包含存储库中的所有对象
+    + 字段：由名称和字节组成
+    + 创建：每次有更改时都会重新创建
+    + 用途：在客户端进行初始同步时下载该文件，以获取存储库中所有对象的完整快照
+  + Delta.xml
+    + 内容：包含自上次更新以来的所有更改
+    + 用途：用于增量更新客户端的本地状态，减少数据传输量
+  + Notification.xml
+    + 内容：包含存储库的当前序列号以及指向当前Snapshot.xml和所有Delta.xml的链接
+    + 用于：客户端首先下载Notification.xml以获取最新的序列号和更新信息，然后根据需要下载Snapshot.xml或Delta.xml进行同步
+
+
+
 ### 4. RPKI: misconfigurations and attacks
+
+
+
+## BGP Security: Beyond ROV
+
+
+
+## Domain Name Systemn Security
+
+### DNS
+
+### DNS cache poisoning
+
+### Query triggering
+
+### TXID and port randomization
+
+### DNSSEC
+
+
+
+## ROV Measuring In The Wild
+
+### Control- vs. Dataplane
+
+### Passive/Active Overview
+
+### Measurement Approaches
+
+### Q&A
+
+
+
+## Web Security
+
+
+
+## PKI & TLS
+
+
+
+## Introduction to Binary Security
+
+
 
