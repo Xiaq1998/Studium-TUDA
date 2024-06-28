@@ -212,5 +212,54 @@ supports two types of port forwarding:
 
 ## BGP Security
 
+### How does BGP work?
+
+**BGP is a protocol to announce prefixes, everybody has Neighbors**
+
+==&rarr; BGP announces **IP prefixes** to neighbors 向邻居宣告IP前缀==
+
++ These neighbors have to be configured 这些邻居必须配置好
++ Each BGP speaking device is part of an **AS(Autonomous System 自治系统)** 每个BGP设备都是AS的一部分
++ The path these announcements take is recorded &rarr; this is called the **Autonomous System Path 自治系统路径**
++ The AS Path shows which AS have forwarded the prefix announcement 自治系统路径显示了哪些AS转发了前缀公告
++ The rightmost AS in the AS Path is called the "Originator" 自治系统路径中最右边的AS被称为“起源者”
+
+**BGP Neighbors**
+
+&rarr; directly connected neighbors 直接连接邻居
+
++ BGP announces IP prefixes to neighbors: 向邻居宣告IP前
+  + These neighbors have to be configured 这些邻居必须配置好
+  + BGP uses **TCP** to connect to a neighbor 使用TCP连接到邻居
++ TCP brings already: 提供的功能
+  + reliable transport: 可靠传输
+    + sender knows that receiver got it 发送方知道接收方已收到数据
+  + flow control: 流量控制
+    + do not send faster than the receiver can receive 不会发送超过接收方接收能力的数据
+  + framing: 帧格式
+    + putting BGP messages into packets 将BGP消息打包成数据包
+
+**BGP works incremental 增量工作机制**
+
+&rarr; using add- / withdraw- messages 使用添加/撤回消息
+
++ At session setup, BGP announces "everything" to its neighbor
++ After that, updates are incremental:
+  + If BGP learns about a new prefix, it sends an add-message to neighbors
+  + If a prefix goes away, it sends a withdraw message to neighbors
++ As long as the BGP session is "up", a router assumes its neighbors are "in sync" (did not forget anything it sent)
+
+
+
+
+
+### BGP and Security
+
+### BGP Filtering
+
+### BGP Error Handling
+
+### More security: RPKI
+
 
 
