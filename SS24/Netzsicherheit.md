@@ -243,23 +243,485 @@ supports two types of port forwarding:
 
 &rarr; using add- / withdraw- messages 使用添加/撤回消息
 
-+ At session setup, BGP announces "everything" to its neighbor
-+ After that, updates are incremental:
-  + If BGP learns about a new prefix, it sends an add-message to neighbors
-  + If a prefix goes away, it sends a withdraw message to neighbors
-+ As long as the BGP session is "up", a router assumes its neighbors are "in sync" (did not forget anything it sent)
-
-
++ At session setup, BGP announces "everything" to its neighbor 会话建立时，BGP向其邻居宣告“所有”内容
++ After that, updates are incremental: 更新是增量的
+  + If BGP learns about a new prefix, it sends an **add-message** to neighbors 如果BGP了解到新的前缀，它会向邻居发送添加消息
+  + If a prefix goes away, it sends a **withdraw message** to neighbors 如果一个前缀消失了，它会向邻居发送撤回消息
++ As long as the BGP session is "up", a router assumes its neighbors are "in sync" (did not forget anything it sent) 只要BGP会话是“正常的”，路由器就会假设其邻居是“同步的”，即没有遗忘之前发送的任何信息
 
 
 
 ### BGP and Security
 
+**RFC7454 &rarr; Reference Document on BGP Security**
+
+**Simple Measures**
+
+&rarr; Easy to implement
+
+&rarr; Easy to maintain
+
+&rarr; ... but only of limited use
+
+&rarr; ... still should be implemented
+
+&rarr; List of measures:
+
+1. **Maximun Prefix 最大前缀**
+
+   &rarr; 设置最大前缀是为了防止意外或恶意的路由更新泛滥，导致网络中断或设备过载
+
+   + Good counter-measure against misconfigured peers 最大前缀是一种有效的防护措施，针对配置错误的对等体
+   + Definition:
+     + Define a threshold 阀值
+       + 设置一个前缀数量的上限，超过这个数量就会触发警报
+     + Define an action if threshold is hit
+   + Possible actions:
+     + Tear down session 拆除会话 (until manual intervention 直到手动干预)
+       + 在检测到超过阀值后，自动拆除会话，直到管理员手动干预为止
+     + Tear down and restart 拆除并重启 (after *n* minutes)
+       + 在检测到超过阀值后，自动拆除会话，并在n分钟后重新建立会话
+     + Waring only
+       + 当达到阀值时，仅发出警告，不进行任何会话操作
+   + Best practices:
+     + Set threshold high enough 设置足够高的阀值(like 10* usual size)
+     + Configure a warning at 90% 在90%的阀值配置警告
+
+   ![Screenshot_2024-06-28 13.11.45_cCQSVd](/Users/summer/Pictures/截屏/Screenshot_2024-06-28 13.11.45_cCQSVd.jpg)
+
+2. **MD5 Session Password / TCP AO(Aothentication Option 身份验证选项)**
+
+   &rarr; MD5已经被认为是不安全的，但仍然在使用中。TCP-AO是一个更现代的替代方案，具有更强的安全性
+
+   + Set the same password on each side 在每一侧设置相同的密码
+     + 双方必须配置相同的密码，以便对每个TCP包进行签名
+   + Password is used to MD5 sign each TCP packet by the sender 密码用于对每个TCP包进行MD5签名
+   + Receiver checks the signature 接收方检查签名
+     + If it does not match, packet is silently discarded 如果签名不匹配，包将被静默丢弃
+   + Still used, even MD5 no longer state of the art
+   + More modern approach: TCP-AO with stronger hashes
+   + Recommendation: Use this for iBGP, but not for eBGP
+     + 对于iBGP (内部BGP)会话，可以使用MD5或TCP-AO来增加安全性
+     + 对于eBGP (外部BGP)会话，建议使用更强的安全措施
+   + Some password management is important
+
+   ![Screenshot_2024-06-28 13.16.34_Nhg4Bg](/Users/summer/Pictures/截屏/Screenshot_2024-06-28 13.16.34_Nhg4Bg.jpg)
+
+3. **IP Time-to-live security 生存时间安全性**
+
+   &rarr; IP TTL用于防止未授权的远程主机于BGP邻居建立会话，通过设置并检查数据包的TTL值，可以确保数据包只来自直接相连的设备
+
+   + Send IP packets with initial TTL of 255 发送数据包时设置初始TTL为255
+   + Receiver checkes if value is really 255 接收方检查TTL值
+     + If not, packet is silently discarded 如果TTL值不是255，数据包将被静默丢弃
+   + Very easy to implement 只需要在BGP配置中设置相应的TTL值
+     + but must be configured on both sides 通信双方都进行配置才能生效
+   + Defined in RFC5082
+
+![Screenshot_2024-06-28 13.33.30_qQsYHO](/Users/summer/Pictures/截屏/Screenshot_2024-06-28 13.33.30_qQsYHO.jpg)
+
 ### BGP Filtering
+
+<img src="/Users/summer/Pictures/截屏/Screenshot_2024-06-28 13.36.38_ihyMk0.jpg" alt="Screenshot_2024-06-28 13.36.38_ihyMk0" style="zoom:25%;" />
+
+&rarr; BGP过滤可以确保只有可信赖的路由通告被接受和传播，从而保护网络免受错误或恶意路由的影响
+
+**BGP过滤机制**
+
++ Raw Input 原始输入
+  + 所有接收到的BGP路由通告
++ Blocklist 黑名单
+  + 列出明确禁止的前缀和路径。被列入黑名单的路由通告会被直接丢弃，不会进入路由表
++ Allowlist 白名单
+  + 列出明确允许的前缀和路径。只有被列入白名单的路由通告才会被考虑放入路由表
++ The Good Stuff 有效路由
+  + 同时通过黑名单和白名单过滤的路由通告，确保这些路由是可信且有效的
+
+#### Prefix Filtering 前缀过滤
+
+&rarr; Prefix Filtering用于阻止非路由IPv4和IPv6前缀的传播，以保护网络免受错误配置和恶意活动的影响
+
+**过滤内容：**
+
++ Block non-routable IPv4 prefixes：阻止不可路由的IPv4前缀
+  + Private IPv4 space: 私有IPv4空间
+    + 10.0.0.0/8
+    + 172.16.0.0/12
+    + 192.168.0.0/16
+  + IPv4 networks reserved for documentation purposes: 保留用于文档目的的IPv4网络
+    + 192.0.2.0/24
+    + 198.51.100.0/24
+    + 203.0.113.0/24
+  + IPv4 multicast address space: 组播地址空间
+    + 224.0.0.0/4
+  + IPv4 reserved for "future use": 预留用于未来使用的IPv4
+    + 240.0.0.0/4
++ Block non-routable IPv6 prefixes：阻止不可路由的IPv6前缀
+  + Allow **only** 2000::/3
+  + Block everything else
++ Filter against too small and too large prefixes 过滤过小和过大的前缀
+  + IPv4:
+    + Prefix sizes: /8 - /24
+    + Block everything smaller or larger (exception: Blackholing 黑洞路由)
+  + IPv6:
+    + Prefix sizes: /19 - /48
+    + might allow a default route from your upstream providers 可以允许从上游供应商接收默认路由
+
+**More Prefix Filtering**
+
++ IXP Lan Prefixes (and their more specifics)
+  + 过滤互联交换点（IXP）的局域网前缀及其更具体的前缀
++ Your own prefixes
+  + 过滤掉本公司网络内部使用的前缀，防止泄漏
++ Your customers prefixes
+  + 过滤掉客户的前缀，确保只允许合法的前缀通过，防止错误配置导致路由问题
+
+
+
+#### AS Path Filtering
+
+&rarr; 即使前缀完全合法，AS路径可能会有问题。通过对AS路径进行过滤，可以确保路径信息的准确性和可靠性
+
+**过滤条件**
+
++ Private ASes 私有AS号段
+  + 64512 - 65534
+  + 4200000000-4294967294
++ Reserved ASes 保留的AS号段
+  + 参见IANA的特殊用途AS编号
++ Anywhere in the AS path 路径中的自有AS号
+  + 如果AS路径中包含自有AS号，前缀会自动被过滤
++ Regular expressions can be used 使用正则表达式
+  + but do not overdo it
+  + better split it up
+
+**Filtering from Customers**
+
++ we need the "Allowlist" 需要使用“允许列表”
++ from customers allow only 仅允许客户的前缀
+  + 从客户处接收路由通告时，仅允许他们自己的前缀
++ customers prefixes 仅允许客户的AS号
+  + customers ASes (anywhere in the path) 无论客户的AS号出现在路径中的任何位置，都应该接受
+  + 如果客户AS号不在路径中，则拒绝
++ use this to create an Allowlist per customer 为每个客户创建单独的允许列表
+  + 可以确保每个客户只能通告他们自己授权的前缀，防止错误或恶意通告
+
+**Conclusion**
+
++ protect your BGP routers and sessions
++ filter incoming
++ unwanted IP Prefixes
++ bogus ASes in the path
++ allow from customers using an Allowlist
++ filter outgoing
++ make sure you announce only valid prefixes
+
+
 
 ### BGP Error Handling
 
+**BGP Message Types**
+
+&rarr; TCP containing BGP messages
+
++ OPEN
+  + initial message for setting up a session 用于建立会话的初始消息
++ UPDATE
+  + incremental routing updates: adds and withdraws 增量路由更新消息，包含新增的前缀和撤回的前缀
++ KEEPALIVE
+  + send this if you have nothing to send 如果没有其他消息要发送，则发送此消息以保持会话的活跃状态
++ NOTIFICATION
+  + to tell the other side there was an error, and then close the BGP session 当发生错误时，用于通知对端并关闭BGP会话
+
+**Update message**
+
+&rarr; Incremental routing updates 用于传递增量路由更新
+
++ Update messages can contain multiple things:
+
+  + a list of "adds" 新增前缀列表
+
+    + named "Network Layer Reachability Information (NLRI)" 网络层可达性信息
+    + with common attributes 包含公共属性
+
+  + a list of "withdraws" 撤回前缀列表
+
+    + withdraws do not have attributes 撤回前缀没有属性
+
+      <img src="/Users/summer/Pictures/截屏/Screenshot_2024-06-29 12.54.43_Bav7DK.jpg" alt="Screenshot_2024-06-29 12.54.43_Bav7DK" style="zoom:50%;" />
+
++ Attributes of BGP prefixes:
+
+  + Mandatory attributes 必需属性: have to be there 必须存在
+    + e.g.: AS-Path
+  + Optional attribute 可选属性: are, well, optional 可选的
+    + e.g.: MED (Multi-Exit Discriminator 多出口鉴别器)
+  + Transitive attributes 可传递属性:
+    + are kept on the prefix and forwarded via BGP 在前缀上保留，并通过BGP转发
+    + even (!) when not understoodt by the forwarding device 即使转发设备不理解这些属性，也要保留
+  + Non-transitive attributes 不可传递属性: are added to a prefix and not forwarded by the receiver 添加到前缀上，但不会被接收者转发
+
+**More about BGP attributes**
+
++ Flags: first byte of any attribute
+
+  + Optional (1) or Well-Known (0)
+  + Transitive (1) or Non-Transitive (0) (well-known is always transitive)
+  + Partial (1) or Complete (0) ("Partial" only for optional transitive)
+  + Extended Length Bit (0 = one length octet, 1 = two length octets)
+  + Rest of the flags are unused
+
+  ![Screenshot_2024-06-29 13.21.24_BaZJun](/Users/summer/Pictures/截屏/Screenshot_2024-06-29 13.21.24_BaZJun.jpg)
+
++ Attribute Type: Origin
+
+  + Well-known, Transitive, Mandatory, (and quite simple)
+  + Length is one octet
+  + Possible values:
+    + 0 - IGP
+    + 1 - EGP
+    + 2 - Incomplete
+
+  ![Screenshot_2024-06-29 13.22.46_3IcMVh](/Users/summer/Pictures/截屏/Screenshot_2024-06-29 13.22.46_3IcMVh.jpg)
+
++ Attribute Type: AS Path
+
+  + Well-known, Mandatory
+  + Realized as "sequence of segments"
+  + Segment: (type, length, value)
+    + Type = 1: Unordered set of ASes traversed
+    + Type = 2: Ordered Set of ASes traversed
+    + Length: Number of ASes in value part
+
+  ![Screenshot_2024-06-29 13.23.51_Vu29ZH](/Users/summer/Pictures/截屏/Screenshot_2024-06-29 13.23.51_Vu29ZH.jpg)
+
+**What happens if an attribute is malformed?**
+
+&rarr; Update Message Error Handling 更新消息错误处理
+
+All errors detected while processing the UPDATE message must be indicated by sending the NOTIFICATION message with the **Error Code UPDATE Message Error**. The error subcode elaborates on the specific nature of the error. 所有在处理更新消息是检测到的错误必须通过发送带有错误代码的通知消息来指示。错误子代码详细说明了错误的具体性质。
+
++ Notification 通知消息: 
+
+  + to tell the other side there was an error, and then close the BGP session. 用于告知对方出现了错误，然后关闭BGP会话
+
++ Error in Update Messages 更新消息中的错误
+
+  &rarr; shut down the BGP session 关闭BGP会话
+
+  + if any of the well-known attributes contain an error:
+
+    + a notification is sent back 会发送回一条通知消息
+    + and the BGP session is closed 并且关闭BGP会话
+
+  + this is how it was until RFC7606
+
+  + RFC7607 changes error handling 修订了错误处理
+
+    &rarr; no longer shutting down the session 不再关闭会话
+
+    + if an attribute contains an error the announcement (add) is treated like a withdraw 如果某个属性包含错误，则公告（添加）将被视为撤回
+    + so the session stays up and the "bad" prefix is withdrawn from the BGP table 因此会话保持开启，并且“坏”前缀将从BGP表中撤回
+
+**Conclusion**
+
++ BGP Error handling has been improved over the years 错误处理已在这些年中得到改进
++ In case of malformed attributes, BGP handles an announcement like a withdrawal 在属性格式错误的情况下，BGP将公告视为撤销处理
++ Implementation bugs may cause major disruptions 实现中的错误可能导致重大中断
++ The quality of a BGP implementation is also affected by how quickly critical bugs are fixed 实现的质量也受到修复关键错误速度的影响
+
+
+
 ### More security: RPKI
+
+&rarr; Resource Public Key Infrastructure (RPKI) 资源公钥基础设施，一种基于公钥基础设施（PKI）的安全框架，用于验证和确保互联网路由信息的准确性和可靠性
+
+**Certificate: based proof of address assignment 基于证书的IP地址分配证明**
+
++ there are only 5 entities handing out IP resources
++ these are the 5 RIRs(区域互联网注册管理机构)
++ these are the **trust-anchors** in this model
++ they have contractual proof who they gave which resource
++ and sign you a certificate for it
+
+**RPKI**
+
++ digitally signed route objects 用于数字签名路由对象
++ resource holders can：
+  + get their resources signed and can define how they are announced 资源持有者可以让其资源获得签名，可以定义如何公告这些资源
+  + define an Origin-AS 定义一个原始自治系统
+  + define a maximum length of a prefix 定义一个前缀的最大长度
+  + this is called a **"ROA"(Route Origin Authorisation 路由来源授权)**
++ routers can use this to validate BGP announcements
++ what problem does it want to solve?
+  + Certificate - based proof of resource assignment 基于证书的资源分配证明
+  + Resources are IP prefixes and AS numbers 资源包括IP前缀和AS号码
+  + Verifiable originator AS for each prefix 可验证的前缀起始AS
+  + Only allow certain prefix lengths 只允许某些前缀长度
+
+**Validating your ROAs**
+
+validator(RPKI验证器) 的功能及其工作流程
+
++ fetch resource certificates and ROAs from RIRs (via rsync) 从RIRs获取资源证书和ROAs
+
++ Validates the "chain of trust" 验证信任链
+
++ check signatures of certificates 检查证书的签名
+
++ check signatures of ROAs 检查ROAs的签名
+
++ supplies a validated cache for your routers 提供验证后的缓存
+
++ RPKI Validator System Architecture:
+
+  ![Screenshot_2024-06-29 14.24.35_EaqUGf](/Users/summer/Pictures/截屏/Screenshot_2024-06-29 14.24.35_EaqUGf.jpg)
+
+
+
+## Chapter 06: Selected Topic
+
+### Firewalls
+
+**What's a Firewall** 
+
++ Barrier between *us* and *them* *我们* 和*他们* 之间的屏障
+
++ Limits communication to the outside world 与外界通信的限制
+  + The outside world can be another part of the same organization 外界可以是统一组织的另一部分
+
+**Limitations**
+
++ A firewall is "a sort of crunchy shell around a soft, chewy center" 防火墙虽然提供了外围保护，但是内部仍然脆弱
+
+**Why use Firewall?**
+
++ most hosts have security holes 大多数主机都有安全漏洞
+  + Proof: most software is buggy. Therefore, most security software has security bugs
++ Firewalls run much less code, and hence have few bugs(and holes) 防火墙运行代码少的多，因此漏洞比较少
++ Firewalls can be professionally(and hence better) administered 防火墙可以由专业人员管理
++ Firewalls run less software, with more logging and monitoring 防火墙运行较少的软件，但有更多的日志记录和监控
++ They enforce the partition of a network into separate security domains 他们强制将网络分割成独立的安全域
++ Without such a partition, a network acts as a giant virtual machine, with an unknown set of privileged and ordinary users 没有这种分割，网络就像一个巨大的虚拟器，拥有一组未知的特权和普通用户
+
+**Should we fix the network protocols instead? 我们应该修复网络协议吗？**
+
++ Network security is not the problem 网络安全不是问题所在
++ Firewalls are not a solution to network problems. They are a network response to a host security problem 防火墙不是网络问题的解决方案，它们是对主机安全问题的网络响应
++ Better network protocols will not obviate the need for firewalls. The best cryptography in the world will not guard against buggy code 更好的网络协议不能消除对防火墙的需求。世界上最好的加密技术也无法防止有漏洞的代码
+
+**Firewall Advantages**
+
+&rarr; if you don't need it, get rid of it 如果你不需要它，就把它丢掉
+
++ No ordinary users, and hence no passwords for them 没有普通用户，因此没有他们的密码
++ Run as few servers as possible 尽量少运行服务器
++ Install conservative software, don't get the latest fancy servers, etc. 安装保守的软件，不要安装最新的花哨服务器等
++ Log everything, and monitor the log files 记录所有内容，并监控日志文件
++ Keep copious backups, including a "Day 0" backup 保持大量备份，包括“第0天”的备份
+
+**Schematic of a Firewall 防火墙示意图**
+
+![Screenshot_2024-07-02 20.46.52_oYn7ng](/Users/summer/Pictures/截屏/Screenshot_2024-07-02 20.46.52_oYn7ng.jpg)
+
++ Inside 内部网络
++ Outside 外部网络
++ Gateway 网关
++ Filter 过滤器
++ DMZ (Demilitarized Zone) 隔离区
+  + Good spot for things like email and web servers 适合放置邮件和网页服务器等服务
+  + Outsiders can send email, retrieve web pages 外部人员可以发送邮件、检索网页
+  + Insiders can retrieve email, update web pages 内部人员可以检索邮件，更新网页
+  + Must monitor such machines very carefully 必须非常仔细的监控这些机器
+
+**Positioning Firewalls 防火墙的定位**
+
+&rarr; Firewalls protect administrative divisions 防火墙保护管理分区
+
++ Why Administrative Domains?
+  + Firewalls enforce policy 防火墙执行策略
+  + Policy follows administrative boundaries, not physical ones 策略遵循管理边界，而不是物理边界
+
+**Firewall Philosophies 防火墙的理念**
+
++ Block all dangerous destinations 阻止所有危险的目的地&rarr; 必须知道网络中所有部分的所有危险内容
++ Block everything; unblock things known to be both safe and necessary 阻止所有内容，只解锁已知安全且必要的内容 &rarr; much safer
+
+**Types of Firewalls**
+
++ Packet Filters
++ Dynamic Packet Filters
++ Application Gateways
++ Circuit Relays
++ Personal and/or Distributed Firewalls
+
+
+
+### Packet Filters
+
+**Packet Filters 包过滤器**
+
++ Router-based(and hence cheap) 基于路由器
++ Individual packets are accepted or rejected; no context is used 单个数据包被接受或拒绝；不使用上下文
++ Filter rules are hard to set up; the primitives are often inadequate, and different rules can interact 过滤规则难以设置；原语往往不充分，不同规则之间可能相互作用
++ Packet filters a poor fit for ftp and X11 包过滤器不适合FTP和X11
++ Hard to manage access to RPC-based services 难以管理基于RPC的服务访问
+
+**Running without state 无状态运行**
+
++ We want to permit outbound connections 希望允许出站连接
++ We have to permit reply packets 必须允许回复数据包
++ For TCP, this can be done without state 对于TCP，可以在无状态下运行
++ The very first packet of a TCP connection has just the SYN bit set. TCP连接的第一个数据包只有SYN位被设置
++ All others have the ACK bit set 其他所有数据包都设置了ACK位
++ Solution: allow in all packets with ACK turned on 允许所有设置了ACK的数据包通过
+
+**Locating Packet Filters 包过滤器的位置**
+
++ Generally have per-interface rules 通常有每个接口的规则
++ Rules are further divided to apply to inbound or outbound packets on an interface 规则进一步细分为应用于接口上的入站或出站数据包
++ Better to filter inbound packets - less loss of information 更好的选择是过滤入站数据包——信息丢失较少
+
+**Filtering inbound packets**
+
+&rarr; If you filter outbound packets to the DMZ link, you can't tell where they came from 如果过滤发送到DMZ链路的出站数据包，你无法知道他们来自哪里
+
+**Packet Filters and UDP**
+
++ UDP has no notion of a connection. It is therefore impossible to distinguish a reply to a query - which should be permitted - from an intrusive packet. UDP没有连接的概念。因此无法区分查询的回复（应该被允许）和侵入性的数据包
++ Address-spoofing is easy - no connections 地址欺骗很容易——因为没有连接
++ At best, one can try to block known-dangerous ports. But that's a risky game 最多只能尝试阻止已知危险的端口。但这是一个风险很大的游戏
++ The safe solution is to permit UDP packets through to known-safe servers only 安全的解决方案是只允许UDP数据包通过到已知安全的服务器
++ Example (DNS):
+  + Accepts queries on port 53 接受端口53上的查询
+  + Block if handling internal queries only; allow if permitting external queries 如果只处理内部查询，则阻止；如果允许外部查询，则允许
+  + What about recursive queries? 递归查询怎么办？
+    + Bind local respnse socket to some other port; allow inbound UDP packets to it 将本地响应套接字绑定到其他端口；允许入站UDP数据包到达
+    + Or put the DNS machine in the DMZ, and run no other UDP services 或者将DNS机器放在DMZ中，并运行其他UDP服务
+
+
+
+
+
+
+
+
+
+
+
+
+
+### Stateful Packet Filters
+
+### Application Firewalls
+
+### The DNS
+
+### Circuit Gateways
+
+### The Problems with Firewalls
+
+
 
 
 
