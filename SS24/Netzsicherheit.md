@@ -699,27 +699,240 @@ validator(RPKI验证器) 的功能及其工作流程
     + Bind local respnse socket to some other port; allow inbound UDP packets to it 将本地响应套接字绑定到其他端口；允许入站UDP数据包到达
     + Or put the DNS machine in the DMZ, and run no other UDP services 或者将DNS机器放在DMZ中，并运行其他UDP服务
 
+**ICMP Problems**
 
+&rarr; Internet Control Message Protocol，互联网控制消息协议，用于网络设备在互联网上交换控制信息的协议。
 
++ Often use ICMP packets in response to TCP or UDP packets 经常使用ICMP数据包作为对TCP或UDP数据包的响应
++ Important example: "Path MTU" response 路径MTU响应
++ Must be allowed in or connectivity can break 必须允许这些数据包进入，否则可能会连接中断
++ Simple packet filters can't match things up 简单的包过滤器无法匹配这些数据包
 
+**The Problem with RPC**
 
+&rarr; Remote Procedure Call 远程过程调用，是一种协议，允许程序在不同的地址空间上执行程序代码。
 
++ RPC services bind to random port numbers. RPC服务绑定到随机端口号
++ There's no way to know in advance which to block and which to permit 无法提前知道哪些端口需要阻止，哪些需要允许
++ Similar considerations apply to RPC clients 类似的考虑适用于RPC客户端
++ Systems using RPC cannot be protected by simple packet filters 使用RPC的系统无法通过简单的包过滤器保护
 
+**FTP, SIP et al.**
 
++ FTP Clients(and some other services) use secondary channels 使用辅助通道
++ Again, these live on random port numbers 这些通道位于随机端口上
++ Simple packet filters cannot handle this 简单的包过滤器无法处理这些
 
+**Saving FTP**
 
++ By default, FTP clients send a **PORT command** to specify the address for an inbound connection 默认情况下，FTP客户端发送一个PORT命令以指定入站连接的地址
++ If the **PASV command** is used instead, the data channel uses a separate outbound connection 如果使用PASV命令，数据通道将使用一个单独的出站连接
++ If local policy permits arbitrary outbound connections, this work well 如果本地策略允许任意出站连接，这种方式效果很好
+
+**The Role of Packet Filters**
+
++ Packet filters are not very useful as general-purpose firewalls 包过滤器作为通用防火墙并不是非常有用
++ That said, they have their place 尽管如此，它们在某些特殊情况下非常有用
++ Several special situations where they're perfect 有几个特定的情况，它们是完美的
+
+**Simplicity**
+
++ Packet filters are very simple, and can protect some simple environment 包过滤器非常简单，可以保护一些简单的环境
++ Virtually all routers have the facility built in 几乎所有的路由器都内置了这种功能额
+
+**Address Filtering**
+
++ At the border, block internal addresses from coming in from the outside 在边界处，阻止外部进入的内部地址
++ Similarly, prevent fake addresses from going out 同样的，防止伪造地址外出
 
 
 
 ### Stateful Packet Filters
 
+**Stateful Packet Filters 状态化数据包过滤器**
+
++ Most common type of packet filter 最常见的过滤器类型
++ Sovels may - but not all - of the problems with simple packet filters 与简单的过滤器相比，它解决了许多问题，但不是所有问题
++ Requires per-connection state in the firewall 要求防火墙中为每个连接维护状态
+
+**Keeping State**
+
++ When a packet is sent out, record that 当发送数据包时，防火墙记录该数据包的信息
++ Associate inbound packet with state created by outbound packet 当接收到入站数据包时，防火墙会将其与之前记录的出站数据包状态相关联
+
+**Problems Solved**
+
++ Can handle UDP query/response 能够处理UDP查询/响应
++ Can associate ICMP packets with connection 能够讲ICMP数据包于连接相关联
++ Solves some of the inbound/outbound filtering issues - but state tables still need to be associated with inbound packets 解决了一些入站/出站过滤问题，但仍需在入站数据包上维护状态表
++ Still need to block against address-spoofing 仍需阻止地址欺骗
+
+**Remaining Problems**
+
++ Still have problems with secondary ports 仍然存在次级端口问题
++ Still have problems with RPC 仍然存在RPC问题
++ Still have problems with complex semantics(i.e., DNS) 仍然存在复杂语义问题
+
+**Network Address Translators(NAT) 网络地址转换器**
+
++ Translates source address(and sometimes port numbers) 地址翻译，将私有IP地址翻译成公共IP地址
++ Primary purpose: coping with limited number of global IP address 节省IP地址
++ It's not really stronger than a stateful packet filter
+
+
+
 ### Application Firewalls
 
-### The DNS
+**Moving up the Stack 为什么要向上移动堆栈？**
+
+——Why move up the stack?
+
++ Apart from the limitations of packet filters discussed last time, firewalls are inherently incapable of protecting against attacks on a higher layer 吃了之前讨论的包过滤器的局限性，防火墙本质上无法保护高层攻击
++ IP packet filters can't protect against bogus TCP data. IP包过滤器无法防止伪造的TCP数据
++ A TCP-layer firewall can't protect against bugs in SMTP. TCP层防火墙无法保护SMTP中的漏洞
++ SMTP proxies can't protect against problems in the email itself, etc. SMTP代理无法保护电子邮件本身的问题
+
+**Advantages**
+
++ Protection can be tuned to the individual application 保护可以针对个别应用进行调整
++ More context can be available 可以获得更多上下文信息
++ You only pay the performance price for that application, not others 只需为特定应用支付性能开销，而非所有应用
+
+**Disadvantages**
+
++ Application-layer firewalls don't protect against attacks at lower layers 应用层防火墙无法保护底层攻击
++ They requier a separate program per application 需要为每个应用程序设置一个独立程序
++ These programs can be quite complex 这些程序可能非常复杂
++ They may be very intrusive for user applications, user behavior, etc. 可能对用户应用程序、用户行为等非常具有侵扰性
+
+**Example: Protecting Email**
+
++ Email Threats:
+  + The usual: defend against protocol implementation bugs
+  + Virus-scanning
+  + Web bugs in HTML email
++ Inbound Email
+  + Email is easy to intercept: MX records in the DNS route inbound email to an arbitrary machine 电子邮件容易被拦截，DNS中的MX记录将入站邮件路由到任意机器
+  + Possible to use "*" to handle entire domain 可以使用 “ * ”处理整个域 
+  + Net result: all email for that domain is sent to a front end machine 该域的所有电子邮件都发送到前端机器
++ Different Sublayers
+  + Note that are multiple layers of protection possible here 有多个保护层可供选择
+  + The receiving machine can run a hardened SMTP, providing protection at that layer 接收机器可以运行强化的SMTP，在该层提供保护
+  + Once the email is received, it can be scanned at the content layer for any threats 一旦收到电子邮件，可以在内容层扫描任何威胁
+  + The firewll function can consist of either or both 防火墙功能可以包括以上任何一种或两者
++ Outbound Email
+  + No help from the protocol definition here 协议定义没有帮助
+  + But - most MTAs(邮件传输代理) have the ability to forward some or all email to a relay host 但是大多数MTA具有将一些或所有电子邮件转发到中继主机的能力
+  + Declare by administrative fiat that this must be done 通过行政命令声明必须这样做
+  + In a large organization, some groups will run their own MTA 在大组织中，一些小组将运行自己的MTA
++ Combining Firewall Types
+  + Use an application firewall to handle inbound and outbound email 使用应用防火墙处理入站和出站电子邮件
+  + Use a packet filter to enforce the rules 使用数据包过滤器来执行规则
+
+
+
+### Application Proxies
+
+**Small Application Gateways**
+
++ Some protocols don't need full-fledged handling at the application level 一些协议不需要再应用层进行完整处理
++ That said, a packet filter isn't adequate 也就是说，包过滤器是不够的
++ Solution: examine some of the traffic via an application-specific proxy; react accordingly 通过特定应用代理检查部分流量，并相应地做出反应
+
+**FTP Proxy**
+
++ Scan the FTP control channel 扫描FTP控制通道
++ If a **PORT command** is spotted, tell the firewall to open that port temporarily for an incoming connection 当FTP控制通道中的PORT命令被检测到时，通知防火墙临时开放该端口以接收传入的连接
++ Can do similar things with RPC - define filters based on RPC applications, rather than port numbers 通过定义基于RPC应用的过滤器，而不是端口号
+
+**Attacks via FTP Proxy**
+
++ Downloaded Java applets can call back to the originating host 下载的Java小程序可以回调到源主机
++ A malicious applet can open an FTP channel, and send a PORT command listing a vulnerable port on a nominally-protected host 恶意小程序可以打开FTP通道，并发送一个PORT命令，该命令列出一个名义上受保护的主机上的易受攻击端口
++ The firewall will let that connection through 防火墙会允许该连接通过
++ Solution: make the firewall smarter about what host and port numbers can appear in PORT commands 使防火墙更加智能，能够识别和过滤PORT命令中的主机和端口号
+
+**Web Proxies**
+
++ Again, built-in protocol support 内置协议支持
++ Provide performance advantage: caching 缓存
++ Can enforce site-specific filtering rules 可以执行特定站点的过滤规则
+
+
 
 ### Circuit Gateways
 
+**Circuit Gateways 电路网关**
+
++ Circuit gateways operate at (more or less) the TCP layer 电路网关操作在TCP层
++ No application-specific semantics 无应用程序特定语义
++ Avoid complexities of packet filters 避免数据包过滤的复杂性
++ Allow controlled inband connections, i.e., for FTP 允许受控的入站连接，例如用于FTP
++ Handle UDP 处理UDP
++ Most common one: SOCKS. Supported by many common applications, such as Firefox and Pidgin 最常见的电路网关时SOCKS
+
+**Application Modifications**
+
++ Application must be changed to speak the circuit gateway protocol instead of TCP or UDP 应用程序必须更改为使用电路网关协议，而不是TCP或UDP
++ Easy for open source 开源软件的修改比较容易
++ Socket-compatible circuit gateway libraries have been written for SOCKS - use those instead of standard C libarary to convert application 已经为SOCKS编写了与套接字兼容的电路网关库——使用这些库代替标准C库来转换应用程序
+
+**Adding Authentication 添加认证**
+
++ Because of the circuit orientation, it's feasible to add authentication 由于电路导向的特性，可以实现认证
++ Purpose: extrusion control 挤出控制
+
+
+
+### Personal and Distributed Firewalls
+
+**Rationale**
+
++ Conventional firewalls rely on topological assumptions - these are questionable today 传统防火墙依赖于拓扑假设——这些在今天值得怀疑
++ Instead, install protection on the end system 相反，在终端系统上安装保护措施
++ Let it protect itself 让终端系统自我保护
+
+**Personal Firewalls**
+
++ Add-on to the main protocol stack 主协议栈的附加组件
++ The "inside" is the host itself; everything else is the "outside" “内部”是主机本身；其他一切都是“外部”
++ Most act like packet filters 大多数个人防火墙的作用类似于数据包过滤器
++ Rules can be set by individual or by administrator 规则可以由个人或管理员设置
+
+**Saying "No", Saying "Yes"**
+
++ It's easy to reject protocols you don't like with a personal firewall 使用个人防火墙拒绝不喜欢的协议很容易
++ The hard part is saying "yes" safely 困难在于安全地说“是”
++ There's no topology - all that you have is the sender's IP address 没有拓扑结构——你唯一拥有的是发送者的IP地址
++ Spoofing IP addresses isn't that hard, especially for UDP 伪造IP地址并不难，尤其是对于UDP
+
+**Application-Linked Firewalls**
+
++ Most personal firewalls act on port numbers 大多数个人防火墙基于端口号进行操作
++ At least one such firewall is tied to applications - individual programs are or are not allowed to talk, locally or globally 至少有一种这样的防火墙与应用程序相关联——个别程序是否被允许进行本地或全球通信
++ Pros 优点: don't worry about cryptic port numbers; handle auxiliary ports just fine 无需担心难以理解的端口号；可以很好的处理辅助端口
++ Cons 缺点: service applications operate on behalf of some other application 应用程序名称有时也难以理解；服务应用程序可能代表其他应用程序运行
+
+**Distributed Firewalls 分布式防火墙**
+
++ In some sense similar to personal firewalls, though with central policy control 在某种意义上类似于个人防火墙，但具有集中策略控制
++ Use IPsec to distinguish "inside" from "outside" 使用IPsec区分“内部”和“外部”
++ Insiders have inside-issued certificates; outsiders don't 内部人员拥有内部签发的证书，外部人员没有
++ Only trust other machines with the proper certificate 只信任具有正确证书的其他机器
++ No reliance on topology; insider laptops are protected when traveling; outsider laptops aren't a threat they visit 不依赖拓扑结构：内部笔记本电脑在旅行时也能受到保护；外部笔记本电脑来访时不会构成威胁
+
+
+
 ### The Problems with Firewalls
+
+**Problems**
+
++ Corrupt insiders
++ IPsec versus Firewalls
+  + jj
++ Connectivity 
++ Laptops 
++ Evasion 
 
 
 
