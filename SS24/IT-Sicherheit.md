@@ -688,13 +688,212 @@ Query ID(TXID): 16-bit + Source Port: 16-bit &rarr; overall 2^32^ bits
 
 ## ROV Measuring In The Wild
 
+&rarr; To measure anything in the Internet, we have three options:
+
+1. Observe the Controlplane of BGP 观察BGP的控制平面
+   + That is the Routing table of a (or many) BGP server(s) 也就是一个或多个BGP服务器的路由表
+   + Publicly available routing tables are exported by so called *Route Collectors* 公共可用的路由表由所谓的路由收集器导出
+2. Try to send Data(Dataplane) from point A to point B 尝试从A点到B点发送数据
+3. Use both 同时使用两种方式
+
 ### Control- vs. Dataplane
+
+**Control Plane 控制平面**
+
++ Check if a BGP Announcement reached your Router 检查BGP公告是否到达你的路由器
++ if Announcement is RPKI invalid: 如果公告是RPKI无效的
+  + All Routers along the Path are not ROV Enforcing 所有路径上的路由器都没有强制执行ROV
++ Problem:
+  + Routecollectors have a limited view on the Internet 路由器收集器在互联网上的视野有限
+  + A route that is dropped due to its RPKI invalidity (on a router before the collector router), does not reach the Collectors 因RPKI无效而被丢弃的路由（在收集器路由器之前的某个路由器上）不会到达收集器
+
+**Data Plane 数据平面**
+
++ Send an IP-Packet towards an illegitimate prefix and see if its reachable 向非法前缀发送IP数据包并查看其是否可达
++ If reachable: 
+  + All routers along the path to the prefix are not ROV Enforcing 所有路径上的路由器都没有强制执行ROV
++ Problem:
+  + BGP can find a way (if there is one) to omit the ROV Enforcing routers. BGP可以找到一种方法（如果有的话）来绕过ROV强制执行路由器
+
+Before we start to measure, there are two types of Approaches that have to be clarified before we even start:
+
+1. Measuring random occurrences of RPKI invalid prefixes on the Internet
+2. Actively generating RPKI invalid prefixes for measurement
+
+
 
 ### Passive/Active Overview
 
+**Passive Measurements**
+
++ Find announced RPKI invalid prefixes in the wild 目标是找到实际网络中宣布的RPKI无效前缀
+
+  &rarr; measure
+
++ How to find these?
+
+  + RPKI
+  + RouteCollectors
+
+**Active Measurements**
+
++ Actively announce ROV invalid prefixes 目标是主动宣布ROV无效前缀
+
++ Create a ROA for a prefix with a owned ASN 为一个拥有的前缀创建一个ROA
+
++ Announce the sadi prefix with a different(but also owned) ASN 使用不同的（但也是拥有的）ASN（自治系统号）宣布该前缀
+
+  &rarr; Measure 
+
++ Downsides 
+  + High(er) financial costs
++ Upsides
+  + Verifiability 
+
+
+
 ### Measurement Approaches
 
-### Q&A
+#### RouteCollector(Control Plane)
+
+**Route collectors 路由收集器**
+
++ are BGP Servers that contribute to a publicly accessible database of all seen routes 是BGP服务器，它们贡献了所有一直路由的公开访问数据库
++ *routeviews.org* is a project with 45BGP routers of IXPs around the world
++ Newer RIB files(>2020) are roughly 100MB in size for 2 hourly observations 较新的RIB文件大约为100MB，每2小时观察一次
+
+**How to measure ROV with this setup?**
+
++ Passive Measurement
+  1. Download a RIB(RoutingInformationBase) file and find RPKI invalid prefixes by matching ROAs against the BGP announcements 下载一个RIB文件，并通过将ROA与BGP公告匹配来查找RPKI无效前缀
+  2. If you found such a prefix you can inspect more RouteCollector RIB files and proceed to 如果找到这样的前缀，可以进一步检查更多的路由收集器RIB文件，并继续
++ Active Measurement
+  1. Find your own prefix and proceed the same way as in passive measurement 找到自己的前缀，并以被动测量的方式进行测量
+  2. Additionally, announce your prefix from multiple locations(BGP injection points) 此外，从多个位置宣布比的前缀（BGP注入点）
+
+
+
+#### TCP Handshake Trigger
+
+**TCP Handshake Trigger 握手触发器**
+
++ Concept: use a server, that sends a packet to an IP address we own 使用一个服务器发送数据包到我们拥有的IP地址
+
++ Only suitable for *Active Measurements* 仅适用于主动测量
+
++ Setup:
+
+  + Sender: owned by us
+  + Vantage Point(VP): any TCP speaking server in the Internet
+  + Measurement Server: owned by us
+
++ Process:
+
+  1. 发送TCP(SYN)包：
+     + Send a TCP(SYN) packet** from sender with a forged IP origin(the address of the Measurement Server) 发送着从伪造的IP来源（测量服务器的地址）发送一个TCP（SYN）包
+  2. 视点回复：
+     + The VP answers with a TCP(SYN+ACK) packet the Measurement Server 视点服务器用TCP（SYN+ACK）包回复测量服务器
+  3. 接收验证：
+     + If the Measurement Server receives that TCP(SYN+ACK) packet, a route exists 如果测量服务器接收到TCP（SYN+ACK）包，说明存在一条路径
+  4. 前缀失效处理：
+     + Invalidate the prefix of the Measurement Server and wait till the ROA was found by the Relying Parties. Now repeat steps 1-3. 使测量服务器的前缀失效，并等待ROA被相关方发现。然后重复步骤1-3
+     + If the Measurement Server has not received a TCP(SYN+ACK) packet from the VP, a ROV enforcing router were along the priginal path 如果测量服务器未收到来自视点的TCP（SYN+ACK）包，说明路径上存在ROV强制路由器
+
+  &rarr; During invalidation, the BGP graph could have already changed: FalsePositives ahead! 在失效期间，BGP图可能已经改变，可能会导致误报
+
+
+
+#### IP-ID Sidechannel
+
+![Screenshot_2024-07-04 23.11.04_KLctM1](/Users/summer/Pictures/截屏/Screenshot_2024-07-04 23.11.04_KLctM1.jpg)
+
+**Couting Methods for IP-ID 计数方法**
+
++ Constant: IP-ID保持不变，不随时间或数据包的变化而变化
++ Local: IP-ID在局部范围内递增，只在特定流量内保持递增
++ Global: IP-ID全局递增，对所有流量的IP-ID都在一个全局计数器下递增
++ Random: IP-ID随机生成，每个数据包的IP-ID都是随机数，没有特定的模式
++ Odd: IP-ID只生成奇数，跳跃递增，可能用于特定类型的流量标识
++ Counters are used to differentiate IP-fragments of multiple streams 使用计数器区分多个流的IP碎片
+  + Those are the methods that occur throughout the internet
+
+**IP-ID Side Channel**
+
+![Screenshot_2024-07-04 23.16.53_dLnSid](/Users/summer/Pictures/截屏/Screenshot_2024-07-04 23.16.53_dLnSid.jpg)
+
+Process:
+
+1. 发送数据包
+
+   + Send multiple TCP/IP-Packets from sender to VP without interruption 从发送者连续发送多个TCP/IP数据包到VP
+
+2. 伪造数据包
+
+   + Start sending spoofed TCP/IP-Packets towards the Measurement Server with the following content: 向测量服务器发送伪造的TCP/IP数据包
+     + SrcIP = VP's IP
+     + TCP Flags = SYN
+
+3. 测量服务器响应
+
+   + The Measurement Server will respond with a TCP SYN/ACK to the VP 测量服务器将回应TCP SYN/ACK 数据包到VP
+
+4. VP响应
+
+   + The VP never sent a TCP SYN to the Measurement Server and will therefore respond with a **TCP RST** Packet. Doing so increases the IP-ID counter of the VP. VP为向测量服务器发送TCP SYN数据包。将回应TCP RST数据包，增加VP的IP-ID计数器
+
+5. 评估IP-ID字段
+
+   + Evaluate the IP-ID Field from the VP Server throughout the measurement 在整个测量过程中评估VP服务器的IP-ID字段
+
+6. 判断计数器增加
+
+   + Did the counter rapidly increased right after sending the spoofed packets to the Measurement Server? 发送伪造数据包到测量服务器后，IP-ID计数器是否迅速增加？&rarr; if yes, VP reached the Measurement Server 如果是，表示VP到达测量服务器
+
+   + 潜在问题（外部过滤）：
+
+     + In case of outbound filtering of the VantagePoint, we can not be sure wether it was due to a Firewall, a ROV enforcing router or BGP rerouting with another ROV enforcing router
+
+       &rarr; Huge Potential for False Positives 可能会导致大量误报
+
+     + 解决方案：Use other VPs
+
+       + Use other VPs in the same subnet or with small divergence in the path by using another subnet 在相同或路径有小偏差的情况下，使用其他VP
+
+
+
+#### RIPE Atlas
+
+&rarr; 是一个广泛部署的互联网测量平台，可以用于多种网络健康和连通行检查
+
++ Organiser: Réseaux IP Européens Network Coordination Centre (RIPE NCC)
++ Can be generally used for: 通用用途
+  + overall Internet Health 互联网整体健康状况监测
++ Can be specifically used for: 具体用途
+  + Accessibility Check 可访问性检查
+  + Ping 
+  + Trace route 路由追踪
++ False Postive sources: 潜在误报来源
+  + Ping(ICMP) is partially filtered throughout the Internet 在整个互联网中部分被过滤
+  + Geographical concentration around the European Union and the near East 地理集中度：主要集中在欧洲联盟和近东地区
+
+#### Advertisement Networks(AdNet)
+
++ 广告代理机构：
+  + Advertisement Agencies selling "Browserarea" to their customers 将“浏览区”出售给其客户
++ For each advertisement:
+  + The advertiser pays a small amount of money to have the right to show some advertisement in the browser window of the client
+  + The site owner gets payed and even smaller amount to allow the advertisement network sell its site space to the advertiser 
+
++ Implementation:
+  + The AdNet injects a div at the proposed place in the HTML file of the site
+  + The advertisers server is linked in that div
+  + The Client is actively loading content from the referenced server
++ Downsides:
+  + Costs money
+  + NoScript / AdBlocker / uBlock / DNS Sinkhole (e.g. PiHole) filter our traffic before the measurement started
+  + Requests are out of order
+  + (Logical-)OR
+  + Client interrupts transmission by “Closing the window”
 
 
 
