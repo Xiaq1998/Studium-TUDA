@@ -210,6 +210,510 @@ supports two types of port forwarding:
 
 
 
+## Chapter 04: Network Level Security
+
+### Module 01: Intro to Network Level Security
+
+**Layer 3 Security - Network Layer Security**
+
++ Which technologies did you use?
+
+  + Wireguard
+    + simple VPN protocol 简单的VPN协议
+    + sends packets over an encrypted UDP tunnel 通过加密的UDP隧道发送数据包
+  + OpenVPN
+    + complex VPN protocol 复杂的UDP协议
+    + several configuration options 有多种配置选项
+  + IPSec: direct Extension for IP 直接扩展
+  + Ciscos Anyconnect: Proprietary VPN from Cisco
+
++ Which layer did you choose for your solution?
+
+  + IPSec works on layer 3
+
+  + Other solutions are harder to classify
+
+    &rarr; Except IPSec, most VPNs somewhat violate the classical layer model 除了IPSec，大多数VPN在某种程度上违反了经典层模型
+
+**Scope of Protection Layer 3**
+
+&rarr; Before we discuss the scope of protection, we need to differentiate between **Upper & Lower Layer 3**
+
++ Upper Layer 3 上层第三层: User space 用户空间
+
+  + Perspective of Internet user 互联网用户的视角
+
+  + Upper Layer 3, is essentially the network layer that was discussed earlier 本质上是前面讨论的网络层
+
+  + Can be accessed by users 用户可以访问
+
+  + Protocols examples: IP, ICMP, etc.
+
+  + Upper Layer 3 Security:
+
+    + Dependency on network technology: none
+      + This layer is not dependent on the network technology 这一层不依赖于网络技术
+      + The user normally sends out an IP packet using their end-device 用户通常使用他们的终端设备发送IP包
+      + Any necessary tunneling/packaging is done by the provider in the backend 任何必要的隧道/封装都是由提供商在后端完成
+      + Result: The provider does mind if the content of the packet is encrypted or not, as long as the relevant IP metadata is intact 只要相关的IP元数据是完整的，提供商并不关心数据包的内容是否加密
+    + Protection:
+      + Data protected in: Black circuits & muxes, circuit & packet switches 在黑色电路和多路复用器、电路和数据包交换机中
+      + Data unprotected in: Red LANs, red MTAs, hosts 
+    + Protection granularity: hosts, network
+
+    ![Screenshot_2024-07-06 16.25.41_WZX2wJ](/Users/summer/Pictures/截屏/Screenshot_2024-07-06 16.25.41_WZX2wJ.jpg)
+
++ Lower Layer 3 下层第三层: Telco space 电信空间
+
+  + Perspective of telecommunication providers 电信服务提供商的视角
+
+  + Can not be accessed by normal users 普通用户无法访问
+
+  + Protocol examples: MPLS, Switched Circuits, SNAP, SNDCP, etc.
+
+  + Lower Layer 3 Security:
+
+    + Dependency on provider technology: high 对提供商技术的依赖性很高
+      + This layer essentially secures the backend technology 这一层本质上确保了后端技术的安全
+      + Lower Layer 3 Security strongly depends on both hardware and software employed by the provider 下层第三层安全性在很大程度上取决于提供商所使用的硬件和软件
+    + Protection:
+      + Data protected in: Black circuits & muxes 在黑色电路和多路复用器中
+      + Data unprotected in: Red LANs & bridges, routers &MTAs 在红色局域网、桥接器、路由器和MTA中
+    + Protection granularity 保护粒度: LAN, (sub-)network 
+
+    ![Screenshot_2024-07-06 16.25.10_magAGP](/Users/summer/Pictures/截屏/Screenshot_2024-07-06 16.25.10_magAGP.jpg)
+
+**Developers Perspective**
+
+&rarr; we discuss the third option: Rely on a **network security mechanism** to provide security(Layer 3 and below)
+
++ Which protocol is most relevant when implementing network security? 实现网络安全时最相关的协议是哪个？
+
+  &rarr; IP or better said IPv4
+
+  + IP is a "narrow" protocol
+  + 上层协议（如：电子邮件、WWW、文件共享等）依赖于底层的TCP/UDP协议，再通过IP进行传输
+  + 底层协议（如：Token Ring、以太网、WLANIEEE802.11）通过IP协议实现网络连接
+
++ What IP offers:
+
+  + provides connectionless and best-effort service
+  + basically does not give you any guarantees for the delivery packets
+  + IP datagrams have no inherent security
+    + IP source address can be spoofed
+    + Content of IP datagrams can be sniffed
+    + Content of IP datagrams can be modified
+    + IP datagrams can be replayed
+
+
+
+### Module 02: IP Security (IPSec)
+
+**Security Problems of the Internet Protocol(IP)**
+
+&rarr; When an entity receives an IP packet, it has no assurance of:
+
++ Data origin authentication/data integrity
++ Confidentiality
+
+**IPSec - Overview**
+
+&rarr; IPSec offers security on network layer
+
++ IPSec is based on the paradigm of a "connection"
+  + ...despite the fact that IP is connectionless 尽管IP是无连接的
+  + Connection is called "Security Association(SA)" 基于一种称为“安全关联”的连接范式运行
++ Provides security services:
+  + Connectionless integrity 无连接完整性
+  + Data origin authentication 数据源认证
+  + Confidentiality 机密性
+  + Rejection of replayed packets 拒绝重放的包
+  + Limited traffic flow confidentiality 有限的流量机密性
+  + Access control 访问控制
++ IPSec introduces "Protection Protocols":
+  + Extra headers between layer 3 and 4 (IP and TCP) to give the destination enough information to identify the "security association": 在第3层和第4层之间添加了额外的头部信息，以提供足够的信息来识别“安全关联”
+  + Authentication Header (AH) 认证头
+    + Offers message integrity and source authentication but not message confidentiality 提供消息完整性和源认证，但不提供消息机密性
+  + Encapsulating Security Payload (ESP) 封装安全负载
+    + Offers source authentication, message integrity and confidentiality 提供源认证、消息完整性和机密性
+  + Run in two modes:
+    + Transport mode, for host-based end-to-end security 传输模式，用于基于主机的端到端安全性
+    + Tunnel mode, for security between network borders 隧道模式，用于网络边界之间的安全性
+
+**Authentication Header (AH)**
+
++ IPSec AH contains an encrypted hash of the whole packet
+
++ This allows the receiver to verify the authenticity of the addresses and the integrity of the payload and parts of the header
+
++ Authenticates:
+
+  + IP Header
+  + Itself
+  + IP Payload
+
++ Uses HMACs for authentication:
+
+  + Specified are HMACs based on MD5 and SHA1
+
+  ![Screenshot_2024-07-06 17.57.56_HPG76s](/Users/summer/Pictures/截屏/Screenshot_2024-07-06 17.57.56_HPG76s.jpg)
+
+**Encapsulating Security Payload (ESP)**
+
++ IPSec ESP guarantees the integrity and/or confidentiality of the original datagram combining a secure hash and encrypting the IP payload or the whole IP packet
++ Authenticates itself, IP payload and ESP trailers:
+  + HMACs, like with IPSec AH
++ Encrypts IP payload and ESP Trailer:
+  + Symmetric encryption(DES, AES, ...)
++ Can be combined with AH
+
+![Screenshot_2024-07-06 18.00.34_2SmcS4](/Users/summer/Pictures/截屏/Screenshot_2024-07-06 18.00.34_2SmcS4.jpg)
+
+**Transport Mode**
+
++ Sets up a secure end-to-end connection
+  + Between tow hosts
++ Keeps original IP header
+  + Protocol field is set to indicate that an IPSec header follows
++ Can be used for ESP
++ Can be used for AH & ESP
+  + to get encryption together with authenticated IP header
++ Pros:
+  + protects IP payload 保护IP有效载荷
+  + can do traffic analysis but is efficient (little overhead) 可以进行流量分析，但效率高，开销小
+  + good for ESP host to host traffic 适用于ESP主机到主机的通信
+
+**Tunnel Mode**
+
++ Sets up a secure end-to-end connection
+
+  + Between two networks
+
+    &rarr; not every hosts has to be adapted/maintained
+
++ Introduces additional IP header
+
+  + With addresses of tunnel endpoints
+  + To prevent traffic analysis(when used with ESP)
+
++ Can be used for AH, ESP, and bot
+
++ Can be combined with transport mode
+
+  + Between hosts
+  + To obtain additional authentication/encryption
+
++ Pros:
+
+  + encapsulates and protects entire(inner) IP packet 封装和保护整个内部IP包
+  + add new header for next hop 为下一跳添加新的头部
+  + no routers on way can examine inner IP header 路径上的路由器不能检查内部IP头部
+  + good for VPNs, gateway to gateway security 适用于VPN，网关到网关的安全性
+
+**IPSec Working Details**
+
+![Screenshot_2024-07-07 13.31.42_c23gzq](/Users/summer/Pictures/截屏/Screenshot_2024-07-07 13.31.42_c23gzq.jpg)
+
++ IAD 集成接入设备: 连接总部和分支机构到Internet，使用IPSec协议实现数据加密和认证
+
++ SA(Security Assocation 安全关联): 用于建立安全隧道
+
++ R1 converts original datagram into IPSec datagram 将原始数据报转换为IPSec数据包的步骤
+
+  1. 添加ESP Trailer字段：Append to back of original datagram(which includes original header fields) an "ESP trailer" field 将一个“ESP Trailer”字段附加到原始数据报的末尾。这个原始数据报包括原始头字段
+     + ESP Trailer: Padding for block ciphers
+  2. 加密数据段：Encrypt result using algorithm and key specified by SA 使用由安全关联指定的算法和密钥对结果进行加密
+  3. 添加ESP Header字段：Append to front of this encrypted quantity the "ESP header", creating the "envelope" 将这个加密后的数据量的前面添加“ESP Header”字段，创建一个“信封”
+     + ESP Header: 
+       + SPI, so receiving entity knows what to do
+       + Sequence number, to thwart replay attacks
+  4. 创建认证MAC：Create authentication MAC over the whole envelope, using algorithm and key specified in SA 使用SA中指定的算法和密钥，在整个新风尚创建一个认证的MAC
+  5. 附加MAC到信封：Append MAC to back of envelope, forming payload 将MAC附加到信封的末尾，形成负载
+  6. 创建新的IP头：Create brand new IP header, with all the classic IPv4 header fields, which it appends before payload 创建一个全新的IP头，包含所有经典的IPv4头字段，并将其附加到负载之前
+
+  ![Screenshot_2024-07-07 13.47.42_9EmSce](/Users/summer/Pictures/截屏/Screenshot_2024-07-07 13.47.42_9EmSce.jpg)
+
++ IPSec Sequence Numbers:
+
+  + Protection against replay 重放攻击保护
+  + For new SA, sender initializes seq. # to 0 新建SA时，发送方将序列号初始化为0
+  + Each time datagram is sent on SA: 每次在SA上发送数据报时，
+    + Sender increments seq # counter 发送方递增序列号计数器
+    + Places value in seq # field 将#值放入序列号字段
+  + Goal:
+    + Prevent attacker from sniffing and replaying a packet 防止攻击者嗅探并重放数据包
+  + Method:
+    + Destination checks for duplicates, but doesn't keep track of all received packets; instead uses a window 目标检查重复数据包，但不跟踪所有接收到的数据包，而是使用窗口机制
+
++ Algorithm at Receiver
+
+  + If received packet falls in window, packet is new and MAC checks 如果接收的数据包落在窗口内，数据包是新的并且MAC检查通过&rarr; slot in window marked 窗口中的插槽被标记为已使用
+  + If received packet is to right of window, MAC check 如果接收的数据包在窗口的右侧，进行MAC检查&rarr; window advanced & right-most slot marked 窗口向前移动，最右边的插槽被标记为已使用
+  + If received packet is left of window, already marked or fails MAC check 如果接收的数据包在窗口的左侧，已经被标记或MAC检查失败&rarr; packet is discarded 数据包被丢弃
+
+  ![Screenshot_2024-07-07 14.12.09_l2KDPW](/Users/summer/Pictures/截屏/Screenshot_2024-07-07 14.12.09_l2KDPW.jpg)
+
+  + 窗口机制：
+    + 窗口大小：默认W=64
+    + N：是接收到的最高序列号
+    + 窗口范围：固定窗口大小W，包含最近接收到的N个数据包的序列号
+    + 窗口向前移动：当接收到一个有效的新数据包（在窗口右侧），窗口会向前移动以包含这个新序列号
+    + 窗口内数据包：当数据包的序列号在当前窗口范围内时，说明这是一个新的数据包，接收方会对其进行MAC验证并标记为已接收
+    + 窗口右侧数据包：如果数据包的序列号超出了当前窗口的右边界，接收方会首先进行MAC验证。验证通过后，窗口会向前移动，以包含该数据包，并将相应的插槽标记为已使用
+    + 窗口左侧数据包：这些数据包要么已经被接收过，要么是重放攻击。接收方会丢弃这些数据包
+
+**IPSec in IPv6 - Myths**
+
++ IPv6 is more secure than IPv4
++ IPv6 has better security and it's built in
++ IPv6 has no NAT
++ Global addresses used I'm exposed to the Internet
++ IPv6 Networks are too big to scan
++ IPv6 is too new to be attacked
++ IPv6 is just IPv4 with 128 bits addresses
++ There is nothing new
++ My network is IPv4 only &rarr; IPv6 is not a security problem
+
+
+
+### Module 03: IPSec Operation
+
+####Some Implementation consideration
+
+**IPSec Implementation Alternatives:**
+
++ Host Implementation
+  + Advantages of IPsec implementation in end systems:
+    + Provision of end-to-end security services
+    + Provision of security services on a per-flow basis
+    + Ability to implement all modes of IPsec
++ Router (Gateway) Implementation
+  + Advantages of IPsec implementation in routers/gateways:
+    + Ability to secure IP packets flowing between two networks over a public network such as the Internet:
+      + Allows to create virtual private networks (VPNs)
+      + No need to integrate IPsec in every end system
+    + Ability to authenticate and authorize IP traffic from remote users
+
+
+
+####IPSec Databases
+
+**Security Associations (SA) 安全关联**
+
++ IPsec's security associations
+
+  + Are the abstraction of an IPsec connection 是IPSec连接的抽象
+
+  + Are unidirectional 单向的
+
+    &rarr; Two have to be established for bidirectional communication 双向通信需要建立两个安全关联
+
+  + Consist of (at least) a triplet：由至少一个三元组组成
+
+    + Security Parameter Index (SPI) 安全参数索引: A 32 bit value to distinguish SPI's with identical IP destination address and security protocol
+    + IP destination address 目的地址
+    + Security Protocol 安全协议: AH or ESP (but not combination in one SA)
+
+  + Define parameters and algorithms for authentication
+
+  + Define parameters and algorithms for encryption
+
+  + There exists a database of Security Associations (SAD)
+
++ Two kinds of SAs:
+
+  + IKE_SA: "master" 主
+    + Long-term validity 长期有效
+    + Used to negotiate the CHILD_SA 用于协商CHILD_SA
+    + Based on a pre-shared secret or a PKI 机遇预共享密钥或公钥基础设施（PKI）
+  + CHILD_SA: "session" 会话
+    + Used for data transmission 用于数据传输
+
++ For establishing a secure communication between two IP hosts: 为在两个IP主机之间建立安全通信
+
+  + Negotiate IKE SA 协商IKE_SA
+  + Use IKE SA to negotiate CHILD_SA 使用IKE_SA协商CHILD_SA
+  + Use CHILD_SA to encrypt the data to transmit 使用CHILD_SA加密要传输的数据
+
+**Security Parameters Index (SPI) 安全参数索引**
+
++ Can be up to 32 bits large 长达32位
++ The SPI allows the destination to select the correct SA under which the received packet will be processed: 允许目标选择在接收到的数据包中使用哪个SA进行处理
+  + According to the agreement with the sender 根据与发送者的协议
+  + The SPI is sent with the packet by the sender 由发送者随数据包一起发送
++ SPI + Dest IP address + IPsec Protocol (AH or ESP) &rarr; uniquely identifies a SA
+
+**SA Database (SAD) 安全关联数据库**
+
++ Holds parameters for each SA 保存每个SA的参数
+  + Lifetime of this SA 生命周期
+  + AH and ESP information
+  + Tunnel or transport mode 隧道模式或传输模式
++ Every host or gateway participating in IPsec has their own SA database 每个参与IPSec的主机或网关都有自己的SA数据库
++ Is searched using “longest match”: 使用“最长匹配”进行搜索
+  1. Search SAD for a match on the combination of SPI, destination, and source addr. If matching process according to SAD entry 根据 SPI、目的地址和源地址的组合在 SAD 中搜索匹配项。如果匹配，则根据 SAD 条目进行处理
+  2. Search the SAD for a match on both SPI and destination address. If matching process according to SAD entry 在 SAD 中根据 SPI 和目的地址进行匹配。如果匹配，则根据 SAD 条目进行处理
+  3. Search the SAD for a match on only SPI. Process with matching SAD entry. Otherwise, discard packet and log an auditable event 仅根据 SPI 在 SAD 中进行匹配。如果匹配，则根据 SAD 条目进行处理。否则，丢弃数据包并记录可审计事件
+
+**Security Policy Database (SPD) 安全策略数据库**
+
+&rarr; SPD manages SA
+
++ What traffic to protect? 
+
+  &rarr; Policy entries define which SA or SA bundles to use on IP traffic 策略条目定义了在 IP 流量上使用哪些 SA 或 SA 组合
+
++ Ordered list of access control entries 访问控制条目的有序列表
+
++ Nominally static but could be dynamic 通常是静态的，但也可以是动态的
+
++ Per-interface, inbound & outbound databases, secure trafficdatabase 每个接口的入站和出站数据库，安全流量数据库
+
++ Each SPD entry specifies: 每个 SPD 条目指定
+
+  + DISCARD 丢弃 (do not let in or out 不允许进入或出去)
+  + BYPASS 绕过 (outbound: do not apply IPsec, inbound: do not expect IPsec 出站：不应用 IPsec，入站：不期望 IPsec)
+  + PROTECT 保护 (process IPsec (protocols & algorithms) 处理 IPsec（协议和算法）)
+
++ Traffic characterized by selectors: 通过选择器对流量进行特征描述
+
+  + source/ destination IP addr. (also bit masks & ranges)
+  + next protocol, source/ destination ports
+  + user or system ID (map to other selectors in an SG)
+
++ SPD logically separated into three parts:
+
+  1. The SPD-S (secure traffic) contains entries for all traffic subject to IPsec protection. SPD-S（安全流量）包含所有受 IPsec 保护的流量条目
+  2. SPD-O (outbound) contains entries for all outbound traffic that is to be bypassed or discarded. SPD-O（出站）包含所有要绕过或丢弃的出站流量条目
+  3. SPD-I (inbound) is applied to inbound traffic that will be bypassed or discarded. SPD-I（入站）适用于要绕过或丢弃的入站流量
+
+**Peer Authorization Database (PAD) 对等授权数据库**
+
+&rarr; The PAD provides the link between the SPD and a security association management protocol such as IKE 提供了SPD和安全关联管理协议之间的链接
+
++ Critical functions:
+  + identifies the peers or groups of peers that are authorized to communicate with this IPsec entity
+  + specifies the protocol and method used to authenticate each peer
+  + provides the authentication data for each peer
+  + constrains the types and values of IDs that can be asserted by a peer with regard to child SA creation, to ensure that the peer does not assert identities for lookup in the SPD that it is not authorized to represent, when child SAs are created
+  + peer gateway location info, e.g., IP address(es) or DNS names, MAY be included for peers that are known to be "behind" a security gateway
+
+####IPSec Key Management
+
+**IPSec - Key Exchange: Internet Key Exchange (IKE) Protocol 互联网密钥交换**
+
++ based on Diffie-Hellman key exchange 基于 Diffie-Hellman 密钥交换
+  + Supported by “cookies” to prevent denial of service attacks 通过“cookies”防止拒绝服务攻击
++ Sets up IPsec's Security Associations (SA's) 设置 IPsec 的安全关联 (SA)
+  + By exchanging/establishing required parameters 通过交换/建立所需参数
++ Consists of two phases:
+  + Set up secure control channel 建立安全控制通道
+  + Set up security association 建立安全关联
+
+**IKEv1 Key Types**
+
++ Step 1: Use main mode or agressive mode to establish „secure channel“ 使用主模式或积极模式建立“安全通道”
+  + Bidirectional SA, for further use 双向 SA，用于进一步使用
+  + For each of main and aggressive, protocols are defined for each of the following key types: 对于主模式和积极模式，每种密钥类型都定义了协议
+    + pre-shared secret key
+    + public signature keys
+    + public encryption keys (old crufty way)
+    + public encryption keys (new improved method)
++ Step 2: Use quick mode to establish SA 使用快速模式建立 SA
+  + Typically two unidirectional SAs 通常是两个单向 SA
+
+**Main Mode vs. Aggressive Mode**
+
++ The standard defined one variant as required: 
+  + main mode, pre-shared secret keys
+  + but nobody uses it
++ the most commonly used scheme became:
+  + aggressive mode, pre-shared secret keys
+
+**IKEv1 vs. IKEv2**
+
++ IKEv1:
+  + 9 msgs (ID hiding) or 6 to set up IPsec SA 使用 9 条消息（ID 隐藏）或 6 条消息来建立 IPsec SA
+  + 8 different protocols
+  + Lots of other issues
+    + public encryption keys, must know public key of other side before it sends cert. Original doesn’t even allow sending cert 公共加密密钥，在对方发送证书之前，必须知道对方的公钥。原始版本甚至不允许发送证书
+    + original public encryption keys: separately encrypt fields with other side’s public key (requires separate private key ops too). Undefined if field (e.g. name) bigger than an RSA block 原始公共加密密钥：用对方的公钥分别加密字段（也需要单独的私钥操作）。如果字段（例如名字）大于一个 RSA 块，则未定义
++ IKEv2:
+  + one protocol, 4 messages, ID hiding 一个协议，4 条消息，ID 隐藏
+  + cleaned it up and simplified it a lot
+
+**Traffic Restrictions 流量限制**
+
++ IPSec Policy:
+  + Traffic between these sets of IP addresses (or address ranges), and protocol types, and ports, must have this sort of cryptographic protection 在这些 IP 地址（或地址范围）、协议类型和端口之间的流量必须具有某种加密保
++ Creating SA, specify "traffic selectors" 创建 SA，指定“流量选择器”
++ IKEv1:
+  + § Initiator proposes. Responder (if has more restrictive policy) can just say “no” 发起者提出建议。响应者（如果有更严格的策略）可以直接说“不”
++ IKEv2:
+  + allowed responder to narrow or say “single address pair” 允许响应者缩小范围或说“单一地址对”
+
+**Lost messages**
+
++ IKEv1 kind of didn't say
+  + had “commit bit”, defined incomprehensibly and almost oppositely in ISAKMP and IKE 有“提交位”，在 ISAKMP 和 IKE 中定义得难以理解且几乎相反
+    + ISAKMP: for Bob to tell Alice to wait for his ack. Bob 告诉 Alice 等待他的确认
+    + IKE: for Bob to tell Alice to send an ack. Bob 告诉 Alice 发送确认
++ IKEv2:
+  + all messages request/response, and requester keeps sending until it gets a response 所有消息都是请求/响应，发起者会一直发送消息直到收到响应
+
+**Fragmentation Attack 分片攻击**
+
++ IKE runs on top of UDP
+
+  + Message 3 contains certs (depending on authentication choice) and can be really large (encryption of name, name can be very very long). If that’s where cookie is returned, have fragmentation attack 消息 3 包含证书（取决于认证选择），并且可能非常大（名字加密，名字可以非常非常长）。如果此时返回 cookie，可能会遭受分片攻击
+
+    &rarr; Solutions: shorten message 3
+
+**NAT Issues**
+
+&rarr; All sorts of IP protocols violate layering 各种 IP 协议违反分层
+
++ TCP/UDP:
+  + “pseudoheader”: checksum computed on addresses from IP header, and TCP header “伪头”：校验和根据 IP 头和 TCP 头中的地址计算
+  + So NAT box must fudge TCP/UDP checksum 因此 NAT 设备必须修改 TCP/UDP 校验和
++ FTP:
+  + sends addresses as text string “144.27.8.95“ 以文本字符串形式发送地址“144.27.8.95”
+  + NAT must look inside FTP data to change address NAT 必须查看 FTP 数据以更改地址
+  + Worse yet! if changes TCP byte numbering: NAT must keep track and fix TCP ack, and msg #’s! 如果更改了 TCP 字节编号：NAT 必须跟踪并修复 TCP 确认和消息编号
+
+**IPSec vs. NAT**
+
++ AH:
+  + Safeguards against spoofing and man-in-the-middle attacks that change the source/destination IPs
+  + The hash includes source/destination IPs which are modified by the NAT server
+  + Verification of the hash fails on tunnel or transport mode
+  + Incompatible with NAT
++ ESP with Tunnel Mode:
+  + Full IP packet ciphered and signed but transmitted inside another packet
+  + Modification of the outer packet’s IP address does not alter the inner packets content
+  + Compatible with NAT
+
+**IPSec vs. SSL/TLS**
+
++ SSL/TLS is in user space/application; IPsec in OS
+  + IPsec protects all apps
++ SSL/TLS is susceptible to a DoS attack:
+  + Attacker inserts bogus TCP segment into packet stream:
+    + with correct TCP checksum and seq #s
+  + TCP acks segment and sends segment’s payload up to SSL.
+  + SSL will discard since integrity check is bogus
+  + Real segment arrives:
+    + TCP rejects since it has the wrong seq #
+  + SSL never gets real segment
+    + SSL closes conn. since it can’t provide lossless byte stream service
++ What happens if an attacker inserts a bogus IPsec datagram?
+  + IPsec at receiver drops datagram since integrity check is bogus; not marked as arrived in seq # window
+  + Real segment arrives, passes integrity check and passed up to TCP – no problem!
+
+
+
+
+
 ## BGP Security
 
 ### How does BGP work?
@@ -929,7 +1433,6 @@ validator(RPKI验证器) 的功能及其工作流程
 
 + Corrupt insiders
 + IPsec versus Firewalls
-  + jj
 + Connectivity 
 + Laptops 
 + Evasion 

@@ -899,9 +899,530 @@ Process:
 
 ## Web Security
 
+### Recap
+
+**Web Basics**
+
++ HTTP(S) is:
+  + Simple and widely used
+  + Stateless 
+  + Unencrypted without S
+  + Secured with S
++ HTTP Requests and Responses:
+  + Requests are from client to server
+  + Responses from server to client with requested content or error code
+  + Stateless 
++ URL(Unified Resource Locator) 统一资源定位器
+  + protocol://[user[:password]@]hostname[:port]/path/file?query
+  + http://www.cased.de:81/topics/forschung.html?id=1
+
+**Cookies**
+
++ What are Cookies?
+  + Small text files (<4KB)
+  + Created by server and stored on the client-side (in the browser)
+  + Set in HTTP response header
+  + Sent back to server by client on subsequent visits
+  + Used to store state on client (HTTP is a stateless protocol)
++ Type fo Cookies
+  + Validity 有效期: session 会话 vs. persistent 持久性
+    + Session Cookie: 在会话结束后或浏览器关闭后删除
+    + Persistent Cookie: 根据设置的过期日期存储
+  + Origin: first-party 第一方vs. third-party 第三方
+    + First-Party Cookie: 由您正在访问的网站设置
+    + Third-Party Cookie: 由不同域名的网站设置
+  + Other cookie attributes
+    + HttpOnly: cannot be read by JavaScript 只能通过HTTP协议发送，JavaScript不能访问
+    + Secure: only sent with HTTPS
+    + SameSite: 
+      + lax: only sent as first-party cookie 仅作为第一方Cookie发送
+      + strict: only sent as first-party cookie if Referer is the same site 仅在Referer与当前站点相同时作为第一方Cookie发送
++ Scope of Setting Rules:
+  + domain: any domain-suffix of URL-hostname, except TLD 任何URL主机名的域后缀，除了TLD(顶级域名)
+  + path: can be set to anything (def. /) 可以设置为任何路径（默认是 ' / '）
+    + if set, browser will send cookie only if domain and path fit 如果设置了路径，浏览器只有在域名和路径匹配时才会发送cookie
++ Client-Side Read/Write:
+  + Setting a cookie in JavaScript:
+    + document.cookie = "name=value; expires=…; "
+  + Reading cookies:
+    + alert(document.cookie);
+  + Deleting a cookie:
+    + document.cookie = "name=…; expires= Thu, 01-Jan-70"
+    + 将过期时间设置为过去的时间，然后浏览器就会把这个cookie删除
++ HttpOnly Property of Cookies
+  + Address bar of browers: 浏览器地址栏的脚本
+    + 使用“ javascript: alert(document.cookie)” 命令，可以显示所有非HttpOnly的Cookies
+    + Cookie is set to HttpOnly &rarr; invisible to JavaScript
+  + Cookie sent over HTTP/S, but not accessible to scripts 通过HTTP/S发送但脚本无法访问的cookie
+    + cannot be read via document.cookie 不能通过“document.cookie”来读取
+    + also blocks access from XMLHttpRequest headers 也阻止了通过XMLHttpRequest头部访问这些cookies
+  + Helps prevent cookie theft via XSS(Cross Site Scripting) 帮助防止通过跨站脚本攻击盗取cookie
+    + but does not stop most other risks of XSS bugs
++ SameSite Property of Cookies
+  + Cookie should only be sent with requests initiated from the **same registrable domain** 只有在同一个注册域名发起的请求中cookie才会被发送
+    + 这意味着，当用户在不同网站之间进行导航或从不同网站发起请求时，带有SameSite属性的cookie不会被发送
+  + 作用：Mitigates the risk of CSRF and infrmation leakage attacks 减轻跨站请求伪造攻击的风险
++ Cookie Protocol Problems:
+  + Server is blind:
+    + does not see cookie attributes
+    + does not see which domain set the cookie
+    + server processes cookies sent to it
+  + Server only sees:
+    + Cookie: NAME=VALUE
+    + Cookie Parameters remain in the browser
+    + Plausibility checks are difficult 合理性检查很困难
+  + No encryption or integrity checks are included
+    + must be implemented on web application or client side
+
+### Web Security
+
+**Typical Web Application**
+
++ Written in a mixture of PHP, Java, JavaScript, Python, C, ...
++ Runs on a Web server or Application Server 在Web服务器或应用服务器上运行
++ Interacts with back-end databases and third parties 与后端数据库和第三方交互
++ Prepares and outputs results for users 为用户转北和输出结果
++ Dynamically generated HTML pages 动态生成HTML页面
+
+**Architecture of Web Deployment**
+
+![Screenshot_2024-07-05 15.07.15_UxuNl3](/Users/summer/Pictures/截屏/Screenshot_2024-07-05 15.07.15_UxuNl3.jpg)
+
+**OWASP TOP 10**
+
+&rarr; The Open Web Application Security Project (OWASP) 开放Web应用程序安全项目, released a list of the Top 10 vulnerabilities
+
+Last update was 2021, updated every 4 years
+
+
+
+### CSRF
+
+**CSRF - Cross-Site Request Forgery 跨站请求伪造**
+
+&rarr; 是一种网络攻击，攻击者诱导用户的浏览器在用户不知情的情况下发起恶意请求。
+
++ Also known as: one-click attack / session riding 一次点击攻击 / 会话劫持
++ Simple attack and a lot of vulnerable websites 攻击简单，大量网站易受攻击
++ Forces user's browser to send an unauthorized request to a website that the user is currently authenticated to 强制用户浏览器发送未经授权的请求
++ Security problem is due to the **statelessness of HTTP** 安全问题的根源是：HTTP的无状态性
+
+**How it works**
+
++ Since request are performed by the user's browser, all cookies will be submitted to the website 请求由用户的浏览器执行：所有的cookie和认证令牌都会提交到目标网站
+
++ Session identifiers and all authentication tokens will be also submitted 会话标识符和所有认证令牌也会被提交
+
++ What happens?
+
+  1. Victim opens www.bank.com 受害者打开www.bank.com
+     + 用户点击或访问了一个链接或页面，可能是恶意网站上的连接
+  2. Browser sends all knwon cookies to *bank.com* 浏览器发送所有已知的cookie到bank.com
+     + 包括会话cookie和认证令牌
+  3. User is identified and logged in 用户被识别并登录
+     + 用户在目标网站（银行网站）上已经有有效的登录会话
+  4. Bank performs transfer of 1000 USD to account 1234 银行执行转账操作，将1000美元转账到账号1234
+     + 因为请求带有合法的会话和认证信息，银行认为这是合法的请求
+
+  + Fortunately, most banks are using more advanced security methods to control transactions like PIN/TAN, smsTAN, and so on... 大多数银行使用更先进的安全方法来控制交易
+
+**Countermeasures**
+
++ Additional PIN/TAN input 额外的PIN/TAN输入
++ Random(one-time) tokens associated with the user's current session 随机（一次性）令牌，为每个用户会话生成并关联一个随机的一次性令牌，并在表单中包含该令牌
++ Double Submit Cookies 双提交Cookie
+  + store cryptographically strong random value in a cookie
+  + site matching a token sent a form value and compare with the token in cookie
+  + due to the Same Origin Policy, attacker cannot read/modify the cookie value
+
++ Enter additional secure password (over HTTPS)
+
+**Mitigation 缓解措施**
+
++ Session time out after a period of inactivity 在一段时间的非活动后，会话会自动超时
++ Confirmation of actions 在执行重要操作前，要求用户确认
++ Client/User Side:
+  + Logoff after using a web service 使用后登出
+  + Do not save username/passwords in the browser 不保存用户名/密码
+  + Use different browsers to access sensitive applications 使用不同的浏览器
+  + Use Add-Ons like no-script to prevent POST based CSRF vulnerabilities to exploit 使用No-Script等插件
+
+
+
+### SQL Injection
+
+&rarr; Injections(or code injections) happen when some applications or servers interpret user supplied input. 注入攻击（或代码注入）发生在某些应用程序或服务器解释用户提供的输入时。
+
+**Type of Injections**
+
++ SQL Injection (the most injections) 
++ JavaScript Code Injection(XSS)
++ XPath Injection
++ LDAP Injection
+
+**What is SQL?**
+
++ SQL(Structured Query Language 结构化查询语言) is the standard language for requests in relational database management systems(RDBMS 关系数据库管理系统) 结构化查询语言是用于关系数据库管理系统中请求数据的标准语言
++ Used to: SELECT 选择, INSERT 插入, UPDATE 更新and DELETE 删除 data as well as define schema of DB
+
+&rarr; Example: SELECT * FROM members WHERE id="1";
+
+**What is SQL Injection?**
+
++ SQL Injection:
+  + Consists of insertion or "injection" of a SQL query via the input data from the client to the application 是一种通过客户端输入的数据插入或“注入”SQL查询的方法
+  + Mainly in the form of POST or GET method in the website 主要以网站中的POST或GET方法的形式存在
+  + Exploits poorly filtered or not correctly escaped SQL queries to run malicious code(the "buffer overflow" of RDBMS)  利用过滤不严或未正确转义的SQL查询来运行恶意代码（关系数据库管理系统的“缓冲区溢出”）
++ What happens if somebody can change those values?
+  + unexpected behavior of application/database 应用程序/数据库会发生意外行为
+
+**SQL Injection Objectives 目标**
+
++ SQL injection errors occur when: 注入错误发生在
+  + Data enters a program from an untrusted source 数据来自不可信来源时进入程序
+  + The data is used to dynamically construct a SQL query 这些数据用于动态构造SQL查询
++ A successful SQL injection exploit can:
+  + read sensitive data from the database (confidentiality) 从数据库中读取敏感数据
+  + modify databse data(insert/update/delete) (integrity) 修改数据库数据
+  + execute administration operations on the database(such as shutdown the DBMS) (availability) 执行数据库上的管理操作
+  + and in some cases issue commands to the operating system 在某些情况下向操作系统发出命令
++ SQL and any platform that requires an interaction with a SQL databse may be affected. SQL注入会影响任何需要与SQL数据库交互的平台
+
+**Blind SQL Injection**
+
+&rarr; Blind SQL Injection can be injected without seeing the output. 盲目SQL注入是一种SQL注入攻击，攻击者无法直接看到查询的输出结果
+
++ Error-based blind SQL Injection: 错误信息型盲目SQL注入
+  + abuse error messages to exfiltrate data 利用数据库返回的错误信息来提取数据
++ Time-based blind SQL Injection: 基于时间的盲目SQL注入
+  + abuse injected delays to exfiltrate data 通过引入延迟来提取数据，观察查询的执行时间来推断结果
+  + e.g., construct query that wait 1 second if a table starts with 'A'
+
+**SQL Injection Countermeasures**
+
+&rarr; Parameterized queries 参数化查询
+
++ Parameterized queries using bound, typed parameters 参数化查询是一种防范SQL注入的有效方法，通过绑定和使用类型化参数，可以确保输入数据被正确处理
++ Easy to adopt and work in fairly similar ways among most web technologies：在大多数Web技术中都能很容易采用，并且以类似方法工作
+  + e.g., Java, .NET, PHP, Perl, Python
+
+
+
+### XSS
+
+**Cross-Site Scripting (XSS) 跨站脚本攻击**
+
+&rarr; XSS occurs when a web application interprets(malicious) data from a user. 跨站脚本攻击发生在Web应用程序解释用户提供的（恶意）数据时
+
+Not exclusive JavaScript Problem - but often used, e.g.: VBScript, ActiveX, TypeScript, ... 这种攻击并不仅限于JavaScript，还可以利用其他脚本语言
+
++ Threats:
+
+  + account hijacking 账户劫持
+  + changing of user settings 修改用户设置
+  + cookie theft/poisoning 窃取或污染Cookie
+  + redirecting 重定向用户到恶意网站
+
++ Main objective: Modify behavior of original site 主要目标是修改原始网站的行为
+
+  + <SCRIPT> Different languages (e.g. JavaScript) 
+    <OBJECT> Applet, Media, ActiveX
+    <APPLET> Applet, deprecated
+    <EMBED> Embedding Media
+    <FORM> Forms
+
++ XSS:
+
+  &rarr; Attacker injects malicious JavaScript code into a HTML-Page 攻击之将恶意的JavaScript代码注入到HTML页面中
+
+  + XSS攻击分为两种类型：
+    + Persistent XSS 持久性: save the malicious JavaScript 恶意JavaScript代码被永久存储在服务器上
+    + Non-Persistent XSS 非持久性: executed once by the victim 恶意JavaScript代码不会被存储在服务器上，而是通过特定的触发条件，被一次性执行
+
++ XSS Countermeasures
+
+  + Blocking "<"and">" is not enough
+  + Event handlers(e.g. onMouseover), stylesheets(CSS), encoded inputs(%3C), etc.
+  + Any user input must be preprocessed before it is used inside HTML
+  + In Python, cgi.escape(string, quot) will replace all special characters with their HTML codes
+
+**JavaScript Introduction**
+
+&rarr; JavaScript是一种在客户端浏览器中执行的编程语言。它被广泛嵌入在网页中，主要用于增强用户与网页的交互体验。
+
++ Language executed by client browser  客户端浏览器执行的语言
+  + Scripts are embedded in Web pages 脚本嵌入在网页中
+  + Can run before HTML is loaded, before page is viewed, while it is being viewed or when leaving the page 可以在HTML加载之前、页面被查看之前、页面被查看时或离开页面时运行
++ Attacker gets to execute code on user's machine 攻击者可以利用JavaScript在用户机器上执行代码
+  + Often used to exploit other vulnerabilites 通常被用来利用其他漏洞
++ Common usage of JavaScript:
+  + Form validation 表单验证
+  + Page visualizations and specail effects 页面可视化和特效
+  + Navigation systems 导航系统
+  + Basic math calculations 基本数学计算
+  + Dynamic content manipulation 动态内容操作
+
+**JavaScript Security Model**
+
++ Script runs in a "sandbox"
+
+  + no direct file access
+  + restricted network access
+
++ Same-Origin Policy (SOP) 同源策略
+
+  &rarr; SOP是一种安全机制，限制了不同来源的脚本之间的交互
+
+  + Can only read properties of documents and windows from the same server, protocol, and port 只有当文档来自相同的服务器、使用相同的协议和端口时，JavaScript才能访问其属性
+  + If the same server hosts unrelated sites, scripts from one site can access document properties on the other 如果同一服务器托管多个无关的站点，来自一个站点的脚本不能访问另一个站点的文档属性
+  + SOP does not apply to script tags inserted into the site 同源策略不适用于插入到站点中的“<script>”标签
+    + this script runs as if it was loaded from the site that provided the page 这种情况下，脚本会以提供该页面的站点的身份运行，可能带来安全隐患
+
+
+
+### Magecart & The JavaScript Supply Chain
+
 
 
 ## PKI & TLS
+
+### Domain Validation
+
++ How to get a certificate?
+
+  &rarr; DV (Domain Validation 域名验证)
+
++ How to get a certificate as attacker? 
+
+  &rarr; Intercept DV 
+
+  + Attacker could intercept DNS and point CA to different server 攻击者可以拦截DNS并将CA指向不同的服务器
+  + or manipulate HTTP response 操纵HTTP响应
+
++ Multi-Perspective Validation 多角度验证
+
+  &rarr; Attacker typically topologically constrained, cannot intercept all paths 攻击者通常收到拓扑约束，无法拦截所有路径
+
++ How to police fraudulent certs? 如何监控欺诈性证书
+
+  &rarr; CT (Certificate Transparency 证书透明性)
+
+  + All CAs must publicly log all created certificates, so misbehaving CAs are found faster 所有证书颁发机构必须公开记录所有创建的证书，这样可以更快地发现行为不当的CA
+
++ What if **fraudulent certificate** is found? 如果发现欺诈性证书了怎么办
+
+  + Contact CA, revoke certificate 联系CA，请求吊销证书
+  + Also used when e.g. cert private key is leaked 证书私钥泄露时也需要吊销证书
+
++ How does a web client know a certificate was revoked?
+
+  + CRL (Certificate Revocation List) 证书吊销刘表
+    + list of revoked certs, signed by CA, link contained in cert
+    + Problem: gets larger, in-line download incurs high latency
+  + OCSP (Online Certificate Status Protocol) 在线证书状态协议
+    + protocol to ask CA whether a given certi is revoked
+    + Problem: leaks domain name to CA
+
++ Fundamental Dilemma: What if OCSP/CRL is unavailable?
+
+  + Hardfail 硬失败
+    + Certificate considered invalid 证书被视为无效
+    + Pro: more secure
+    + Con: vulnerable to DoS, if attacker can block OCSP/CRLs
+  + Softfail 软失败
+    + Certificate is considered valid 证书被视为有效（目前所有浏览器的默认设置）
+    + Pro: no DoS
+    + Con: insecure, if attacker can blokc OCSP/CRLs
+
+
+
+### Transport Layer Security
+
+&rarr; TLS (Transport Layer Security) provides authentication, confidentiality, reliability with efficient reusability 传输层安全协议，提供了一系列服务，确保数据在网络传输中的安全性和完整性
+
++ Services provided by TLS
+  + Server authentication (mandatory 强制性) 服务器认证
+  + Client authentication (optional – if required by the server) 客户端认证
+  + Secure connection 安全连接
+    + Authentication and integrity of messages 
+    + Confidentiality of messages
+    + Reliability of messages (prevents message re-ordering, truncating, etc.)
+  + Efficiency 效率
+    + Allows resuming old TLS sessions in new connections 会话恢复
+
+Websites and apps require：authentication, integrity, confidentiality and availability
+
++ Example Applications
+  + Online banking
+  + Online purchases, auctions, payments
+  + Restricted website access
+  + Software download
+  + Web-based email
+
+TLS can be used used to secure applications and websites
+
++ Pro:
+  + Easy to implement and use
+  + Deployed in most browsers & servers
++ Con:
+  + Protects only if used by the application
+  + More vulnerable to Denial-ofService attacks (malicious packets cannot be removed at the IP level) 
+  + Can only be used in End-to-End mode
+
+
+
+### TLS Authentication via Certificates
+
+&rarr; Connecting to a secure website requires confirming the authenticity of the server 连接到安全网站需要确认服务器的真实性
+
+TLS authentication uses certificates, which bind a public key to a distinguished name. TLS认证使用证书，将公钥绑定到特定名称
+
++ Certificate Generation:
+  1. Bob generates a key pair (private/public). Bob生成密钥对
+  2. Bob generates a CertificationRequestInfo containing: 
+     + His name
+     + His public key
+     + Optional Attributes
+  3. Bob signs the *CertificateRequestInfo* with his private key. Bob用自己的私钥签名证书请求信息
+  4. Bob sends the CertificationRequestInfo and his signature as *Certificate Signing Request (CSR 证书签名请求)* to a *Certification Authority (CA)*. Bob将证书请求信息及其签名作为证书签名请求发送给证书颁发机构
+  5. The CA generates an X.509 certificate containing Bob’s name, public key and optional attributes and signs it with its own private key. CA生成X.509证书
+
+Upon receipt of a certificate, the recipient can validate it by verifying CA’s signature 当收到证书时，接收者可以通过验证CA的签名来验证其真实性。
+
++ Certificate Validation:
+  1. Alice obtains Bob's certificate 
+  2. Alice checks if CA's signature is valid 检查CA的签名是否有效
+
+For TLS the distinguished name in the certificate is a domain name, not a person 对于TLS，证书中的可分辨名称是域名，而不是个人
+
+
+
+### TLS Architecture
+
+The handshake sets all security parameters for the TLS session 握手阶段会设定所有用于TLS会话的安全参数
+
++ Security Parameters for a TLS session:
+  + Connection end 连接端点(Who is server? Who is the client?)
+  + Pseudo random function (PRF) algorithm 伪随机函数算法
+  + Bulk encryption algorithm (symmetric cipher) 批量加密算法
+  + MAC algorithm 消息认证码
+  + Compression algorithm 压缩算法 (should not be used, see CRIME)
+  + Master secret and other cryptographic keys 主密钥和其他加密密钥
+  + Key exchange 密钥交换 (+ signature algorithm)
+
+Data transfer uses the record layer after a successfully completed handshake 在TLS握手成功完成后，数据传输使用记录层进行加密和验证
+
++ TLS Record Protocol Functions
+  + Provides end-to-end encryption using the selected (symmetric) bulk encryption algorithm 提供端到端加密
+  + Ensures message authentication and integrity using selected MAC algorithm 确保消息认证和完整性
+
+![Screenshot_2024-07-10 00.09.06_QHbOcY](/Users/summer/Pictures/截屏/Screenshot_2024-07-10 00.09.06_QHbOcY.jpg)
+
+
+
+### TLS Handshake
+
+Main purpose of handshake is —— to agree on parameters and authenticate the parties 商定安全参数并对通信双方进行认证
+
+**TLS Handshake Steps:**
+
++ Agree on cipher suite: 商定密码套件
+  + encryption algorithm
+  + key exchange algorithm
+  + message authentication code (MAC)
++ Exchange random values to generate shared keys 交换随机值以生成共享密钥
+
+**A full handshake involves several messages between client and server**
+
+![Screenshot_2024-07-10 14.09.15_8x7inH](/Users/summer/Pictures/截屏/Screenshot_2024-07-10 14.09.15_8x7inH.jpg)
+
++ In the **ClientHello** message the client suggests parameters for the TLS session 在ClientHello消息中，客户端建议TLS会话的参数
++ and the Server responds in the **ServerHello** message with its choices 在ServerHello消息中响应其选择
++ In the **ChangeCipherSpec** message the parties switch to encrypted communication 在ChangeCipherSoec消息中，双方切换到加密通信 &rarr; The ChangeCipherSpec Protocol
+  + a protocol of its own 独立的协议，用于指示切换加密算法
+  + not explicitly needed in TLS 1.3, but sent to prevent middleboxes from trying to parse the following encrypted data 在TLS 1.3中并非强制需要的，但发送此消息可以防止中间设备尝试解析随后的加密数据
+  + Consists only of ChangeCipherSpec message (which itself consists of a single byte with value 1) 仅包含一个字节，值=1
+  + From here on, everything is encrypted, but not authenticated yet! 从这里开始，所有通信加密，但通信尚未认证
++ Server Authentication via Certificate Chain, This certificate exchange is **mandatory** for the server 通过证书链进行服务器身份验证，此证书交换对于服务器来说是强制的
+  + Message **Certificate *** follows immediately after ServerHello 在 ServerHello 消息之后立即发送Certificate 消息
+    + First certificate must be servers’s certificate 证书链中的第一个证书必须是服务器的证书
+    + Each following certificate must certify the preceding one 每个后续证书必须认证前一个证书
+    + Root certificate authority may be omitted 根证书认证机构（CA）可以省略
+    + Certificate’s public key must be compatible with a signature algorithm understood by the client 证书的公钥必须与客户端理解的签名算法兼容
+  + Server then proves that he is the certificate’s owner using **CertificateVerify *** message 服务器使用 CertificateVerify 消息证明其身份
+    + Server signs hash(ClientHello | ServerHello | Certificate) with the private key associated with the certificate
++ After optional ClientCertificate request, the server indicates **end of ServerHello** 在可选的 ClientCertificate 请求之后，
+  服务器指示 ServerHello 结束
+  + Server may require client to authenticate by sending **CertificateRequest** 服务器可能要求客户端通过发送CertificateRequest消息进行身份验证
+  + Server sends **Finished** to both, indicate end and to protect the integrity of previously sent messages 服务器向双方发送 Finished消息，标志 ServerHello 结束，还用于验证先前发送消息的完整性
++ If the server requested authentication, the client’s first answer is a list of **certificates** 如果服务器请求身份验证，客户端的第一个答案是证书列表
+  + Similar **certificate *** chain as for server authentication
+  + If certificate_authorities in certificate request was nonempty, one of the certificates in the certificate chain should be issued by one of the listed CAs
+  + Like the server, the client then proves his authenticity by signing the previous messages and sending a **CertificateVerify *** message
++ And then, the handshake is finished by sending a **Finished** message
+  + Contains a hash of all previously sent messages 包含所有先前发送消息的哈希值
+  + Integrity-protected by symmetric handshake key material 通过对称握手密钥材料保护器完整性
+  + Recipient of the message must verify that contents are correct 消息接收方必须验证内容是否正确
+  + Once a side has sent his Finished message and received and validated it’s peers Finished message, it may begin to send and receive application data 一方发送完成消息并接收、验证对方的完成消息后，可以开始发送和接收应用数据
+  + This handshake design commonly save 1 round-trip for session creation (for protocols where the clients sends the first data) 这种握手设计通常可以节省一次往返时间以创建会话
+
+**TLS 1.3 zero-RTT handshake (only resumption 仅限会话恢复)**
+
+![Screenshot_2024-07-10 14.40.39_jXAAGm](/Users/summer/Pictures/截屏/Screenshot_2024-07-10 14.40.39_jXAAGm.jpg)
+
++ Provides even more speed than 1-RTT handshake, no RTT overhead 提供比1-RTT握手更快的速度，没有RTT开销
++ Early data is protected by pre-shared-secret from previous session, server state is stored in session cookie 早期数据由前一个会话的预共享密钥保护，服务器状态存储在会话Cookie中
++ Problem: weaker security guarantees 安全保证较弱
+  + Not (less) forward secure 不具备（较少具备）前向安全性
+  + No replay protection for early application data, must only be used where message replay is not an issue 早期应用数据没有重放保护
+  + Theoretically this should be the case for HTTP GET, practically it’s not 仅在消息重放不是问题的情况下使用
+
+
+
+### TLS Cipher Suites and Key Computations
+
+A cipher suite consists of cryptographic algorithms used for various purposes 密码套件由用于各种目的的加密算法组成
+
+**Ingredients of a Cipher Suite:**
+
++ Key Exchange Algorithm 密钥交换算法
+  + 用于协商会话密钥，确保只有通信双方知道这些密钥
+  + Example: Ephemeral Diffie-Hellman (DHE) with RSA signed DH Parameters
++ Data Encryption Algorithm数据加密算法
+  + 用于对传输的数据进行加密
+  + Example: AES with 128-bit key in Galois/Counter Mode (GCM)
++ Hash Function for HMACs 用于HMAC的哈希函数
+  + 用于消息认证码（HMAC），确保数据的完整性和真实性
+  + Example: SHA256
+
+
+
+### Some Security Recommendations for TLS
+
+**Strong Cipher Suites - General Advice on Cipher Suites:**
+
++ must not negotiate NULL encryption 禁止协商NULL加密
++ must not use RC4 cipher suites 禁止使用RC4密码套件
++ should not use static RSA key transport 不应该使用静态RSA密钥传输
++ must support and prefer cipher suites with perfect forward secrecy 必须支持并优选选择具有完美前向保密性的密码套件
+  + Example：Ephemeral Diffie-Hellman and Elliptic Curve Ephemeral Diffie-Hellman
+
+**Perfect Forward Secrecy**
+
+&rarr; can help if long term secret key is compromised
+
++ Perfect forward secrecy (PFS) or forward secrecy: use fresh session keys for every new session
++ This preserves confidentiality even if long term secret (private) key is compromized
++ In TLS this is the case with Ephemeral Diffie-Hellman (DHE) or Ephemeral Elliptic Curve Diffie-Hellman (ECDHE)
++ Attention: PFS cannot protect against cryptanalysis of the used key excange or the block cipher itself (i.e. if you can break DH)
++ Logjam shows that DH can already be broken if used incorrectly (!)
+
+**Only four of the cipher suites in TLS 1.2 provide PFS **
+
+1. TLS_DHE_RSA_WITH_AES_128_GCM_SHA256
+2. TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+3. TLS_DHE_RSA_WITH_AES_256_GCM_SHA384
+4. TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384 
 
 
 
