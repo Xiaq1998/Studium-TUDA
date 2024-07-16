@@ -4,15 +4,15 @@
 
 ### 1. Network, subnetwork, networks of networks(Internet)
 
-A network is a set of two or more connected computers
+A network is a set of two or more connected computers 网络是一组连接在一起的两台或多台计算机
 
-Connect more computers to broadcast channel with Hub/Switch
+Connect more computers to broadcast channel with Hub/Switch 使用集线器/交换机将更多计算机连接到广播频道
 
-A network can have multiple subnets
+A network can have multiple subnets 网络可以有多个子网
 
-Routers connect different networks
+Routers connect different networks 路由器连接不同的网络
 
-Routers connect networks to Internet
+Routers connect networks to Internet 路由器将网络连接到互联网
 
 ![Screenshot_2024-06-25 00.03.31_3X0Ksn](/Users/summer/Pictures/截屏/Screenshot_2024-06-25 00.03.31_3X0Ksn.jpg)
 
@@ -22,26 +22,26 @@ Routers connect networks to Internet
 
 **Physical Layer**
 
-+ Delivery of individual **bits** over a medium(air, wire, ...)
++ Delivery of individual **bits** over a medium(air, wire, ...) 通过介质传送单个比特
 + Examples: Fast Ethernet(100BASE-*), Gigabit Ethernet(1000BASE- *), ...
 
 **Data Link Layer**
 
-+ Delivery of **frames**
-+ Identified by media access address(MAC address)
++ Delivery of **frames ** 帧传送
++ Identified by media access address(MAC address) 通过媒体访问控制地址（MAC 地址）识别
 + Examples: Ethernet, IEEE-802.11, PPP
 
 **Internet Layer**
 
-* Delivery of **packets** from one host to another
-* Hosts are now addressable over different Networks(if e.g. IPs are unique)
+* Delivery of **packets** from one host to another 将数据包从一个主机传送到另一个主机
+* Hosts are now addressable over different Networks(if e.g. IPs are unique) 现在可以通过不同的网络寻址主机
 * Example: IP
 
 **Transport Layer**
 
-+ End-to-end communication of **segments** or **datagrams**
-+ Congestion Control, Packet reordering/resending, ...(for TCP)
-+ Add the concept of **ports**
++ End-to-end communication of **segments** or **datagrams** 段或数据报的端到端通信
++ Congestion Control, Packet reordering/resending, ...(for TCP) 拥塞控制、数据包重新排序/重新发送
++ Add the concept of **ports ** 添加端口概念
 + Examples: TCP, UDP
 
 **Each layer uses the lower and services the upper layer for data transmission. 每层均使用下层并为上层提供服务，以进行数据传输**
@@ -106,7 +106,7 @@ Routers connect networks to Internet
 + 右边电脑收到广播请求后回复其MAC地址：**ARP Reply**——192.168.1.1 is at c8:0e:14:41:e2:bd
 + ARP Table：ARP表缓存响应，用于缓存IP地址和MAC地址的映射关系
 
-**ARP Spoofing 欺骗 &rarr; ARP Poisoning**
+**ARP Spoofing 欺骗 &rarr; ARP Poisoning 中毒**
 
 ![Screenshot_2024-06-25 16.22.38_gW4v2Q](/Users/summer/Pictures/截屏/Screenshot_2024-06-25 16.22.38_gW4v2Q.jpg)
 
@@ -116,10 +116,10 @@ Routers connect networks to Internet
 
   &rarr; 结果：当Host 1或Host 2尝试与网关128.64.16.0通信时，数据包会被错误地发送到攻击者(Host 3)
 
-**What can attack do with ARP poisoning?**
+**What can attack do with ARP poisoning? ARP 中毒攻击可以做什么**
 
-+ Eavesdrop on packets(passwords, DNS requests, communication) 窃听数据包
-+ Intercept and manipulate packets(MitM, Man-in-the-Middle 中间人攻击) 拦截和操纵数据包
++ Eavesdrop on packets (passwords, DNS requests, communication) 窃听数据包
++ Intercept and manipulate packets (MitM, Man-in-the-Middle 中间人攻击) 拦截和操纵数据包
 + Drop packets creating DoS 丢弃数据包并造成DoS
 
 
@@ -134,7 +134,7 @@ Routers connect networks to Internet
   + 客户端发送一个DHCP Discover消息
     + src（源地址）：0.0.0.0
     + dest（目的地址）：255.255.255.255
-  + 这是一条广播消息，表示希望获取一个IP地址
+  + 这是一条广播（Broadcast）消息，表示希望获取一个IP地址
 + **DHCP Offer** &rarr; 每个DHCP服务器响应DHCP Offer消息，提供一个可用的IP地址
   + DHCP服务器接收到DHCP Discover消息后，会响应一个DHCP Offer消息
     + src：223.1.2.5
@@ -154,7 +154,7 @@ Routers connect networks to Internet
 
 **DHCP starvation attack 耗尽攻击(DoS)**
 
-**&rarr; 一种拒绝服务攻击，攻击者通过发送大量伪造的DHCP Discover请求，消耗DHCP服务器上的所有可用IP地址池，从而使合法用户无法获取IP地址**
+&rarr; 一种拒绝服务攻击，攻击者通过发送大量伪造的DHCP Discover请求，消耗DHCP服务器上的所有可用IP地址池，从而使合法用户无法获取IP地址
 
 ![Screenshot_2024-06-25 17.11.20_MkRrJn](/Users/summer/Pictures/截屏/Screenshot_2024-06-25 17.11.20_MkRrJn.jpg)
 
@@ -195,12 +195,16 @@ Routers connect networks to Internet
 
 **What target do wo spoof?**
 
-+ The attacker's target is usually to spoof as a legitimate DHCP Server
++ The attacker's target is usually to spoof as a **legitimate DHCP Server**
 
 **What DHCP message do we spoof?**
 
 + DHCP Offer
 + DHCP ACK
+
+**Challenges?**
+
++ Attacker needs to lease IP not in use 攻击者需要租用未使用的 IP
 
 
 
@@ -210,8 +214,8 @@ Routers connect networks to Internet
 
 + IPv4 address is written in dotted-decimals 点分十进制 (0 to 255)
 + Each interface has its own IP address 每个接口都有自己的IP地址
-+ Routers usually have multiple interfaces(with own IP addresses)
-+ Also other hosts might have multiple interfaces
++ Routers usually have multiple interfaces(with own IP addresses) 路由器通常有多个接口（具有自己的 IP 地址）
++ Also other hosts might have multiple interfaces 其他主机也可能有多个接口
 
 ![Screenshot_2024-06-25 17.55.42_JQvBgg](/Users/summer/Pictures/截屏/Screenshot_2024-06-25 17.55.42_JQvBgg.jpg)
 
@@ -1428,5 +1432,221 @@ A cipher suite consists of cryptographic algorithms used for various purposes �
 
 ## Introduction to Binary Security
 
+### Introduction to Binaries
+
+**Programming Languages:**
+
+&rarr; meant to be written and read by humans
+
+**Terms:**
+
++ Compiler: 编译器
+  + Translates a program from a source language (usually high-level programming language) to some target language (usually low-level programming language or machine code) 
+  + 将程序从源语言（通常是高级编程语言）翻译成
+    某种目标语言（通常是低级编程语言或机器代码）
++ Interpreter: 解释器
+  + Directly executes instructions of some language 直接执行某种语言的指令
+
+**The Executable and Linkable Format (ELF) 可执行与可链接格式**
+
+&rarr; The ELF file consists of:
+
++ ELF Header, 通过命令`readelf -h`查看
++ Program Headers, 通过命令`readelf -l`查看
++ Section Headers, 通过命令`readelf -S`查看
 
 
+
+## Deep Learning
+
+### A Gentle Introduction to ML/DL for Computer Network
+
+**Generative AI 生成式人工智能**
+
+&rarr; is a type of artificial intelligence technology that can produce various types of content, including text, imagery, audio and synthetic data 生成式人工智能是一种人工智能技术，可以生成各种类型的内容，包括文本、图像、音频和合成数据
+
+AI is the new electricity
+
+**Artificail General Intelligence (AGI) 通用人工智能**
+
+&rarr;  is a theoretical form of AI able to solve any number of hypothetical tasks using generalized human cognitive abilities 通用人工智能是人工智能的一种理论形式，能够利用人类的广义认知能力解决任意数量的假设任务
+
+**Intelligence**
+
+&rarr; The capacity to learn and solve problems
+
+**Artifical Intelligence**
+
+&rarr; A program that can sense, reason, act, and adapt
+
+**Machine Learning**
+
++ The study and construction of programs that are not explicitly programmed, but learn patterns as they are exposed to more data over time 研究和构建一些没有明确编程的程序，但这些程序会随着时间的推移接触到更多的数据而学习模式
++ These programs learn from repeatedly seeing data, rather than being explicitly programmed by humans 这些程序通过反复查看数据来学习，而不是由人类明确编程
+
+**Supervised Learning 监督学习**
+
+&rarr; 三种主要类型：
+
++ Regression 回归
+  + Prediction of Numerical values 用于预测数值型数据
+  + commpnly application:
+    + Packet Rate 数据包速率
+    + Packet Loss 数据包丢失率
+    + Time of arrival 到达时间
++ Classification 分类
+  + Prediction of categorical values 用于预测类别型数据
+  + commonly application:
+    + VPN or Not 是否为VPN
+    + Flow Category (VoIP/Video/Chat) 流量类别
+    + AS Type of Relationships 自治系统关系类型
+    + Anomaly Detection (BGP Hijack) 异常检测
++ Time series 时间序列
+  + Regression/Classification with Time Axis Importance 分析考虑时间轴的重要性，进行回归或分类
+  + commonly application:
+    + Internet flow (list of packets) 网络流量
+    + BGP Route 
+    + IP Traceroute 路径追踪
+
+**Supervised vs. Unsupervised Learning**
+
+&rarr; The biggest difference between supervised and unsupervised machine learning is **the type of data used** 监督式机器学习和无监督式机器学习之间最大的区别在于所使用的数据类型
+
++ Supervised learning uses labeled training data 监督式学习
+  使用带标签的训练数据
+
++ Unsupervised learning does not
+
+**Reinforcement Learning (RL) 强化学习**
+
+&rarr; RL is the science of decision making 强化学习 (RL) 是一门决策科学
+
++ It is about learning the optimal behavior in an environment
+  to obtain maximum reward 它旨在学习环境中的最佳行为
+  以获得最大回报
+
+**Deep Learning 深度学习**
+
++ DL < ML < AI
++ Model: artificial neural networks 其模型是人工神经网络
++ Neural network: consist of a series of layers of “neurons” connected to each other 神经网络由一系列层（“神经元”）组成，这些神经元彼此相连
++ Each neuron combines many inputs and produces an output through a simple mathematical function 每个神经元结合多个输入，并通过一个简单的数据函数生成输出
+
+**3 different single neurons**
+
++ Linear Regression 线性回归
+  + no activation function
+  + 用于预测连续数值
++ Logistic Regression 逻辑回归
+  + 使用Sigmoid激活函数
+  + 用于二分类问题，将输出值映射到0到1之间
++ The Perceptron 感知器
+  + 使用 Sign 激活函数
+  + 用于二分类问题，输出值为-1或1
+
+**Linear functions & Activation functions**
+
++ Linear functions
+  + Lines in space
+  + Planes if multidimensional
+  + Constant derivative
++ Activation functions
+  + Non-linear
+  + Differentiable (almost everywhere)
+
+**Loss functions 损失函数**
+
+&rarr; is a function that compares the target and predicted output values; measures how well the neural network models the training data. When training, we aim to minimize this loss between the predicted and target outputs 是一个比较目标和预测输出值的函数；衡量神经网络对训练数据的建模效果。在训练时，我们的目标是尽量减少预测输出和目标输出之间的损失
+
++ The most common loss function used in deep neural networks is cross-entropy
+
+**Gradient Descent 梯度下降法**
+
++ Basic Search Procedure:
+  + Choose initial value for 𝜃 开始时为参数 θ 选择一个初始值
+  + Until we reach a minimum 不断更新 θ 的值以减少损失/优化函数 J(θ)，直到达到最小值
+    + Choose a new value for 𝜃 to reduce the loss/optimization function J(𝜃)
+
+
+
+### A Deep Learning Approach for Detecting IP Hijack Attacks
+
+**Short Intro**
+
++ The Internet is a large collections of Autonomous Systems (ASes) interconnected 互联网是由大量互联的自治系统（ASes）组成的集合
++ Routing is done by ASes exchanging paths to Address Prefixes (APs) using the Border Gateway Protocol (BGP) 路由通过自治系统交换通往地址前缀（APs）路径的方式进行，使用的是边界网关协议（BGP）
+  + BGP routing's update messages list the entire AS path to reach an IP address prefix (AP). BGP路由更新消息列出到达IP地址前缀（AP）的整个AS路径
+  + ASes compute forwarding routes by exchanging BGP routing announcements with their neighbors. ASes通过与邻居交换BGP路由公告来计算转发路由
++ Policy-Based routing protocol influenced by the Internet economy: 互联网经济影响下的基于策略的路由协议
+  + Customer → provider
+  + Peer &rarr;  peer
+
+**Types of Relationships (TORS) 关系类型**
+
+&rarr; The commercial agreements between two connected ASes are broadly classified into three types of relationship (ToR) 两个相连的 AS 之间的商业协议大致可分为三种关系类型 
+
++ Provider-to-customer (P2C) 提供者-客户关系
+  + the customer AS pays the provider AS for transit traffic from and to the rest of the Internet 客户AS为从提供者AS获取传输流量以及访问互联网其余部分而支付费用
++ Peer-to-peer (P2P) 对等关系
+  + two ASes freely exchange traffic between themselves and their customers, but do not exchange traffic from or to their providers or other peers 两个ASes之间自由交换流量，彼此及其客户之间的流量，但不交换来自或到他们的提供者或其他对等方的流量
++ Siblings (S2S) 兄弟关系
+  + two ASes that belong to the same administrative domain 同一管理域下的两个ASes
+
+**Why TORS are important?**
+
++ The Internet topology alone does not imply reachability among ASs 仅靠互联网拓扑结构无法确保ASes之间的通信可达性
++ ToR information is mostly not public 两个连接的ASes之间的商业协议通常是机密的
+
+**The Problem**
+
++ IP Hijack Attacks
+  + the attacker directs the traffic to its network
+  + This attack allows the attacker to:
+    + Eavesdrop, record and manipulate Internet traffic
+    + Implement various man-in-the-middle attacks
+
+**SASA: Source-Aware Self-Attention 源感知自注意力**
+
+
+
+
+
+## Übung & Klausur
+
+**Was sind Vulnerability (= Schwachstelle), Threat (= Bedrohung) und Attack(= Angriff)?**
+
++ Vulnerability 漏洞: Ein Fehler in der Gestaltung, Umsetzung oder Konfiguration eines Systems, der einen Angriff ermöglicht. 系统设计、实施或配置中存在的导致攻击的缺陷
++ Threat 威胁: Eine Person oder andere Ursache, die die Schutzziele beeinträchtigen könnte. 可能损害保护目标的人或其他原因
++ Attack 攻击: Eine bestimmte Methode, die eine Schwachstelle ausnutzt. 利用漏洞的特定方法
+
+**Nennen Sie vier Schutzziele aus der IT-Sicherheit und erklären Sie, wie sie realisiert werden können**
+
++ Vertraulichkeit (Confidentiality) 机密性： kann durch Verschlüsselung sichergestellt werden. 可以通过加密来确保机密性
++ Authentizität (Authenticity) 真实性： kann durch digitale Signaturen sichergestellt werden. 可以通过数字签名来保证真实性
++ Integrität (Integrity) 完整性： kann durch MACs sichergestellt werden. MAC 可以确保完整性
++ Zurechenbarkeit (Accountability) / Nicht-Abstreitbarkeit (Non-Repudiation)不可否认性： kann ebenfalls durch digitale Signaturen sichergestellt werden. 通过数字签名来确保不可否认性
++ Verfügbarkeit (Availability) 可用性： kann durch Zugangs- und Netzwerkkontrolle sowie Serverkapazitäten sichergestellt werden. 可以通过访问和网络控制以及服务器容量来确保可用性
+
+**Erklären Sie das Kerckhoff’sche Prinzip**
+
+&rarr; Die Sicherheit eines Kryptosystems soll ausschließlich auf der Geheimhaltung des kryptographischen Schlüssels beruhen. Alle anderen Informationen (insbesondere also das verwendete kryptographische Verfahren) dürfen öffentlich sein, ohne die Sicherheit des Kryptosystems zu beeinflussen. 密码系统的安全性应完全基于密码密钥的保密性。所有其他信息（特别是所使用的加密方法）可以是公开的，而不影响密码系统的安全性
+
+**Nennen Sie Eigenschaften, Algorithmen und Anwendungsbeispiele für symmetrische und asymmetrische Verschlüsselung. Was versteht man unter hybrider Verschlüsselung?**
+
++ symmetrischen Verschlüsselung
+  + Eigenschaften: 
+    + Bei der symmetrischen Verschlüsselung wird **derselbe Schlüssel** zum Ver- und Entschlüsseln verwendet 对称加密使用相同的密钥进行加密和解密
+    + Die Laufzeit der Algorithmen ist **relativ kurz** im Vergleich zur asymmetrischen Verschlüsselung 与非对称加密相比，算法的运行时间相对较短
+  + Algorithmen: AES, Twofish, Serpent, DES
+  + Anwendungsbeispiele: Festplattenverschlüsselung 硬盘驱动器加密
++ asymmetrischen Verschlüsselung
+  + Eigenschaften: 
+    + Asymmetrische Kryptosysteme verwenden **zwei unterschiedliche Schlüssel**, einen öffentlichen Schlüssel (public key) zum Verschlüsseln und einen privaten Schlüssel (private key) zum Entschlüsseln 非对称密码系统使用两个不同的密钥，一个用于加密的公钥和一个用于解密的私钥
+    + Im Vergleich mit der symmetrischen Verschlüsselung sind die Algorithmen **relativ langsam** 与对称加密相比，该算法相对较慢
+  + Algorithmen: RSA, ElGamal
+  + Anwendungsbeispiele: digitale Signaturen, Austausch eines Sitzungsschlüssels 数字签名或交换会话密钥
++ hybrider Verschlüsselung
+  + Bei hybrider Verschlüsselung wird sowohl symmetrische als auch asymmetrische Verschlüsselung verwendet, um eine Nachricht sicher zu übertragen 混合加密使用对称和非对称加密来安全地传输消息
+  + Dabei wird die eher langsame asymmetrische Verschlüsselung benutzt, um einen Sitzungsschlüssel für ein symmetrisches Verfahren zu verschlüsseln (mit dem öffentlichen Schlüssel des Empfängers) 相对慢的非对称加密用于加密对称过程的会话密钥（使用接收者的公钥）
+  + Die Nachricht selbst wird dann mit dem symmetrischen Verfahren verschlüsselt und anschließend zusammen mit dem verschlüsselten Sitzungsschlüssel an den Empfänger gesendet 然后使用对称方法对消息本身进行加密，然后与加密的会话密钥一起发送给接收者
+  + Dieser entschlüsselt mit seinem privaten Schlüssel den Sitzungsschlüssel und damit dann die Nachricht. 此人使用他的私钥来解密会话密钥，从而解密消息

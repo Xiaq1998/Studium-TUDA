@@ -712,6 +712,228 @@ supports two types of port forwarding:
 
 
 
+#### Module 05: VLAN Security
+
+**Virtual LANs can reduce complexity**
+
++ Before VLAN:
+  + One physical cable per subnet 每个子网一条物理电缆
+  + Moving hosts requires physical rewiring 移动主机需要重新进行物理布线
+  + Adding a new subnet requires adding new wires AND switches 添加新子网需要添加新电线和交换机
+  + Bandwidth not shared between subnets 子网之间不共享带宽
++ After VLAN:
+  + “Virtual cable” per subnet 每个子网一条“虚拟电缆”
+  + Remote reconfiguration of networks 网络的远程重新配置
+  + Bandwidth can be shared between subnets 子网之间可以共享带宽
+
+**Typical VLAN Setup**
+
+![Screenshot_2024-07-11 12.47.26_REEOrU](/Users/summer/Pictures/截屏/Screenshot_2024-07-11 12.47.26_REEOrU.jpg)
+
++ 多个交换机连接了不同的部门设备和服务器
++ 各部门的设备通过交换机连接，并分配有不同的 VLAN ID，以便实现网络隔离和管理
+
+**802.1Q: Overview**
+
+![Screenshot_2024-07-11 12.52.14_bHU9KD](/Users/summer/Pictures/截屏/Screenshot_2024-07-11 12.52.14_bHU9KD.jpg)
+
++ A layer 2 extension 二层扩展
+  + Adds an additional **32 bit field (“tag”)** after the source MAC address 在源 MAC 地址之后添加一个额外的 32 位字段（“标签”）&rarr; 802.1Q Header
++ Each packet gets its own tag 每个数据包都有自己的标签
++ If a packet is not tagged, the switch can add a default tag 如果一个数据包没有被标记，交换机可以添加一个默认标签
+
+**802.1Q: Header**
+
+![Screenshot_2024-07-11 12.54.53_DCsvag](/Users/summer/Pictures/截屏/Screenshot_2024-07-11 12.54.53_DCsvag.jpg)
+
++ DA & SA 目的MAC地址和源MAC地址
+
++ TPID - Tag Protocol Identifier (16 bit) 标签协议标识符
+  + Indicates that the frame is VLAN tagged 表示帧被 VLAN 标记
+  + Value is 0x8100 for 802.1Q tagged frames 对于 802.1Q 标记的帧，值为 0x8100
+  + For VLAN unaware devices it looks just like the EtherType/Length field 对于不支持 VLAN 的设备，它看起来就像 EtherType/Length 字段
++ PCP - Priority Code Point (3 bit) 优先级代码点
+  + Frame priority according to IEEE 802.1p 根据 IEEE 802.1p 确定帧的优先级
+  + From 0 (best effort) to 7 (highest priority)
+  + Used for class-of-service (CoS) 用于服务质量 (CoS)
++ DEI - Drop Eligible Indocator (1 bit) 丢弃可行指示符
+  + Field formerly used as CFI (Canonical Format Indicator) for Token Ring compatibility 以前用作 CFI（规范格式指示符）以兼容令牌环
+  + Indicates if a frame can be dropped in case of congestion 表示在拥塞情况下帧是否可以被丢弃
+  + Normally used together with the PCP field 通常与 PCP 字段一起使用
++ VID - VLAN Identifier (12 bit) VLAN标识符
+  + Specifies the actual VLAN 指定实际的 VLAN
+  + Offers 4094 VLANs 提供 4094 个 VLAN
+  + 0x000 (priority frames - CoS) and 0xFFF are reserved
+
+**Modes of Operation**
+
+&rarr; each port of a switch can either be: 交换机端口的操作模式
+
++ Untagged (Access): 未标记（接入模式）
+  + Only regular Ethernet frames are accepted 仅接受常规以太网帧
+  + The connected system is not allowed to add tags 连接的系统不允许添加标签
+  + Switch adds a defined tag (“native VID”) 交换机添加定义的标签（“本地 VID”）
++ Tagged (Trunk): 标记（干线模式）
+  + Switch expects a frame with tag 交换机期望帧带有标签
+  + Connected system can set the VID 连接的系统可以设置 VID
+  + Untagged packets will be treated as originating from the native VID 未标记的包将被视为来自本地 VID
+  + Frames with native VID are typically stripped 带有本地 VID 的帧通常会被剥离
+
+**Possible Attacks:**
+
++ Double Tagging 双重标记
+  + Idea: an Ethernet frame can carry two VLAN extensions 一个以太网帧可以携带两个 VLAN 扩展
+  + Attack: an attacker can send frames to other VLANs 攻击者可以向其他 VLAN 发送帧
+    1. The attacker adds a second tag (Tag 2) to the frame before sending 攻击者在发送前在帧上添加第二个标签 (Tag 2)
+    2. The first switch removes Tag 1 because it’s the ports native VID 第一个交换机移除 Tag 1，因为它是端口的本地 VID
+    3. The second switch only sees the attacker’s Tag 2 and outputs the packet to the respective (attacker-controlled) VID 第二个交换机只看到攻击者的 Tag 2，并将数据包输出到相应的（由攻击者控制的）VID
+  + Limitation:
+    + Attacker needs access to a trunk port 攻击者需要访问一个干线端口
+    + Port has to accept frames to the victim VID (Tag 2) 端口必须接收受害者 VID (Tag 2) 的帧
+    + Attacker VID (Tag 1) must equal the native VID of the switch’s trunk port, otherwise first tag will not be removed 攻击者 VID (Tag 1) 必须等于交换机干线端口的本地 VID, 否则，第一个标签不会被移除
+    + Answers to the packet sent are not getting back to the attacker 发送的数据包的响应不会返回给攻击者
++ Switch Spoofing 交换机欺骗
+  + Idea: Switches allow for automatic/dynamic configuration 交换机允许自动/动态配置
+    + Using 802.1ak:
+      + Multiple VLAN Registration Protocol (MVRP)
+      + VLAN Trunking Protocol (VTP) with Cisco hardware
+    + 工作原理
+      + When a new switch enters the network or the configuration is changed it announces the VLANs to the uplink 当一个新的交换机加入网络或者配置发生改变时，它会向上行链路宣布VLANs
+      + Only the switch facing the end system needs to be configured 只有面对终端系统的交换机需要配置
+  + Attack: An attacker can use MVRP to announce himself as a switch 攻击者可以使用MVRP宣布自己是一个交换机
+    1. Use MVRP to announce all VIDs as configured 使用MVRP宣布所有VIDs已配置
+    2. Uplink switches will reconfigure its downlink port accordingly 上行交换机会重新配置其下行端口
+    3. Attacker becomes part of all VLANs 攻击者成为所有VLAN的一部分
+  + Limitation: 
+    + Needs access to one port that supports MVRP/VTP 需要访问一个支持MVRP/VTP的端口
+
+**Attack Mitigation 攻击缓解策略**
+
++ Switch Spoofing
+  + Disable automatic trunk negotiation 禁用自动中继协商
+    + at least on “untrusted” ports
+    + or only activate it temporarily
+  + Explicitly set all non-trunk ports as access ports 明确将所有非中继端口设置为访问端口
++ Double Tagging
+  + Set the native VID on trunk ports to an unused VLAN 将中继端口上的本地VID设置为一个未使用的VLAN
+  + Explicitly tag native VID packets on a trunk port (must be done on all switches) 明确在中继端口上对本地VID数据包进行标记（必须在所有交换机上进行）
++ Denial-of-Service attacks
+  + Use PCP (priorities) to allow mission critical systems to communicate while under a flooding attack 使用PCP（优先级）允许关键任务系统在遭受泛洪攻击时进行通信
+
+**Q&A**
+
++ Is switch spoofing possible on access ports? 访问端口是否可能进行交换机欺骗？
+
+  &rarr; No, but trunk ports can be created dynamically, e.g. with DTP 不可能，但可以动态创建中继端口，例如使用DTP
+
++ Is double tagging possible on access ports? 访问端口是否可能进行双重标记？
+
+  &rarr; Yes, if switch accepts tagged frames on access port (and removes it) 是的，如果交换机接受在访问端口上的标记帧（并且移除它们）
+
+  &rarr; Access port VLAN ID must be equal to native VLAN ID on trunk ports 访问端口的VLAN ID必须等于中继端口上的本地VLAN ID
+
++ How do I get to know the victim VLAN ID for double tagging? 如何知道受害者的VLAN ID以进行双重标记？
+
+  &rarr; Guess, often VLAN ID equals 1 or try all 4094 possibilities 猜测，通常VLAN ID等于1，或者尝试所有4094个可能性
+
++ Which attack to use if on a trunk port? 在中继端口上使用哪种攻击？
+
+  &rarr; Switch spoofing more powerful 交换机欺骗更强大
+
+  &rarr; But if certain VIDs are blocked only use double tagging 但如果某些VLAN ID被阻止，则只能使用双重标记
+
+
+
+### Chapter 05: Link Level Security
+
+#### Module 01: Intro to Link Level Security
+
+**Data Link Layer - Goals**
+
+&rarr; to provide reliable, efficient communication between adjacent machines connected by a single communication channel 通过单一通信通道连接相邻机器，提供可靠、高效的通信
+
+**Scope of Protection Layer 2**
+
+![Screenshot_2024-07-11 13.42.52_hHahsM](/Users/summer/Pictures/截屏/Screenshot_2024-07-11 13.42.52_hHahsM.jpg)
+
++ Dependency on network technology: Minor 轻微
+  + The link layer is dependent on the network technology 链路层依赖于网络技术
+  + But: Far less dependent, then lower layer 3 但依赖性远低于第3层
+  + Protection:
+    + Data protected in: local networks (black/red bridges and corresponding communication links) 本地网络（黑/红桥接和相应的通信链路）
+    + Data unprotected in: Outside of the secured network 在安全网络之外
+  + Protection granularity: individual hosts, LAN segments 个体主机、局域网段
+
+
+
+#### Module 02: Wired Networks
+
+**What is Network Access Authentication 网络访问认证?**
+
++ (Definition) A mechanism by which access to the network is restricted to authorized entities 网络访问认证是一种通过限制授权实体访问网络的机制
+  + Usually identities used are typically userIDs 通常使用用户ID来标识身份
+
++ Once authenticated, the session needs to be authorized, Authorization can include things like: 一旦身份认证通过，会话需要被授权，授权可以包括以下内容
+  + VLANID
+  + rate limits
+  + filters
+  + tunneling
+
+**What could be Problems?**
+
++ Multi-user machine 多用户设备
+  + Each user on a multi-user machine does not need to authenticate once the link is up, so this doesn’t guarantee that only the authenticated user is accessing the network 每个用户在多用户设备上连接后不需要再次认证，因此不能保证只有经过认证的用户在访问网络
++ Hijacking by external attacker 外部攻击者劫持
+  + To prevent hijacking, you need per-packet authentication as well 为防止劫持，需要对每个数据包进行认证
+  + Encryption orthogonal to authentication 加密与认证是正交的
+  + Per-packed MIC based on key derived during the authentication process, linking each packet to the identity claimed in the authentication 每个数据包的MIC（消息完整性检查）基于认证过程中生成的密钥，连接每个数据包与认证中声明的身份
+
+**Network Access Alternatives 网络访问替代方案**
+
+&rarr; Network access authentication has already been implemented at various layers 网络访问认证已经在各个层面实现
+
++ PHY/MAC 物理层/介质访问控制层
+  + Example: 802.11b
+  + Pros: no MAC or TCP/IP changes required (all support in firmware) 不需要MAC或TCP/IP更改（所有支持都在固件中）
+  + Cons: requires firmware changes in NICs and NASes to support new auth methods, requires NAS to understand new auth types, slows delivery of bug fixes (e.g. WEP v1.0), hard to integrate into AAA 需要网卡（NICs）和网络接入服务器（NASes）固件更改以支持新认证方法，需要NAS理解新认证类型，减缓了漏洞修复（例如WEP v1.0）的交付，难以集成到AAA系统中
++ MAC 介质访问控制层
+  + Examples: PPP, 802.1X
+  + Pros: no firmware changes required for new auth methods, easier to fix bugs, easy to integrate into AAA, no network access needed prior to authentication, extensible (RFC 2284) 不需要固件更改即可支持新认证方法，易于修复漏洞，易于集成到AAA系统中，认证前不需要网络访问，具有可扩展性（RFC 2284）
+  + Cons: requires MAC layer changes unless implemented in driver 需要MAC层更改，除非在驱动程序中实现
++ IP + App-Level Gateway. IP + 应用层网关
+  + Examples: hotel access (based on ICMP re-direct to access web server) 酒店访问（基于ICMP重定向访问网页服务器）
+  + Pros: no client MAC or TCP/IP changes required (for ICMP re-direct method) 不需要客户端MAC或TCP/IP更改（适用于ICMP重定向方法）
+  + Cons: Doesn’t work for all apps, no mutual authentication, partial network access required prior to auth, need to find access control server if not at first hop, typically not extensible, may not derive encryption keys, no accounting (no logoff)
++ UDP/TCP/Application
+  + Examples: Proprietary token card protocols 专有令牌卡协议
+  + Pros: No client MAC or TCP/IP changes required – can be implemented purely at the application layer 不需要客户端MAC或TCP/IP更改——可以纯粹在应用层实现
+  + Cons: requires client software, partial network access required prior to auth, need to find access control server if not at first hop, typically not extensible, no accounting (no logoff)
+
+**Why do Auth at the Link Layer?**
+
++ It’s fast, simple, and inexpensive 它快速、简单且经济实惠
+  + Most popular link layers support it: PPP, IEEE 802 大多数流行的链路层支持它
+  + Cost matters if you’re planning on deploying 1 million ports!
++ Client doesn’t need network (services) access to authenticate 客户端无需网络（服务）访问即可认证
+  + No need to resolve names, obtain an IP address prior to auth 无需解析名称，在认证前获取IP地址
++ In a multi-protocol world, doing auth at link layer enables authorizing all protocols at the same time 在多协议环境中，在链路层进行认证可以同时授权所有协议
+  + Doing it at the network layer would mean adding authentication within IPv4, IPv6, AppleTalk, IPX, SNA, NetBEUI
+  + Would also mean authorizing within multiple layers 在多个层次进行授权将导致更多的延迟
+  + Result: more delay
+
+**What is IEEE 802.1X?**
+
+&rarr; The IEEE standard for authenticated and auto-provisioned LANs. IEEE 认证和自动配置局域网的标准
+
++ A framework for authentication and key management: 认证和密钥管理框架
+
+  + IEEE 802.1X derives keys
+
+  + well-known key derivation algorithms
+  + can do authentication, or authentication & encryption
+
+
+
 
 
 ## BGP Security
@@ -1441,3 +1663,268 @@ validator(RPKI验证器) 的功能及其工作流程
 
 
 
+## Zusammenfassung
+
+### Fundamentals
+
+**Definition**
+
++ Asset 资产: an **item of value** to achievement of organizational mission/business objectives. 对实现组织使命/业务目标具有价值的项目
++ Vulnerabilities 弱点: weakness in an information system 信息系统的弱点
++ Threats 威胁: any **circumstance or event** with the potential to cause the security of the system to be compromised. 任何可能导致系统安全受到损害的情况或事件
++ Attacks 攻击: any kind of **malicious activity** that attempts to collect, disrupt, deny, degrade, or destroy information system resources or the information itself. 任何试图收集、破坏、拒绝、降低或毁坏信息系统资源或信息本身的恶意活动
++ Protocol 协议: Communication between **same-layer entities** 同层实体之间的通信
++ Service 服务: Communication between **adjacent Layers** 相邻层之间的通信
++ Connection-oriented
+  + Always uses 3 phases: 
+    1. Establish Connection 
+    2. Transfer data 
+    3. Disconnect
+  + Analogy: Telephony
++ Connectionless (Datagram Service)
+  + Transfer of single data units (often called packets)
+  + Analogy: package delivery
+
+**Security Goals**
+
++ Confidentiality 机密性: Information accessible only for sender and receiver 信息仅供发送者和接收者访问
+
+  &rarr; Need for cryptography (encryption)
+
++ Integrity 完整性: 
+
+  + Data: Stored/Transmitted data is not modified 存储/传输的数据不会被修改
+
+    &rarr; Need for cryptography, message authentication
+
+  + System: System performs its function as intended 系统按预期执行其功能
+
+    &rarr; Need for hardware mechanism, e.g. secure boot
+
++ Availability 可用性: Resistance against denial-of-service attacks 抵御拒绝服务攻击
+
+  &rarr; Hard to do with cryptography
+
+  &rarr; Need for access control, routing control
+
++ Authentication 身份验证:
+
+  + User: Proven identity of communication partners 已证实的通信伙伴身份
+
+    &rarr; Need for means of user authentication
+
+  + Message:  Information associated to communication partner 与通信伙伴相关的信息
+
+    &rarr; Need for means of message authentication
+
++ Non-Repudiation / Accountability 不可否认性: Denial of communication not possible 无法拒绝通信
+
+  &rarr; Need for digital signatures, “notarization”
+
+**From Goals to Defense**
+
++ Often used: Cryptography
+
+  &rarr; Mechanisms: Encryption, Digital Signatures, ...
+
++ Some goals can’t be realized with cryptography alone: 有些目标无法仅靠加密技术实现
+
+  + Availability: can be realized with Access Control 通过访问控制实现
+  + Traffic-Flow Confidentiality: requires Traffic-Padding and other mechanisms 需要流量填充和其他机制
+
+**Symmetric vs. Asymmetric**
+
++ Symmetric: same key to encrypt and decrypt message
++ Asymmetric: two inversely related keys (key pair)
+
+**Four importan concepts**
+
++ Which security goals can be achieved with Crypto?
+  + Confidentiality: Encryption
+  + Message Integrity/Message Authentication: Signatures
++ Two additionally relevant concepts:
+  + Hashing: Input transformation
+  + Diffie-Hellman Key Exchange: Key agreement scheme
+
+**Cryptographic Basics**
+
++ Software: 
+  + Cryptographic libraries (e.g. OpenSSL) 加密库
+  + Compiler optimizations 编译器优化
++ Hardware:
+  + Specific instructions (e.g. x86 AES instruction set) 特定指令
+  + Hardware configurations (e.g. superscalar pipelines) 硬件配置
++ Symmetric Algorithms:
+  + Advantage: very fast
+  + Disadvantage: need a Pre-Shared Key
++ Asymmetric algorithms:
+  + Advantage: usable without shared key
+  + Disadvantage: magnitudes slower than symmetric
+
+**Cryptography Handshake**
+
+
+
+**ISO-OSI Model**
+
++ Layer 5: Application (APP) 
+  + Include: Application(APP), Presentation(PRES), Session (SES)
+  + Abstraction Level: Application-to-Application
+  + Addressing method: Application specific addressing
+  + DNS
+
++ Layer 4: Transport (TRANS)
+  + Abstraction Level: End-to-End
+  + Addressing method: Ports
+  + UDP, TCP
++ Layer 3: Network (NET)
+  + Abstraction Level: Device-to-Device
+  + Addressing method: IP-Addresses
+  + IP, ICMP, ARP
++ Layer 2: Data link (MAC)
+  + Abstraction Level: Hop-to-Hop
+  + Addressing method: MAC-Addresses
++ Layer 1: Physical (PHY)
+  + Abstraction Level: Physical Transmission
+  + Addressing method: -/-
+
+**IPv4 (The Internet Protocol)**
+
++ Why an internet layer? 为什么要使用互联网层？
+  + Make a bigger network and overcome ALGs 建立更大的网络并克服 ALG
+  + Global addressing 全局寻址
+  + Virtualize network to isolate end-to-end protocols from network details/changes 虚拟化网络以将端到端协议与网络细节/更改隔离
++ Why a single internet protocol? 为什么要使用单一互联网协议？
+  + Maximize interoperability 最大限度地提高互操作性
+  + Minimize number of service interfaces 最大限度地减少服务接口数量
++ Why a narrow internet protocol? 为什么要使用狭窄的互联网协议？
+  + Assumes least common network functionality to maximize number of usable networks 假设最不常见的网络功能以最大限度地增加可用网络的数量
+
+**Bad Stuff (Malware)**
+
++ Virus 病毒: Infects files by modifying their source code 通过修改源代码来感染文件
++ Worm 蠕虫: Self-replicating malware that spreads itself through a network 通过网络传播的自我复制恶意软件
++ Trojan 木马: Malware that hides itself in useful software 隐藏在有用软件中的恶意软件
++ These malwares often tend to perform an undesired action: 这些恶意软件往往倾向于执行不良操作
+  + Spyware 间谍软件: Collect information from user (such as bank data) 收集用户信息
+  + Keylogger 键盘记录器: Spyware that monitors key inputs 监视键盘输入的间谍软件
+  + Ransomware 勒索软件: Encrypts target machine, until a ransom is paid 加密目标机器，直到支付赎金
+  + Botnets 僵尸网络: Infected machines join a botnet to execute commands on demand (e.g., to drop additional malware) 受感染的机器加入僵尸网络以按需求执行命令
+
+**What Bad Guys Do:**
+
++ Attacker 1: Eavesdropper 窃听者
+  + Attack on Confidentiality 攻击机密性
+  + Packet sniffers and wiretappers 数据包嗅探器和窃听器
+  + Attacker acts **only passive** 攻击者仅采取被动行为
+  + Can not inject packets 无法注入数据包
++ Attacker 2: Off-Path Attacker 路径外攻击者
+  + Attack on Authentication 攻击身份验证
+  + Trudy can freely inject new packets (actively). Trudy 可以自由注入新数据包
+  + Trudy can not read and/or modify any packets in the network. Trudy 无法读取和/或修改网络中的任何数据包
++ Attacker 3: MitM (Man-in-the-Middle)
+  + Attack on Confidentiality, Integrity, Authentication 攻击机密性、完整性、身份验证
+    + Trudy can freely delay, modify, delete existing packets. Trudy 可以自由延迟、修改、删除现有数据包
+    + Trudy can read all messages and can craft new ones. Trudy 可以读取所有消息并可以制作新消息
+    + Variation of this attacker: Dolev-Yao Adversary
+  + Attack on Availability 攻击可用性
+    + Trudy can trivially delay/destroy all packets when in MitM position. Trudy 在处于 MitM 位置时可以轻松延迟/销毁所有数据包
+
+**Defending Systems**
+
++ Dimension 1: Devices
+  + on different nodes
+  + Which security service should be realized in which nodes?
+    + Integration into Applications
+    + Integration into End systems
+    + Integration into Intermediate systems
++ Dimension 2: Layers
+  + Which security service should be realized in which layer?
+
+![Screenshot_2024-07-16 22.04.52_JG2x7O](/Users/summer/Pictures/截屏/Screenshot_2024-07-16 22.04.52_JG2x7O.jpg)
+
+**Quantizing Vulnerabilities**
+
++ CVSS (Common Vulnerability Scoring System 通用漏洞评分系统) measures three different sub-scores:
+  + Base Score 基本分数: Plain vulnerability score 普通漏洞分数
+  + Temporal Score 时间分数: Accounts for temporal parameters 考虑时间参数
+  + Environmental score 环境分数: Tailors parameters to a user environment 根据用户环境定制参数
+
+**Reconnaissance 侦察**
+
+&rarr; Gather information about a target 收集有关目标的信息
+
++ OSINT (Open-Source Intelligence)
+  + First reconnaissance step: Analyze publicly available information 分析公开信息
+  + Mostly **passive**
++ Defence against OSINT:
+  + Keep to a minimum what you put in the public database: only what is necessary 将公共数据库中的内容保持在最低限度，只保存必要的内容
+
+**Active Scanning**
+
++ Host scanning: Attacker uses ping sweeps to determine live hosts 攻击者使用 ping 扫描来确定活动主机
++ Port scanning: Attacker uses port scans to determine open ports 攻击者使用端口扫描来确定开放端口
++ Fingerprinting/Version Detection: Attackers use port scans to determine information of live services, such as service version 攻击者使用端口扫描来确定活动服务的信息，例如服务版本
++ Network mapping: Attacker often uses traceroute/pathping to determine path to each host discovered during ping sweep 攻击者经常使用 traceroute/pathping 来确定在 ping 扫描期间发现的每个主机的路径
++ Defence against Active Scanning:
+  + Filter using firewalls and packet-filtering capabilities of routers 使用防火墙和路由器的数据包过滤功能进行过滤
+  + Close all unused ports 关闭所有未使用的端口
+  + Scan your own systems to verify that unneeded ports are closed 扫描您自己的系统以验证不需要的端口是否已关闭
+  + Intrusion Detection Systems (IDS) 入侵检测系统
+
+### Application Level Security
+
+**Layer 5 Security**
+
++ Dependency on network technology: None
++ Protection:
+  + Data protected in: Entire network, except the application itself
+  + Data unprotected in: Application itself
+
+**Application developer 3 options:**
+
++ Option 1: Implement an application specific security mechanisms (Layer 5) 实施特定于应用程序的安全机制
++ Option 2: Use a security service from a lower layers (Layer 4) 使用较低层的安全服务
++ Option 3: Rely on a network security mechanism to provide security (Layer 3 and below) 依靠网络安全机制提供安全性
+
+
+
+## Q&A
+
+1. Resilience Definition 弹性定义
+2. How ARP spoofing works. ARP 欺骗的工作原理
+3. Can IPSec prevent ARP spoofing. IPSec 能否防止 ARP 欺骗
+4. Heartbleed vulnerabilities, Prevention, How it effect Heartbleed 漏洞、预防及其影响
+5. Snort rule Snort 规则
+6. Why do certificates have an expiration date when there are CRLs? 有 CRL 时证书为什么会有到期日期？
+7. Disadvantage of using CRL 使用 CRL 的缺点
+8. Advantage of Web of Trust over PKI. Web of Trust 相对于 PKI 的优势
+9. Name one IoT product which you won’t use 说出一种你不会使用的 IoT 产品
+10. Offline dictionary attack with wpa2 and weakness in wpa3. wpa2 的离线字典攻击和 wpa3 的弱点
+11. Why can a recorded TLS 1.2 connection be decrypted afterwards if the PrivatKey is known, why is this not possible with TLS 1.3? 如果知道 PrivatKey，为什么记录的 TLS 1.2 连接事后可以解密，为什么 TLS 1.3 无法做到这一点？
+12. How unannounced Prefix hijack works, can BGP routing prevent it? 未通知的前缀劫持如何工作，BGP 路由可以防止它吗？
+13. Name two other BGP hijack and explain 说出另外两种 BGP 劫持并解释
+14. Advantage of TLS 1.3 over other version. TLS 1.3 相对于其他版本的优势
+15. How are downgrade attacks prevented in SSL v3? SSL v3 中如何防止降级攻击？
+16. Switch Spoofing, countermeasure, how it works 交换机欺骗、对策、工作原理
+17. Hardware fault injection attacks and goals of this attack 硬件故障注入攻击和此攻击的目标
+18. Where and how is RC4 used in WEP? WEP 中 RC4 在哪里以及如何使用？
+19. In which part is the attack carried out? Why is this possible? -> paper 攻击在哪个部分进行？为什么可能？-> 论文
+20. Advantages and disadvantage of applying security measure in application level security 在应用程序级安全中应用安全措施的优点和缺点
+21. Name attacks that can be enabled by ARP Spoofing 可以通过 ARP 欺骗启用的名称攻击
+22. Goal of ARP Spoofing attack. ARP 欺骗攻击的目标
+23. Reconnaissance: potential reason why Nmap recognize port 22 of the host as filtered 侦察：Nmap 将主机的 22 端口识别为已过滤的潜在原因
+    + Firewall Blocking: The firewall between the Nmap scanner and the target host is configured to block traffic to port 22. Nmap 扫描器和目标主机之间的防火墙配置为阻止到端口 22 的流量
+    + IDS/IPS: An IDS/IPS system may detect the scanning activity and actively block or drop traffic from the Nmap scanner and mark the port as filtered. IDS/IPS 系统可能会检测扫描活动并主动阻止或丢弃来自 Nmap 扫描器的流量，并将端口标记为已过滤
+24. How can an attacker with a known plaintext-cyphertext pair (P1,C1) obtain the plaintext P2 from a cyphertext C2 without knowing the decryption key? 具有已知明文-密文对 (P1,C1) 的攻击者如何在不知道解密密钥的情况下从密文 C2 获取明文 P2？
+25. PGP: draw signer-signee diagram (simply draw arrows showing who signs whom), then based on this draw different scenarios, whose keys are legitimate 绘制签名者-签名者图（简单地画出箭头表示谁签署了谁），然后根据此图绘制不同的场景，确定谁的密钥是合法的
+26. There is ext header address in IPV6 and routing header. Why routing header are not potected, or attack. IPV6 和路由报头中有扩展报头地址。为什么路由报头不受保护或受到攻击
+27. Countermeasure of replay attacks 重放攻击的对策
+28. Prevention offline dictionary attack 预防离线字典攻击
+29. Trust in PGP: Steps. PGP 中的信任：步骤
+30. IPSec compares to TLS. IPSec 与 TLS 的比较
+31. Definition of Attack, Vulnerability and Threat 攻击、漏洞和威胁的定义
+32. An attacker has recorded a TLSv1.2 session? He subsequently received the private key, can he reconstruct the session? Does this still work with TLSv1.3? If not, why not? Which TLSv feature would have prevented this? How are downgrade attacks prevented in SSL v3? 攻击者记录了 TLSv1.2 会话？他随后收到了私钥，他可以重建会话吗？这在 TLSv1.3 中仍然有效吗？如果不行，为什么？哪个 TLSv 功能可以防止这种情况？SSL v3 中如何防止降级攻击？
+33. 论文- Paper
+    + How des the Wi-Fi power-saving mechanism work? Wi-Fi 省电机制如何工作？
+    + 
